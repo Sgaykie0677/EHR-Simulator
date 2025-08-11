@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -578,101 +579,20 @@
 
         clearAllBtn.addEventListener('click', clearAllData);
 
-        // --- Event Listeners (NEW Coding Challenge section) ---
-        loadChallengeBtn.addEventListener('click', () => {
-            const randomIndex = Math.floor(Math.random() * medicalReportScenarios.length);
-            currentChallenge = medicalReportScenarios[randomIndex];
-            medicalReportScenarioEl.textContent = currentChallenge.reportText;
-            userICDCodesInput.value = ''; // Clear previous user input
-            userCPTCodesInput.value = ''; // Clear previous user input
-            codingFeedbackEl.innerHTML = '<p class="text-gray-500">Feedback on your coding will appear here.</p>'; // Clear previous feedback
-        });
-
-        checkCodesBtn.addEventListener('click', async () => {
-            if (!currentChallenge) {
-                codingFeedbackEl.textContent = 'Please load a new challenge first!';
-                codingFeedbackEl.style.color = '#991b1b'; // Red text for error
-                return;
-            }
-
-            const userICDs = userICDCodesInput.value.split(',').filter(s => s.trim() !== '');
-            const userCPTs = userCPTCodesInput.value.split(',').filter(s => s.trim() !== '');
-
-            const isICDCorrect = compareCodeArrays(userICDs, currentChallenge.correctICD);
-            const isCPTCorrect = compareCodeArrays(userCPTs, currentChallenge.correctCPT);
-
-            if (isICDCorrect && isCPTCorrect) {
-                codingFeedbackEl.innerHTML = '<p class="text-green-700 font-bold">🎉 Excellent! Your codes are correct! You\'ve accurately identified the diagnoses and procedures for this report.</p>';
-            } else {
-                // Generate detailed feedback using LLM
-                checkCodesText.textContent = 'Generating Feedback...';
-                loadingSpinner.classList.remove('hidden');
-                checkCodesBtn.disabled = true; // Disable button during API call
-
-                const prompt = `As a medical coding expert, analyze the following medical report and the user's submitted codes compared to the correct codes.
-                
-                Medical Report: ${currentChallenge.reportText}
-                
-                User's Submitted ICD Codes: [${userICDs.join(', ')}]
-                User's Submitted CPT Codes: [${userCPTs.join(', ')}]
-                
-                Correct ICD Codes: [${currentChallenge.correctICD.join(', ')}]
-                Correct CPT Codes: [${currentChallenge.correctCPT.join(', ')}]
-                
-                Explain to a medical biller why their submitted codes might be incorrect or incomplete for this scenario. Focus on the discrepancies between the user's codes and the correct codes. Provide a clear explanation of what the correct codes mean and why they are appropriate based on the medical report. Offer specific tips for accurate coding in similar situations. Structure your response as helpful, educational feedback, starting with whether their ICDs and CPTs were correct or incorrect, and then explaining why.`;
-
-                try {
-                    const apiKey = ""; // Canvas will automatically provide the API key here at runtime.
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-
-                    const fetchFn = async () => {
-                        const response = await fetch(apiUrl, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }] }] })
-                        });
-
-                        if (!response.ok) {
-                            const errorData = await response.json();
-                            throw new Error(`API error: ${response.status} ${response.statusText} - ${JSON.stringify(errorData)}`);
-                        }
-                        return response.json();
-                    };
-
-                    const result = await exponentialBackoff(fetchFn);
-
-                    if (result.candidates && result.candidates.length > 0 &&
-                        result.candidates[0].content && result.candidates[0].content.parts &&
-                        result.candidates[0].content.parts.length > 0) {
-                        codingFeedbackEl.innerHTML = `<p class="text-gray-800">${result.candidates[0].content.parts[0].text}</p>`;
-                        codingFeedbackEl.style.color = '#333'; // Reset color
-                    } else {
-                        codingFeedbackEl.innerHTML = '<p class="text-red-700">Error: Could not retrieve detailed feedback. Please try again.</p>';
-                    }
-                } catch (error) {
-                    console.error("Error calling LLM API:", error);
-                    codingFeedbackEl.innerHTML = `<p class="text-red-700">An error occurred while getting feedback: ${error.message}. Please try again later.</p>`;
-                } finally {
-                    checkCodesText.textContent = 'Check My Codes';
-                    loadingSpinner.classList.add('hidden');
-                    checkCodesBtn.disabled = false; // Re-enable button
-                }
-            }
-        });
-
-        // Initial setup to ensure one input row is always present for existing sections
+        // Initial setup to ensure one input row is always present
         window.onload = () => {
+            // Ensure there's at least one diagnosis input initially
             if (diagnosisList.querySelectorAll('.diagnosis-code').length === 0) {
                 addInputRow(diagnosisList, 'diagnosis-code', 'e.g., J02.9 (Acute pharyngitis)');
             }
+            // Ensure there's at least one procedure input initially
             if (procedureList.querySelectorAll('.procedure-code').length === 0) {
                 addInputRow(procedureList, 'procedure-code', 'e.g., 99213 (Office visit)');
             }
+            // Ensure there's at least one charge input initially
             if (chargeList.querySelectorAll('.service-item').length === 0) {
                 addChargeRow();
             }
-            // Load the first challenge automatically on page load
-            loadChallengeBtn.click();
         };
     </script>
 </body>
