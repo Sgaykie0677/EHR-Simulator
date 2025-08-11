@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EHR Simulator for Medical Billing Practice</title>
+    <!-- Tailwind CSS CDN for easy styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 20px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        input[type="text"], input[type="date"], input[type="number"] {
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            width: 100%;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+        input[type="text"]:focus, input[type="date"]:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        .btn-primary {
+            background-color: #3b82f6;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+        .btn-secondary {
+            background-color: #6b7280;
+            color: white;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-size: 0.875rem; /* text-sm */
+        }
+        .btn-secondary:hover {
+            background-color: #4b5563;
+        }
+        .message-box {
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-weight: 500;
+            display: none; /* Hidden by default */
+        }
+        .message-box.success {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+        .message-box.error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+        .flex-grow-1 { /* Custom utility to make item grow */
+            flex-grow: 1;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="container">
+        <h1 class="text-3xl font-extrabold text-center text-gray-800 mb-8">EHR Practice System</h1>
+
+        <!-- Message Box for user feedback -->
+        <div id="messageBox" class="message-box"></div>
+
+        <!-- Patient Registration Section -->
+        <section class="mb-8 p-6 bg-blue-50 rounded-lg">
+            <h2 class="section-title text-blue-800">1. Patient Registration 📝</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label for="patientName" class="block text-gray-700 text-sm font-bold mb-2">Patient Name:</label>
+                    <input type="text" id="patientName" placeholder="John Doe" class="focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="patientDOB" class="block text-gray-700 text-sm font-bold mb-2">Date of Birth:</label>
+                    <input type="date" id="patientDOB" class="focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="md:col-span-2">
+                    <label for="insuranceID" class="block text-gray-700 text-sm font-bold mb-2">Insurance ID:</label>
+                    <input type="text" id="insuranceID" placeholder="ABC123456789" class="focus:ring-blue-500 focus:border-blue-500">
+                </div>
+            </div>
+            <button id="registerPatientBtn" class="btn-primary w-full">Register Patient</button>
+        </section>
+
+        <!-- Encounter Documentation Section -->
+        <section class="mb-8 p-6 bg-green-50 rounded-lg">
+            <h2 class="section-title text-green-800">2. Encounter Documentation 🩺</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label for="encounterDate" class="block text-gray-700 text-sm font-bold mb-2">Encounter Date:</label>
+                    <input type="date" id="encounterDate" class="focus:ring-green-500 focus:border-green-500">
+                </div>
+                <div class="md:col-span-2">
+                    <label for="chiefComplaint" class="block text-gray-700 text-sm font-bold mb-2">Chief Complaint:</label>
+                    <input type="text" id="chiefComplaint" placeholder="Patient reports sore throat and fever" class="focus:ring-green-500 focus:border-green-500">
+                </div>
+            </div>
+
+            <div id="diagnosisList" class="mb-4 space-y-3">
+                <label class="block text-gray-700 text-sm font-bold mb-2">Diagnoses (ICD Codes):</label>
+                <div class="flex items-center gap-2">
+                    <input type="text" class="diagnosis-code flex-grow-1 focus:ring-green-500 focus:border-green-500" placeholder="e.g., J02.9 (Acute pharyngitis)">
+                    <button type="button" class="btn-secondary remove-item-btn">Remove</button>
+                </div>
+            </div>
+            <button id="addDiagnosisBtn" class="btn-primary mb-6 w-full bg-green-600 hover:bg-green-700">Add Another Diagnosis</button>
+
+            <div id="procedureList" class="mb-4 space-y-3">
+                <label class="block text-gray-700 text-sm font-bold mb-2">Procedures (CPT/HCPCS Codes):</label>
+                <div class="flex items-center gap-2">
+                    <input type="text" class="procedure-code flex-grow-1 focus:ring-green-500 focus:border-green-500" placeholder="e.g., 99213 (Office visit)">
+                    <button type="button" class="btn-secondary remove-item-btn">Remove</button>
+                </div>
+            </div>
+            <button id="addProcedureBtn" class="btn-primary w-full bg-green-600 hover:bg-green-700">Add Another Procedure</button>
+        </section>
+
+        <!-- Charge Entry Section -->
+        <section class="mb-8 p-6 bg-purple-50 rounded-lg">
+            <h2 class="section-title text-purple-800">3. Charge Entry & Services 💲</h2>
+            <div id="chargeList" class="mb-4 space-y-3">
+                <label class="block text-gray-700 text-sm font-bold mb-2">Services Rendered:</label>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-2 service-item">
+                    <input type="text" class="service-description col-span-1 md:col-span-1 focus:ring-purple-500 focus:border-purple-500" placeholder="Service Description">
+                    <input type="text" class="service-cpt-code col-span-1 md:col-span-1 focus:ring-purple-500 focus:border-purple-500" placeholder="CPT Code">
+                    <div class="flex gap-2 col-span-1 md:col-span-1">
+                        <input type="number" class="service-price flex-grow-1 focus:ring-purple-500 focus:border-purple-500" placeholder="Price ($)" min="0" step="0.01">
+                        <button type="button" class="btn-secondary remove-item-btn">Remove</button>
+                    </div>
+                </div>
+            </div>
+            <button id="addChargeBtn" class="btn-primary w-full bg-purple-600 hover:bg-purple-700">Add Another Service</button>
+        </section>
+
+        <!-- Generate Claim Section -->
+        <section class="p-6 bg-red-50 rounded-lg">
+            <h2 class="section-title text-red-800">4. Generate & View Claim 📄</h2>
+            <button id="generateClaimBtn" class="btn-primary w-full mb-6 bg-red-600 hover:bg-red-700">Generate Simulated Claim</button>
+
+            <div id="claimOutput" class="bg-gray-50 p-4 border border-gray-200 rounded-lg min-h-[150px] overflow-auto text-sm text-gray-800 whitespace-pre-wrap">
+                <!-- Claim data will appear here -->
+                <p class="text-gray-500">Your simulated claim details will appear here after generation.</p>
+            </div>
+            <button id="clearAllBtn" class="btn-secondary w-full mt-4">Clear All Data</button>
+        </section>
+    </div>
+
+    <script>
+        // DOM Element References
+        const patientNameInput = document.getElementById('patientName');
+        const patientDOBInput = document.getElementById('patientDOB');
+        const insuranceIDInput = document.getElementById('insuranceID');
+        const registerPatientBtn = document.getElementById('registerPatientBtn');
+
+        const encounterDateInput = document.getElementById('encounterDate');
+        const chiefComplaintInput = document.getElementById('chiefComplaint');
+        const diagnosisList = document.getElementById('diagnosisList');
+        const addDiagnosisBtn = document.getElementById('addDiagnosisBtn');
+        const procedureList = document.getElementById('procedureList');
+        const addProcedureBtn = document.getElementById('addProcedureBtn');
+
+        const chargeList = document.getElementById('chargeList');
+        const addChargeBtn = document.getElementById('addChargeBtn');
+
+        const generateClaimBtn = document.getElementById('generateClaimBtn');
+        const claimOutput = document.getElementById('claimOutput');
+        const clearAllBtn = document.getElementById('clearAllBtn');
+        const messageBox = document.getElementById('messageBox');
+
+        // --- Global Data Storage (for this simulation) ---
+        let patientData = {};
+        let diagnoses = [];
+        let procedures = [];
+        let charges = [];
+
+        // --- Utility Functions ---
+
+        /**
+         * Displays a message to the user in the message box.
+         * @param {string} message - The message to display.
+         * @param {string} type - 'success' or 'error' to style the message.
+         */
+        function showMessage(message, type) {
+            messageBox.textContent = message;
+            messageBox.className = `message-box ${type}`; // Reset and apply new classes
+            messageBox.style.display = 'block'; // Make visible
+            setTimeout(() => {
+                messageBox.style.display = 'none'; // Hide after 5 seconds
+            }, 5000);
+        }
+
+        /**
+         * Adds a new input row for diagnoses or procedures.
+         * @param {HTMLElement} parentList - The parent container (diagnosisList or procedureList).
+         * @param {string} className - The class for the input element (e.g., 'diagnosis-code').
+         * @param {string} placeholder - Placeholder text for the input.
+         */
+        function addInputRow(parentList, className, placeholder) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'flex items-center gap-2';
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = `${className} flex-grow-1 focus:ring-${parentList.id.includes('diagnosis') ? 'green' : 'green'}-500 focus:border-${parentList.id.includes('diagnosis') ? 'green' : 'green'}-500`;
+            input.placeholder = placeholder;
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'btn-secondary remove-item-btn';
+            removeBtn.textContent = 'Remove';
+            removeBtn.onclick = () => wrapper.remove(); // Remove the entire row when clicked
+
+            wrapper.appendChild(input);
+            wrapper.appendChild(removeBtn);
+            parentList.appendChild(wrapper);
+        }
+
+        /**
+         * Adds a new input row for charges (description, CPT, price).
+         */
+        function addChargeRow() {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'grid grid-cols-1 md:grid-cols-3 gap-2 service-item';
+
+            const descriptionInput = document.createElement('input');
+            descriptionInput.type = 'text';
+            descriptionInput.className = 'service-description col-span-1 md:col-span-1 focus:ring-purple-500 focus:border-purple-500';
+            descriptionInput.placeholder = 'Service Description';
+
+            const cptInput = document.createElement('input');
+            cptInput.type = 'text';
+            cptInput.className = 'service-cpt-code col-span-1 md:col-span-1 focus:ring-purple-500 focus:border-purple-500';
+            cptInput.placeholder = 'CPT Code';
+
+            const priceWrapper = document.createElement('div');
+            priceWrapper.className = 'flex gap-2 col-span-1 md:col-span-1';
+
+            const priceInput = document.createElement('input');
+            priceInput.type = 'number';
+            priceInput.className = 'service-price flex-grow-1 focus:ring-purple-500 focus:border-purple-500';
+            priceInput.placeholder = 'Price ($)';
+            priceInput.min = "0";
+            priceInput.step = "0.01";
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'btn-secondary remove-item-btn';
+            removeBtn.textContent = 'Remove';
+            removeBtn.onclick = () => wrapper.remove();
+
+            priceWrapper.appendChild(priceInput);
+            priceWrapper.appendChild(removeBtn);
+
+            wrapper.appendChild(descriptionInput);
+            wrapper.appendChild(cptInput);
+            wrapper.appendChild(priceWrapper);
+            chargeList.appendChild(wrapper);
+        }
+
+        /**
+         * Clears all input fields and stored data.
+         */
+        function clearAllData() {
+            // Clear patient data inputs
+            patientNameInput.value = '';
+            patientDOBInput.value = '';
+            insuranceIDInput.value = '';
+
+            // Clear encounter data inputs
+            encounterDateInput.value = '';
+            chiefComplaintInput.value = '';
+
+            // Remove all dynamically added rows for diagnosis, procedure, and charges
+            // Keep one initial empty row for each for user convenience
+            diagnosisList.querySelectorAll('.flex.items-center.gap-2').forEach((row, index) => {
+                if (index > 0) row.remove();
+                else row.querySelector('input').value = '';
+            });
+            procedureList.querySelectorAll('.flex.items-center.gap-2').forEach((row, index) => {
+                if (index > 0) row.remove();
+                else row.querySelector('input').value = '';
+            });
+            chargeList.querySelectorAll('.service-item').forEach((row, index) => {
+                if (index > 0) row.remove();
+                else {
+                    row.querySelector('.service-description').value = '';
+                    row.querySelector('.service-cpt-code').value = '';
+                    row.querySelector('.service-price').value = '';
+                }
+            });
+
+            // Clear stored data
+            patientData = {};
+            diagnoses = [];
+            procedures = [];
+            charges = [];
+
+            // Clear claim output
+            claimOutput.innerHTML = '<p class="text-gray-500">Your simulated claim details will appear here after generation.</p>';
+            showMessage('All data cleared!', 'success');
+        }
+
+        // --- Event Listeners ---
+
+        registerPatientBtn.addEventListener('click', () => {
+            const name = patientNameInput.value.trim();
+            const dob = patientDOBInput.value;
+            const insurance = insuranceIDInput.value.trim();
+
+            if (!name || !dob || !insurance) {
+                showMessage('Please fill in all patient registration fields.', 'error');
+                return;
+            }
+
+            patientData = {
+                name: name,
+                dob: dob,
+                insuranceID: insurance
+            };
+            showMessage('Patient registered successfully!', 'success');
+        });
+
+        addDiagnosisBtn.addEventListener('click', () => {
+            addInputRow(diagnosisList, 'diagnosis-code', 'e.g., J02.9 (Acute pharyngitis)');
+        });
+
+        addProcedureBtn.addEventListener('click', () => {
+            addInputRow(procedureList, 'procedure-code', 'e.g., 99213 (Office visit)');
+        });
+
+        addChargeBtn.addEventListener('click', addChargeRow);
+
+        generateClaimBtn.addEventListener('click', () => {
+            // 1. Validate Patient Data
+            if (Object.keys(patientData).length === 0 || !patientData.name) {
+                showMessage('Please register patient data first.', 'error');
+                return;
+            }
+
+            // 2. Collect Encounter Data
+            const encounterDate = encounterDateInput.value.trim();
+            const chiefComplaint = chiefComplaintInput.value.trim();
+
+            if (!encounterDate || !chiefComplaint) {
+                showMessage('Please fill in encounter date and chief complaint.', 'error');
+                return;
+            }
+
+            diagnoses = Array.from(diagnosisList.querySelectorAll('.diagnosis-code'))
+                             .map(input => input.value.trim())
+                             .filter(value => value !== '');
+
+            procedures = Array.from(procedureList.querySelectorAll('.procedure-code'))
+                               .map(input => input.value.trim())
+                               .filter(value => value !== '');
+
+            if (diagnoses.length === 0 || procedures.length === 0) {
+                showMessage('Please add at least one diagnosis and one procedure.', 'error');
+                return;
+            }
+
+            // 3. Collect Charge Data
+            charges = Array.from(chargeList.querySelectorAll('.service-item')).map(row => {
+                return {
+                    description: row.querySelector('.service-description').value.trim(),
+                    cpt: row.querySelector('.service-cpt-code').value.trim(),
+                    price: parseFloat(row.querySelector('.service-price').value) || 0
+                };
+            }).filter(charge => charge.description !== '' && charge.cpt !== '' && charge.price > 0);
+
+            if (charges.length === 0) {
+                showMessage('Please add at least one service with description, CPT, and price.', 'error');
+                return;
+            }
+
+            // 4. Construct Simulated Claim Output
+            let claimText = `--- Simulated Medical Claim ---\n\n`;
+            claimText += `PATIENT INFORMATION:\n`;
+            claimText += `  Name: ${patientData.name}\n`;
+            claimText += `  DOB: ${patientData.dob}\n`;
+            claimText += `  Insurance ID: ${patientData.insuranceID}\n\n`;
+
+            claimText += `ENCOUNTER DETAILS:\n`;
+            claimText += `  Date: ${encounterDate}\n`;
+            claimText += `  Chief Complaint: ${chiefComplaint}\n\n`;
+
+            claimText += `DIAGNOSES (ICD CODES):\n`;
+            if (diagnoses.length > 0) {
+                diagnoses.forEach(diag => claimText += `  - ${diag}\n`);
+            } else {
+                claimText += `  (No diagnoses entered)\n`;
+            }
+            claimText += `\n`;
+
+            claimText += `PROCEDURES (CPT/HCPCS CODES):\n`;
+            if (procedures.length > 0) {
+                procedures.forEach(proc => claimText += `  - ${proc}\n`);
+            } else {
+                claimText += `  (No procedures entered)\n`;
+            }
+            claimText += `\n`;
+
+            claimText += `SERVICES & CHARGES:\n`;
+            let totalAmount = 0;
+            if (charges.length > 0) {
+                charges.forEach(charge => {
+                    claimText += `  - ${charge.description} (CPT: ${charge.cpt}) - $${charge.price.toFixed(2)}\n`;
+                    totalAmount += charge.price;
+                });
+            } else {
+                claimText += `  (No charges entered)\n`;
+            }
+            claimText += `\nTOTAL CHARGE: $${totalAmount.toFixed(2)}\n`;
+            claimText += `\n--- End of Claim ---`;
+
+            claimOutput.textContent = claimText;
+            showMessage('Claim generated successfully!', 'success');
+        });
+
+        clearAllBtn.addEventListener('click', clearAllData);
+
+        // Initial setup to ensure one input row is always present
+        window.onload = () => {
+            // Ensure there's at least one diagnosis input initially
+            if (diagnosisList.querySelectorAll('.diagnosis-code').length === 0) {
+                addInputRow(diagnosisList, 'diagnosis-code', 'e.g., J02.9 (Acute pharyngitis)');
+            }
+            // Ensure there's at least one procedure input initially
+            if (procedureList.querySelectorAll('.procedure-code').length === 0) {
+                addInputRow(procedureList, 'procedure-code', 'e.g., 99213 (Office visit)');
+            }
+            // Ensure there's at least one charge input initially
+            if (chargeList.querySelectorAll('.service-item').length === 0) {
+                addChargeRow();
+            }
+        };
+    </script>
+</body>
+</html>
