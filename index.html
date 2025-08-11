@@ -86,25 +86,24 @@
         .flex-grow-1 { /* Custom utility to make item grow */
             flex-grow: 1;
         }
-        .loading-spinner {
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top: 4px solid #fff;
-            width: 24px;
-            height: 24px;
-            -webkit-animation: spin 1s linear infinite; /* Safari */
-            animation: spin 1s linear infinite;
+        .hidden {
+            display: none;
         }
-
-        /* Safari */
-        @-webkit-keyframes spin {
-            0% { -webkit-transform: rotate(0deg); }
-            100% { -webkit-transform: rotate(360deg); }
+        .walkthrough-step-content {
+            background-color: #f8fafc; /* bg-blue-50 alternative */
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #e2e8f0; /* border-gray-200 alternative */
+            margin-top: 1rem;
         }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .walkthrough-step-title {
+            font-weight: 600; /* font-semibold */
+            color: #1a202c; /* text-gray-900 */
+            margin-bottom: 0.5rem;
+        }
+        .walkthrough-instructions {
+            font-size: 0.875rem; /* text-sm */
+            color: #4a5568; /* text-gray-700 */
         }
     </style>
 </head>
@@ -197,45 +196,42 @@
             <button id="clearAllBtn" class="btn-secondary w-full mt-4">Clear All Data</button>
         </section>
 
-        <!-- New: Coding Challenge Section -->
-        <section class="p-6 bg-yellow-50 rounded-lg">
-            <h2 class="section-title text-yellow-800">5. Coding Challenge! 🧠</h2>
-            <p class="text-gray-700 mb-4">Read the medical report below and enter the appropriate ICD-10 and CPT codes. Then click "Check My Codes" for feedback!</p>
+        <!-- New: Medical Billing Walkthrough Section -->
+        <section class="p-6 bg-indigo-50 rounded-lg mb-8">
+            <h2 class="section-title text-indigo-800">5. Medical Billing Process Walkthrough 🚶‍♀️</h2>
+            <p class="text-gray-700 mb-4">Click "Start Step" or "Next Step" to walk through the revenue cycle.</p>
 
-            <div class="bg-yellow-100 p-4 rounded-lg border border-yellow-200 mb-6">
-                <h3 class="font-bold text-yellow-900 mb-2">Medical Report Scenario:</h3>
-                <p id="medicalReportScenario" class="text-sm text-yellow-800 min-h-[100px] italic">
-                    Click "Load New Challenge" to begin.
-                </p>
+            <div id="billingWalkthroughContent" class="hidden">
+                <h3 id="walkthroughStepTitle" class="walkthrough-step-title text-indigo-700"></h3>
+                <div id="walkthroughStepInstructions" class="walkthrough-instructions"></div>
             </div>
-
-            <button id="loadChallengeBtn" class="btn-primary w-full mb-6 bg-yellow-600 hover:bg-yellow-700">Load New Challenge</button>
-
-            <div class="mb-4">
-                <label for="userICDCodes" class="block text-gray-700 text-sm font-bold mb-2">Your ICD-10 Codes (comma-separated):</label>
-                <input type="text" id="userICDCodes" placeholder="e.g., J02.9, R05" class="focus:ring-yellow-500 focus:border-yellow-500">
-            </div>
-            <div class="mb-6">
-                <label for="userCPTCodes" class="block text-gray-700 text-sm font-bold mb-2">Your CPT Codes (comma-separated):</label>
-                <input type="text" id="userCPTCodes" placeholder="e.g., 99213" class="focus:ring-yellow-500 focus:border-yellow-500">
-            </div>
-
-            <button id="checkCodesBtn" class="btn-primary w-full mb-6 bg-yellow-600 hover:bg-yellow-700 flex items-center justify-center gap-2">
-                <span id="checkCodesText">Check My Codes</span>
-                <div id="loadingSpinner" class="loading-spinner hidden"></div>
-            </button>
-
-            <div id="codingFeedback" class="bg-gray-50 p-4 border border-gray-200 rounded-lg min-h-[150px] overflow-auto text-sm text-gray-800 whitespace-pre-wrap">
-                <!-- Coding feedback will appear here -->
-                <p class="text-gray-500">Feedback on your coding will appear here.</p>
-            </div>
+            
+            <button id="startBillingWalkthroughBtn" class="btn-primary w-full mb-4 bg-indigo-600 hover:bg-indigo-700">Start Billing Walkthrough</button>
+            <button id="nextBillingWalkthroughBtn" class="btn-primary w-full mb-4 bg-indigo-600 hover:bg-indigo-700 hidden">Next Step</button>
+            <button id="resetBillingWalkthroughBtn" class="btn-secondary w-full hidden">Reset Walkthrough</button>
         </section>
+
+        <!-- New: Prior Authorization Walkthrough Section -->
+        <section class="p-6 bg-orange-50 rounded-lg">
+            <h2 class="section-title text-orange-800">6. Prior Authorization (PA) Walkthrough 🚦</h2>
+            <p class="text-gray-700 mb-4">Follow the steps to understand a PA scenario.</p>
+
+            <div id="paWalkthroughContent" class="hidden">
+                <h3 id="paWalkthroughStepTitle" class="walkthrough-step-title text-orange-700"></h3>
+                <div id="paWalkthroughStepInstructions" class="walkthrough-instructions"></div>
+            </div>
+            
+            <button id="startPaWalkthroughBtn" class="btn-primary w-full mb-4 bg-orange-600 hover:bg-orange-700">Start PA Walkthrough</button>
+            <button id="nextPaWalkthroughBtn" class="btn-primary w-full mb-4 bg-orange-600 hover:bg-orange-700 hidden">Next Step</button>
+            <button id="resetPaWalkthroughBtn" class="btn-secondary w-full hidden">Reset PA Walkthrough</button>
+        </section>
+
     </div>
 
     <script>
         // DOM Element References (existing sections)
         const patientNameInput = document.getElementById('patientName');
-        const patientDOBInput = document.getElementById('patientDOB');
+        const patientDOBInput = document = document.getElementById('patientDOB');
         const insuranceIDInput = document.getElementById('insuranceID');
         const registerPatientBtn = document.getElementById('registerPatientBtn');
 
@@ -254,15 +250,22 @@
         const clearAllBtn = document.getElementById('clearAllBtn');
         const messageBox = document.getElementById('messageBox');
 
-        // DOM Element References (NEW Coding Challenge section)
-        const medicalReportScenarioEl = document.getElementById('medicalReportScenario');
-        const loadChallengeBtn = document.getElementById('loadChallengeBtn');
-        const userICDCodesInput = document.getElementById('userICDCodes');
-        const userCPTCodesInput = document.getElementById('userCPTCodes');
-        const checkCodesBtn = document.getElementById('checkCodesBtn');
-        const checkCodesText = document.getElementById('checkCodesText');
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        const codingFeedbackEl = document.getElementById('codingFeedback');
+        // DOM Element References (NEW Medical Billing Walkthrough)
+        const billingWalkthroughContent = document.getElementById('billingWalkthroughContent');
+        const walkthroughStepTitle = document.getElementById('walkthroughStepTitle');
+        const walkthroughStepInstructions = document.getElementById('walkthroughStepInstructions');
+        const startBillingWalkthroughBtn = document.getElementById('startBillingWalkthroughBtn');
+        const nextBillingWalkthroughBtn = document.getElementById('nextBillingWalkthroughBtn');
+        const resetBillingWalkthroughBtn = document.getElementById('resetBillingWalkthroughBtn');
+
+        // DOM Element References (NEW Prior Authorization Walkthrough)
+        const paWalkthroughContent = document.getElementById('paWalkthroughContent');
+        const paWalkthroughStepTitle = document.getElementById('paWalkthroughStepTitle');
+        const paWalkthroughStepInstructions = document.getElementById('paWalkthroughStepInstructions');
+        const startPaWalkthroughBtn = document.getElementById('startPaWalkthroughBtn');
+        const nextPaWalkthroughBtn = document.getElementById('nextPaWalkthroughBtn');
+        const resetPaWalkthroughBtn = document.getElementById('resetPaWalkthroughBtn');
+
 
         // --- Global Data Storage (for existing simulation) ---
         let patientData = {};
@@ -270,36 +273,84 @@
         let procedures = [];
         let charges = [];
 
-        // --- Global Data Storage (NEW Coding Challenge) ---
-        let currentChallenge = null;
-        const medicalReportScenarios = [
+        // --- Global Data Storage (NEW Medical Billing Walkthrough) ---
+        let currentBillingStep = 0;
+        const billingSteps = [
             {
-                id: 1,
-                reportText: `Patient presents with a persistent cough and sore throat for 5 days. Patient denies fever or shortness of breath. On examination, pharynx is red, tonsils are mildly swollen. Lungs clear to auscultation. Diagnosis: Acute pharyngitis. Management: Advised rest, fluids, and over-the-counter pain relievers.`,
-                correctICD: ['J02.9'], // Acute pharyngitis, unspecified
-                correctCPT: ['99213']  // Established patient office visit, 20-29 minutes
+                title: "Step 1: Patient Registration & Insurance Verification",
+                instructions: `**Action:** Begin by gathering the patient's full demographics and insurance details. **On the simulator:** Fill in the 'Patient Registration' section (Name, DOB, Insurance ID) and click 'Register Patient'. In a real scenario, you'd also call the payer to verify eligibility and benefits.`,
             },
             {
-                id: 2,
-                reportText: `New patient appointment. Chief complaint: Severe headache, pulsatile, located on left side of head. Associated with photophobia and phonophobia. Nausea present. Duration: 3 hours. Patient states this is typical for her migraines. No focal neurological deficits noted. Diagnosis: Migraine without aura.`,
-                correctICD: ['G43.009'], // Migraine without aura, not intractable, without status migrainosus
-                correctCPT: ['99203']  // New patient office visit, 30-44 minutes
+                title: "Step 2: Patient Encounter Documentation",
+                instructions: `**Action:** This is where the provider records the visit details. **On the simulator:** Fill in the 'Encounter Documentation' section (Encounter Date, Chief Complaint, and add at least one Diagnosis and one Procedure). This mirrors the clinical notes that inform coding.`,
             },
             {
-                id: 3,
-                reportText: `Established patient here for annual wellness visit. Patient denies any new concerns. Comprehensive preventative counseling provided. Blood pressure 120/80. No abnormal findings on exam. Patient also reports mild knee pain for 2 weeks after a fall, but states it's improving. Exam of knee shows mild tenderness, no swelling. X-ray of knee ordered.`,
-                correctICD: ['Z00.00', 'M25.569'], // Z00.00: Encounter for general adult medical examination without abnormal findings; M25.569: Pain in unspecified knee
-                correctCPT: ['99396', '99213-25'] // 99396: Preventive medicine reevaluation; 99213-25: Established patient E/M for separate problem
+                title: "Step 3: Medical Coding",
+                instructions: `**Action:** Translate the documentation into standardized ICD-10 and CPT codes. **On the simulator:** Ensure your Diagnosis and Procedure inputs in Section 2 are correctly formatted codes. This is a critical skill for accurate billing.`,
             },
             {
-                id: 4,
-                reportText: `Patient seen via telehealth (audio/video). Chief complaint: Follow-up for uncontrolled Type 2 Diabetes Mellitus. Patient reports difficulty managing blood sugar levels despite current medication regimen. Medication dosages adjusted. Education provided on diet and exercise. Next follow-up in 3 months.`,
-                correctICD: ['E11.9'], // Type 2 diabetes mellitus without complications
-                correctCPT: ['99214-95'] // Established patient office visit (30-39 min) via telehealth
-            }
+                title: "Step 4: Charge Entry & Superbill Creation",
+                instructions: `**Action:** Enter the charges for the services provided. **On the simulator:** Go to 'Charge Entry & Services', add descriptions, CPT codes (ensure they match your procedures from step 2), and prices for the services. This creates the financial record.`,
+            },
+            {
+                title: "Step 5: Claim Generation & Submission",
+                instructions: `**Action:** Compile all data into a standardized claim (CMS-1500 for professional, UB-04 for institutional) and send it to the payer. **On the simulator:** Click 'Generate Simulated Claim' in Section 4. This is the official request for payment.`,
+            },
+            {
+                title: "Step 6: Claim Adjudication",
+                instructions: `**Understanding:** The insurance company reviews the claim. They'll either pay, deny, or reject it, sending an EOB (for patient) or ERA (for provider). **Think:** What common reasons lead to denials at this stage? (e.g., medical necessity, timely filing)`,
+            },
+            {
+                title: "Step 7: Payment Posting",
+                instructions: `**Action:** Once paid, the payment is recorded in the billing system. **Understanding:** This updates the patient's balance and the provider's accounts. Accurate posting prevents overbilling or outstanding balances.`,
+            },
+            {
+                title: "Step 8: Patient Billing & Collections",
+                instructions: `**Action:** If a balance remains after insurance pays, the patient is billed. **Understanding:** This involves sending statements and following up on overdue payments. Clear communication with patients is key.`,
+            },
+            {
+                title: "Step 9: Reporting & Analysis",
+                instructions: `**Understanding:** Continuously analyze billing data to identify trends, improve efficiency, and reduce denials. This step helps optimize the entire revenue cycle. **You've completed the walkthrough!**`,
+            },
         ];
 
-        // --- Utility Functions ---
+        // --- Global Data Storage (NEW Prior Authorization Walkthrough) ---
+        let currentPaStep = 0;
+        const paSteps = [
+            {
+                title: "PA Step 1: Identify Need for Prior Authorization",
+                instructions: `**Scenario:** A patient needs an MRI of the knee.
+                **Action:** The first step is to check the patient's insurance plan and the specific CPT code (e.g., CPT 73721 for MRI knee without contrast) against the payer's policy to determine if a Prior Authorization (PA) is required. Many high-cost imaging services or specialty medications require PA.`,
+            },
+            {
+                title: "PA Step 2: Gather Necessary Information",
+                instructions: `**Action:** If PA is required, you must collect all relevant clinical and administrative information.
+                **Required Info:** Patient demographics, insurance details, referring and rendering provider NPIs, **exact CPT code(s) with modifiers**, **supporting ICD-10 diagnosis code(s) demonstrating medical necessity**, date of service, and any clinical notes (e.g., physician's order, previous treatments tried and failed).`,
+            },
+            {
+                title: "PA Step 3: Submit the Request",
+                instructions: `**Action:** Submit the PA request to the insurance company. This is usually done online via a payer portal, fax, or phone.
+                **Key Point:** Ensure all fields are accurately completed and all required supporting documentation is attached. Incomplete requests are a common cause of delays or denials.`,
+            },
+            {
+                title: "PA Step 4: Follow-up and Await Decision",
+                instructions: `**Action:** After submission, monitor the status of the request. Payers have specific turnaround times (e.g., 7-14 business days for routine, 24-72 hours for urgent).
+                **Outcome:** The PA will either be **Approved**, **Denied**, or sent back for **More Information**.`,
+            },
+            {
+                title: "PA Step 5: Handle Approved Authorization",
+                instructions: `**Action:** If approved, carefully note the **authorization number**, the **approved CPT codes**, the **number of units/visits approved**, and the **valid date range**.
+                **Next:** Ensure this authorization number is included on the claim when submitted to prevent denials. Inform the patient and scheduling department.`,
+            },
+            {
+                title: "PA Step 6: Handle Denied Authorization",
+                instructions: `**Action:** If denied, review the denial reason code carefully (often found on an EOB/ERA from the PA department). Common reasons include 'not medically necessary' or 'incorrect information'.
+                **Next:** If denied for medical necessity, discuss with the provider if an appeal (with additional clinical documentation or a peer-to-peer review) is warranted. If denied for administrative reasons, correct and resubmit. **You've completed the PA walkthrough!**`,
+            },
+        ];
+
+
+        // --- Utility Functions (existing) ---
 
         /**
          * Displays a message to the user in the message box.
@@ -317,9 +368,6 @@
 
         /**
          * Adds a new input row for diagnoses or procedures.
-         * @param {HTMLElement} parentList - The parent container (diagnosisList or procedureList).
-         * @param {string} className - The class for the input element (e.g., 'diagnosis-code').
-         * @param {string} placeholder - Placeholder text for the input.
          */
         function addInputRow(parentList, className, placeholder) {
             const wrapper = document.createElement('div');
@@ -419,44 +467,11 @@
             patientData = {};
             diagnoses = [];
             procedures = [];
-            charges = [];
+            charges = {};
 
             // Clear claim output
             claimOutput.innerHTML = '<p class="text-gray-500">Your simulated claim details will appear here after generation.</p>';
             showMessage('All data cleared!', 'success');
-        }
-
-        /**
-         * Compares two arrays of strings, ignoring order and case, and trims whitespace.
-         * @param {string[]} arr1
-         * @param {string[]} arr2
-         * @returns {boolean} True if arrays contain the same elements (ignoring order/case), false otherwise.
-         */
-        function compareCodeArrays(arr1, arr2) {
-            const normalize = (arr) => arr.map(s => s.trim().toUpperCase()).sort();
-            const n1 = normalize(arr1);
-            const n2 = normalize(arr2);
-            return n1.length === n2.length && n1.every((value, index) => value === n2[index]);
-        }
-
-        /**
-         * Exponential backoff for API calls.
-         * @param {function} fn - The function to retry.
-         * @param {number} retries - Number of retries remaining.
-         * @param {number} delay - Current delay in milliseconds.
-         */
-        async function exponentialBackoff(fn, retries = 5, delay = 1000) {
-            try {
-                return await fn();
-            } catch (error) {
-                if (retries > 0) {
-                    // console.warn(`Retrying in ${delay / 1000}s... Attempts left: ${retries}`);
-                    await new Promise(res => setTimeout(res, delay));
-                    return exponentialBackoff(fn, retries - 1, delay * 2);
-                } else {
-                    throw error;
-                }
-            }
         }
 
 
@@ -579,21 +594,102 @@
 
         clearAllBtn.addEventListener('click', clearAllData);
 
-        // Initial setup to ensure one input row is always present
+        // Initial setup to ensure one input row is always present for existing sections
         window.onload = () => {
-            // Ensure there's at least one diagnosis input initially
             if (diagnosisList.querySelectorAll('.diagnosis-code').length === 0) {
                 addInputRow(diagnosisList, 'diagnosis-code', 'e.g., J02.9 (Acute pharyngitis)');
             }
-            // Ensure there's at least one procedure input initially
             if (procedureList.querySelectorAll('.procedure-code').length === 0) {
                 addInputRow(procedureList, 'procedure-code', 'e.g., 99213 (Office visit)');
             }
-            // Ensure there's at least one charge input initially
             if (chargeList.querySelectorAll('.service-item').length === 0) {
                 addChargeRow();
             }
+            // Initialize walkthroughs
+            resetBillingWalkthrough();
+            resetPaWalkthrough();
         };
+
+        // --- Medical Billing Walkthrough Logic ---
+        startBillingWalkthroughBtn.addEventListener('click', () => {
+            currentBillingStep = 0; // Start from the first step
+            displayBillingStep();
+            startBillingWalkthroughBtn.classList.add('hidden');
+            nextBillingWalkthroughBtn.classList.remove('hidden');
+            resetBillingWalkthroughBtn.classList.remove('hidden');
+            billingWalkthroughContent.classList.remove('hidden');
+        });
+
+        nextBillingWalkthroughBtn.addEventListener('click', () => {
+            currentBillingStep++;
+            if (currentBillingStep < billingSteps.length) {
+                displayBillingStep();
+            } else {
+                walkthroughStepTitle.textContent = "Walkthrough Complete!";
+                walkthroughStepInstructions.innerHTML = `<p class="text-green-700 font-bold">You've successfully reviewed all steps of the Medical Billing Revenue Cycle. Click 'Reset Walkthrough' to start again.</p>`;
+                nextBillingWalkthroughBtn.classList.add('hidden');
+            }
+        });
+
+        resetBillingWalkthroughBtn.addEventListener('click', resetBillingWalkthrough);
+
+        function displayBillingStep() {
+            const step = billingSteps[currentBillingStep];
+            walkthroughStepTitle.textContent = step.title;
+            walkthroughStepInstructions.innerHTML = step.instructions;
+        }
+
+        function resetBillingWalkthrough() {
+            currentBillingStep = 0;
+            billingWalkthroughContent.classList.add('hidden');
+            startBillingWalkthroughBtn.classList.remove('hidden');
+            nextBillingWalkthroughBtn.classList.add('hidden');
+            resetBillingWalkthroughBtn.classList.add('hidden');
+            walkthroughStepTitle.textContent = '';
+            walkthroughStepInstructions.innerHTML = '';
+            showMessage('Medical Billing Walkthrough Reset.', 'success');
+        }
+
+        // --- Prior Authorization Walkthrough Logic ---
+        startPaWalkthroughBtn.addEventListener('click', () => {
+            currentPaStep = 0; // Start from the first step
+            displayPaStep();
+            startPaWalkthroughBtn.classList.add('hidden');
+            nextPaWalkthroughBtn.classList.remove('hidden');
+            resetPaWalkthroughBtn.classList.remove('hidden');
+            paWalkthroughContent.classList.remove('hidden');
+        });
+
+        nextPaWalkthroughBtn.addEventListener('click', () => {
+            currentPaStep++;
+            if (currentPaStep < paSteps.length) {
+                displayPaStep();
+            } else {
+                paWalkthroughStepTitle.textContent = "PA Walkthrough Complete!";
+                paWalkthroughStepInstructions.innerHTML = `<p class="text-green-700 font-bold">You've successfully reviewed the Prior Authorization process. Click 'Reset Walkthrough' to start again.</p>`;
+                nextPaWalkthroughBtn.classList.add('hidden');
+            }
+        });
+
+        resetPaWalkthroughBtn.addEventListener('click', resetPaWalkthrough);
+
+        function displayPaStep() {
+            const step = paSteps[currentPaStep];
+            paWalkthroughStepTitle.textContent = step.title;
+            paWalkthroughStepInstructions.innerHTML = step.instructions;
+        }
+
+        function resetPaWalkthrough() {
+            currentPaStep = 0;
+            paWalkthroughContent.classList.add('hidden');
+            startPaWalkthroughBtn.classList.remove('hidden');
+            nextPaWalkthroughBtn.classList.add('hidden');
+            resetPaWalkthroughBtn.classList.add('hidden');
+            paWalkthroughStepTitle.textContent = '';
+            paWalkthroughStepInstructions.innerHTML = '';
+            showMessage('Prior Authorization Walkthrough Reset.', 'success');
+        }
     </script>
 </body>
 </html>
+
