@@ -28,7 +28,7 @@
             padding-bottom: 8px;
             border-bottom: 2px solid #e5e7eb;
         }
-        input[type="text"], input[type="date"], input[type="number"] {
+        input[type="text"], input[type="date"], input[type="number"], textarea {
             padding: 10px 12px;
             border: 1px solid #d1d5db;
             border-radius: 8px;
@@ -36,7 +36,7 @@
             box-sizing: border-box;
             transition: border-color 0.2s;
         }
-        input[type="text"]:focus, input[type="date"]:focus, input[type="number"]:focus {
+        input[type="text"]:focus, input[type="date"]:focus, input[type="number"]:focus, textarea:focus {
             outline: none;
             border-color: #3b82f6;
         }
@@ -84,6 +84,26 @@
         }
         .flex-grow-1 { /* Custom utility to make item grow */
             flex-grow: 1;
+        }
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #fff;
+            width: 24px;
+            height: 24px;
+            -webkit-animation: spin 1s linear infinite; /* Safari */
+            animation: spin 1s linear infinite;
+        }
+
+        /* Safari */
+        @-webkit-keyframes spin {
+            0% { -webkit-transform: rotate(0deg); }
+            100% { -webkit-transform: rotate(360deg); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -165,7 +185,7 @@
         </section>
 
         <!-- Generate Claim Section -->
-        <section class="p-6 bg-red-50 rounded-lg">
+        <section class="p-6 bg-red-50 rounded-lg mb-8">
             <h2 class="section-title text-red-800">4. Generate & View Claim 📄</h2>
             <button id="generateClaimBtn" class="btn-primary w-full mb-6 bg-red-600 hover:bg-red-700">Generate Simulated Claim</button>
 
@@ -175,10 +195,44 @@
             </div>
             <button id="clearAllBtn" class="btn-secondary w-full mt-4">Clear All Data</button>
         </section>
+
+        <!-- New: Coding Challenge Section -->
+        <section class="p-6 bg-yellow-50 rounded-lg">
+            <h2 class="section-title text-yellow-800">5. Coding Challenge! 🧠</h2>
+            <p class="text-gray-700 mb-4">Read the medical report below and enter the appropriate ICD-10 and CPT codes. Then click "Check My Codes" for feedback!</p>
+
+            <div class="bg-yellow-100 p-4 rounded-lg border border-yellow-200 mb-6">
+                <h3 class="font-bold text-yellow-900 mb-2">Medical Report Scenario:</h3>
+                <p id="medicalReportScenario" class="text-sm text-yellow-800 min-h-[100px] italic">
+                    Click "Load New Challenge" to begin.
+                </p>
+            </div>
+
+            <button id="loadChallengeBtn" class="btn-primary w-full mb-6 bg-yellow-600 hover:bg-yellow-700">Load New Challenge</button>
+
+            <div class="mb-4">
+                <label for="userICDCodes" class="block text-gray-700 text-sm font-bold mb-2">Your ICD-10 Codes (comma-separated):</label>
+                <input type="text" id="userICDCodes" placeholder="e.g., J02.9, R05" class="focus:ring-yellow-500 focus:border-yellow-500">
+            </div>
+            <div class="mb-6">
+                <label for="userCPTCodes" class="block text-gray-700 text-sm font-bold mb-2">Your CPT Codes (comma-separated):</label>
+                <input type="text" id="userCPTCodes" placeholder="e.g., 99213" class="focus:ring-yellow-500 focus:border-yellow-500">
+            </div>
+
+            <button id="checkCodesBtn" class="btn-primary w-full mb-6 bg-yellow-600 hover:bg-yellow-700 flex items-center justify-center gap-2">
+                <span id="checkCodesText">Check My Codes</span>
+                <div id="loadingSpinner" class="loading-spinner hidden"></div>
+            </button>
+
+            <div id="codingFeedback" class="bg-gray-50 p-4 border border-gray-200 rounded-lg min-h-[150px] overflow-auto text-sm text-gray-800 whitespace-pre-wrap">
+                <!-- Coding feedback will appear here -->
+                <p class="text-gray-500">Feedback on your coding will appear here.</p>
+            </div>
+        </section>
     </div>
 
     <script>
-        // DOM Element References
+        // DOM Element References (existing sections)
         const patientNameInput = document.getElementById('patientName');
         const patientDOBInput = document.getElementById('patientDOB');
         const insuranceIDInput = document.getElementById('insuranceID');
@@ -199,11 +253,50 @@
         const clearAllBtn = document.getElementById('clearAllBtn');
         const messageBox = document.getElementById('messageBox');
 
-        // --- Global Data Storage (for this simulation) ---
+        // DOM Element References (NEW Coding Challenge section)
+        const medicalReportScenarioEl = document.getElementById('medicalReportScenario');
+        const loadChallengeBtn = document.getElementById('loadChallengeBtn');
+        const userICDCodesInput = document.getElementById('userICDCodes');
+        const userCPTCodesInput = document.getElementById('userCPTCodes');
+        const checkCodesBtn = document.getElementById('checkCodesBtn');
+        const checkCodesText = document.getElementById('checkCodesText');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const codingFeedbackEl = document.getElementById('codingFeedback');
+
+        // --- Global Data Storage (for existing simulation) ---
         let patientData = {};
         let diagnoses = [];
         let procedures = [];
         let charges = [];
+
+        // --- Global Data Storage (NEW Coding Challenge) ---
+        let currentChallenge = null;
+        const medicalReportScenarios = [
+            {
+                id: 1,
+                reportText: `Patient presents with a persistent cough and sore throat for 5 days. Patient denies fever or shortness of breath. On examination, pharynx is red, tonsils are mildly swollen. Lungs clear to auscultation. Diagnosis: Acute pharyngitis. Management: Advised rest, fluids, and over-the-counter pain relievers.`,
+                correctICD: ['J02.9'], // Acute pharyngitis, unspecified
+                correctCPT: ['99213']  // Established patient office visit, 20-29 minutes
+            },
+            {
+                id: 2,
+                reportText: `New patient appointment. Chief complaint: Severe headache, pulsatile, located on left side of head. Associated with photophobia and phonophobia. Nausea present. Duration: 3 hours. Patient states this is typical for her migraines. No focal neurological deficits noted. Diagnosis: Migraine without aura.`,
+                correctICD: ['G43.009'], // Migraine without aura, not intractable, without status migrainosus
+                correctCPT: ['99203']  // New patient office visit, 30-44 minutes
+            },
+            {
+                id: 3,
+                reportText: `Established patient here for annual wellness visit. Patient denies any new concerns. Comprehensive preventative counseling provided. Blood pressure 120/80. No abnormal findings on exam. Patient also reports mild knee pain for 2 weeks after a fall, but states it's improving. Exam of knee shows mild tenderness, no swelling. X-ray of knee ordered.`,
+                correctICD: ['Z00.00', 'M25.569'], // Z00.00: Encounter for general adult medical examination without abnormal findings; M25.569: Pain in unspecified knee
+                correctCPT: ['99396', '99213-25'] // 99396: Preventive medicine reevaluation; 99213-25: Established patient E/M for separate problem
+            },
+            {
+                id: 4,
+                reportText: `Patient seen via telehealth (audio/video). Chief complaint: Follow-up for uncontrolled Type 2 Diabetes Mellitus. Patient reports difficulty managing blood sugar levels despite current medication regimen. Medication dosages adjusted. Education provided on diet and exercise. Next follow-up in 3 months.`,
+                correctICD: ['E11.9'], // Type 2 diabetes mellitus without complications
+                correctCPT: ['99214-95'] // Established patient office visit (30-39 min) via telehealth
+            }
+        ];
 
         // --- Utility Functions ---
 
@@ -290,7 +383,7 @@
         }
 
         /**
-         * Clears all input fields and stored data.
+         * Clears all input fields and stored data for the main EHR simulation.
          */
         function clearAllData() {
             // Clear patient data inputs
@@ -332,7 +425,41 @@
             showMessage('All data cleared!', 'success');
         }
 
-        // --- Event Listeners ---
+        /**
+         * Compares two arrays of strings, ignoring order and case, and trims whitespace.
+         * @param {string[]} arr1
+         * @param {string[]} arr2
+         * @returns {boolean} True if arrays contain the same elements (ignoring order/case), false otherwise.
+         */
+        function compareCodeArrays(arr1, arr2) {
+            const normalize = (arr) => arr.map(s => s.trim().toUpperCase()).sort();
+            const n1 = normalize(arr1);
+            const n2 = normalize(arr2);
+            return n1.length === n2.length && n1.every((value, index) => value === n2[index]);
+        }
+
+        /**
+         * Exponential backoff for API calls.
+         * @param {function} fn - The function to retry.
+         * @param {number} retries - Number of retries remaining.
+         * @param {number} delay - Current delay in milliseconds.
+         */
+        async function exponentialBackoff(fn, retries = 5, delay = 1000) {
+            try {
+                return await fn();
+            } catch (error) {
+                if (retries > 0) {
+                    // console.warn(`Retrying in ${delay / 1000}s... Attempts left: ${retries}`);
+                    await new Promise(res => setTimeout(res, delay));
+                    return exponentialBackoff(fn, retries - 1, delay * 2);
+                } else {
+                    throw error;
+                }
+            }
+        }
+
+
+        // --- Event Listeners (existing sections) ---
 
         registerPatientBtn.addEventListener('click', () => {
             const name = patientNameInput.value.trim();
@@ -451,20 +578,101 @@
 
         clearAllBtn.addEventListener('click', clearAllData);
 
-        // Initial setup to ensure one input row is always present
+        // --- Event Listeners (NEW Coding Challenge section) ---
+        loadChallengeBtn.addEventListener('click', () => {
+            const randomIndex = Math.floor(Math.random() * medicalReportScenarios.length);
+            currentChallenge = medicalReportScenarios[randomIndex];
+            medicalReportScenarioEl.textContent = currentChallenge.reportText;
+            userICDCodesInput.value = ''; // Clear previous user input
+            userCPTCodesInput.value = ''; // Clear previous user input
+            codingFeedbackEl.innerHTML = '<p class="text-gray-500">Feedback on your coding will appear here.</p>'; // Clear previous feedback
+        });
+
+        checkCodesBtn.addEventListener('click', async () => {
+            if (!currentChallenge) {
+                codingFeedbackEl.textContent = 'Please load a new challenge first!';
+                codingFeedbackEl.style.color = '#991b1b'; // Red text for error
+                return;
+            }
+
+            const userICDs = userICDCodesInput.value.split(',').filter(s => s.trim() !== '');
+            const userCPTs = userCPTCodesInput.value.split(',').filter(s => s.trim() !== '');
+
+            const isICDCorrect = compareCodeArrays(userICDs, currentChallenge.correctICD);
+            const isCPTCorrect = compareCodeArrays(userCPTs, currentChallenge.correctCPT);
+
+            if (isICDCorrect && isCPTCorrect) {
+                codingFeedbackEl.innerHTML = '<p class="text-green-700 font-bold">🎉 Excellent! Your codes are correct! You\'ve accurately identified the diagnoses and procedures for this report.</p>';
+            } else {
+                // Generate detailed feedback using LLM
+                checkCodesText.textContent = 'Generating Feedback...';
+                loadingSpinner.classList.remove('hidden');
+                checkCodesBtn.disabled = true; // Disable button during API call
+
+                const prompt = `As a medical coding expert, analyze the following medical report and the user's submitted codes compared to the correct codes.
+                
+                Medical Report: ${currentChallenge.reportText}
+                
+                User's Submitted ICD Codes: [${userICDs.join(', ')}]
+                User's Submitted CPT Codes: [${userCPTs.join(', ')}]
+                
+                Correct ICD Codes: [${currentChallenge.correctICD.join(', ')}]
+                Correct CPT Codes: [${currentChallenge.correctCPT.join(', ')}]
+                
+                Explain to a medical biller why their submitted codes might be incorrect or incomplete for this scenario. Focus on the discrepancies between the user's codes and the correct codes. Provide a clear explanation of what the correct codes mean and why they are appropriate based on the medical report. Offer specific tips for accurate coding in similar situations. Structure your response as helpful, educational feedback, starting with whether their ICDs and CPTs were correct or incorrect, and then explaining why.`;
+
+                try {
+                    const apiKey = ""; // Canvas will automatically provide the API key here at runtime.
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+                    const fetchFn = async () => {
+                        const response = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }] }] })
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(`API error: ${response.status} ${response.statusText} - ${JSON.stringify(errorData)}`);
+                        }
+                        return response.json();
+                    };
+
+                    const result = await exponentialBackoff(fetchFn);
+
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        codingFeedbackEl.innerHTML = `<p class="text-gray-800">${result.candidates[0].content.parts[0].text}</p>`;
+                        codingFeedbackEl.style.color = '#333'; // Reset color
+                    } else {
+                        codingFeedbackEl.innerHTML = '<p class="text-red-700">Error: Could not retrieve detailed feedback. Please try again.</p>';
+                    }
+                } catch (error) {
+                    console.error("Error calling LLM API:", error);
+                    codingFeedbackEl.innerHTML = `<p class="text-red-700">An error occurred while getting feedback: ${error.message}. Please try again later.</p>`;
+                } finally {
+                    checkCodesText.textContent = 'Check My Codes';
+                    loadingSpinner.classList.add('hidden');
+                    checkCodesBtn.disabled = false; // Re-enable button
+                }
+            }
+        });
+
+        // Initial setup to ensure one input row is always present for existing sections
         window.onload = () => {
-            // Ensure there's at least one diagnosis input initially
             if (diagnosisList.querySelectorAll('.diagnosis-code').length === 0) {
                 addInputRow(diagnosisList, 'diagnosis-code', 'e.g., J02.9 (Acute pharyngitis)');
             }
-            // Ensure there's at least one procedure input initially
             if (procedureList.querySelectorAll('.procedure-code').length === 0) {
                 addInputRow(procedureList, 'procedure-code', 'e.g., 99213 (Office visit)');
             }
-            // Ensure there's at least one charge input initially
             if (chargeList.querySelectorAll('.service-item').length === 0) {
                 addChargeRow();
             }
+            // Load the first challenge automatically on page load
+            loadChallengeBtn.click();
         };
     </script>
 </body>
