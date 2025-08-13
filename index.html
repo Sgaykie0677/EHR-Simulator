@@ -88,19 +88,19 @@
         .hidden {
             display: none;
         }
-        .walkthrough-step-content, .quiz-content {
+        .walkthrough-step-content, .quiz-content, .balance-calculator-content {
             background-color: #f8fafc; /* bg-blue-50 alternative */
             padding: 1rem;
             border-radius: 0.5rem;
             border: 1px solid #e2e8f0; /* border-gray-200 alternative */
             margin-top: 1rem;
         }
-        .walkthrough-step-title, .quiz-question-title {
+        .walkthrough-step-title, .quiz-question-title, .balance-scenario-title {
             font-weight: 600; /* font-semibold */
             color: #1a202c; /* text-gray-900 */
             margin-bottom: 0.5rem;
         }
-        .walkthrough-instructions, .quiz-instructions, .quiz-feedback-text {
+        .walkthrough-instructions, .quiz-instructions, .quiz-feedback-text, .balance-scenario-text, .balance-feedback-text {
             font-size: 0.875rem; /* text-sm */
             color: #4a5568; /* text-gray-700 */
         }
@@ -238,8 +238,8 @@
             <button id="resetPaWalkthroughBtn" class="btn-secondary w-full hidden">Reset PA Walkthrough</button>
         </section>
 
-        <!-- NEW: Knowledge Quizzes Section -->
-        <section class="p-6 bg-pink-50 rounded-lg">
+        <!-- Knowledge Quizzes Section -->
+        <section class="p-6 bg-pink-50 rounded-lg mb-8">
             <h2 class="section-title text-pink-800">7. Knowledge Quizzes! 📚</h2>
             <p class="text-gray-700 mb-4">Test your understanding of coding guidelines, healthcare laws, ethics, and denials & appeals!</p>
 
@@ -262,6 +262,45 @@
 
                 <div id="quizFeedback" class="bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]">
                     <p class="text-gray-500 quiz-feedback-text">Your feedback will appear here.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- NEW: Patient Balance Calculator Section -->
+        <section class="p-6 bg-teal-50 rounded-lg">
+            <h2 class="section-title text-teal-800">8. Patient Balance Calculator 💰</h2>
+            <p class="text-gray-700 mb-4">Practice calculating patient responsibility based on common scenarios.</p>
+
+            <button id="loadBalanceScenarioBtn" class="btn-primary w-full mb-6 bg-teal-600 hover:bg-teal-700">Load New Scenario</button>
+
+            <div id="balanceCalculatorContent" class="balance-calculator-content hidden">
+                <h3 id="balanceScenarioTitle" class="balance-scenario-title text-teal-700"></h3>
+                <div id="balanceScenarioDetails" class="balance-scenario-text mb-4"></div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="userCopay" class="block text-gray-700 text-sm font-bold mb-2">Your Calculated Copay ($):</label>
+                        <input type="number" id="userCopay" placeholder="0.00" min="0" step="0.01" class="focus:ring-teal-500 focus:border-teal-500">
+                    </div>
+                    <div>
+                        <label for="userDeductible" class="block text-gray-700 text-sm font-bold mb-2">Your Calculated Deductible Applied ($):</label>
+                        <input type="number" id="userDeductible" placeholder="0.00" min="0" step="0.01" class="focus:ring-teal-500 focus:border-teal-500">
+                    </div>
+                    <div>
+                        <label for="userCoinsurance" class="block text-gray-700 text-sm font-bold mb-2">Your Calculated Coinsurance ($):</label>
+                        <input type="number" id="userCoinsurance" placeholder="0.00" min="0" step="0.01" class="focus:ring-teal-500 focus:border-teal-500">
+                    </div>
+                    <div>
+                        <label for="userTotalBalance" class="block text-gray-700 text-sm font-bold mb-2">Your Calculated Total Patient Balance ($):</label>
+                        <input type="number" id="userTotalBalance" placeholder="0.00" min="0" step="0.01" class="font-bold focus:ring-teal-500 focus:border-teal-500">
+                    </div>
+                </div>
+                
+                <button id="checkBalanceBtn" class="btn-primary bg-teal-600 hover:bg-teal-700 mb-4">Check My Calculation</button>
+                <button id="resetBalanceBtn" class="btn-secondary hidden">Reset Scenario</button>
+
+                <div id="balanceFeedback" class="bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]">
+                    <p class="text-gray-500 balance-feedback-text">Feedback on your calculation will appear here.</p>
                 </div>
             </div>
         </section>
@@ -306,7 +345,7 @@
         const nextPaWalkthroughBtn = document.getElementById('nextPaWalkthroughBtn');
         const resetPaWalkthroughBtn = document.getElementById('resetPaWalkthroughBtn');
 
-        // DOM Element References (NEW Knowledge Quizzes)
+        // DOM Element References (Knowledge Quizzes)
         const quizGuidelinesBtn = document.getElementById('quizGuidelinesBtn');
         const quizLawsBtn = document.getElementById('quizLawsBtn');
         const quizEthicsBtn = document.getElementById('quizEthicsBtn');
@@ -318,6 +357,19 @@
         const nextQuestionBtn = document.getElementById('nextQuestionBtn');
         const resetQuizBtn = document.getElementById('resetQuizBtn');
         const quizFeedback = document.getElementById('quizFeedback');
+
+        // DOM Element References (NEW Patient Balance Calculator)
+        const loadBalanceScenarioBtn = document.getElementById('loadBalanceScenarioBtn');
+        const balanceCalculatorContent = document.getElementById('balanceCalculatorContent');
+        const balanceScenarioTitle = document.getElementById('balanceScenarioTitle');
+        const balanceScenarioDetails = document.getElementById('balanceScenarioDetails');
+        const userCopayInput = document.getElementById('userCopay');
+        const userDeductibleInput = document.getElementById('userDeductible');
+        const userCoinsuranceInput = document.getElementById('userCoinsurance');
+        const userTotalBalanceInput = document.getElementById('userTotalBalance');
+        const checkBalanceBtn = document.getElementById('checkBalanceBtn');
+        const resetBalanceBtn = document.getElementById('resetBalanceBtn');
+        const balanceFeedback = document.getElementById('balanceFeedback');
 
 
         // --- Global Data Storage (for existing simulation) ---
@@ -402,9 +454,9 @@
             },
         ];
 
-        // --- Global Data Storage (NEW Knowledge Quizzes) ---
+        // --- Global Data Storage (Knowledge Quizzes) ---
         let currentQuizModule = null;
-        let currentQuestionIndex = 0;
+        let currentQuizQuestionIndex = 0;
         const quizModules = {
             "Coding Guidelines": [
                 {
@@ -462,8 +514,117 @@
             ]
         };
 
+        // --- Global Data Storage (NEW Patient Balance Calculator) ---
+        let currentBalanceScenario = null;
+        const patientBalanceScenarios = [
+            {
+                id: 1,
+                patient: "Alex Green",
+                plan: {
+                    copay: 0,
+                    deductible: 1000,
+                    deductibleMetToDate: 700,
+                    coinsurance: 0.15 // 15%
+                },
+                visit: {
+                    service: "Office visit with minor procedure",
+                    allowedAmount: 300
+                },
+                correct: {
+                    copay: 0,
+                    deductibleApplied: 300,
+                    coinsurance: 0,
+                    totalBalance: 300
+                },
+                calculationSteps: `
+                    1. Remaining Deductible: $1,000 (Initial) - $700 (Met to Date) = $300.
+                    2. Apply Allowed Amount ($300) to Remaining Deductible ($300). Deductible is now fully met.
+                    3. No amount remaining for coinsurance from this visit.
+                    4. Total Patient Balance: $300 (Deductible Applied).
+                `
+            },
+            {
+                id: 2,
+                patient: "Brenda White",
+                plan: {
+                    copay: 35, // for specialist
+                    deductible: 500,
+                    deductibleMetToDate: 0,
+                    coinsurance: 0.20 // 20%
+                },
+                visit: {
+                    service: "Specialist Consultation",
+                    allowedAmount: 250
+                },
+                correct: {
+                    copay: 35,
+                    deductibleApplied: 250,
+                    coinsurance: 0, // Deductible not fully met, no coinsurance applies yet
+                    totalBalance: 285
+                },
+                calculationSteps: `
+                    1. Collect Copay: $35.
+                    2. Apply Allowed Amount ($250) to Deductible. Remaining Deductible: $500 - $250 = $250.
+                    3. Deductible is not fully met, so no coinsurance applies from this visit.
+                    4. Total Patient Balance: $35 (Copay) + $250 (Deductible Applied) = $285.
+                `
+            },
+            {
+                id: 3,
+                patient: "Chris Johnson",
+                plan: {
+                    copay: 0,
+                    deductible: 1500,
+                    deductibleMetToDate: 1500, // Deductible fully met
+                    coinsurance: 0.10 // 10%
+                },
+                visit: {
+                    service: "Follow-up Lab Tests",
+                    allowedAmount: 100
+                },
+                correct: {
+                    copay: 0,
+                    deductibleApplied: 0,
+                    coinsurance: 10,
+                    totalBalance: 10
+                },
+                calculationSteps: `
+                    1. No Copay.
+                    2. Deductible is already fully met. No amount applies to deductible.
+                    3. Calculate Coinsurance: $100 (Allowed Amount) * 10% = $10.
+                    4. Total Patient Balance: $10 (Coinsurance).
+                `
+            },
+             {
+                id: 4,
+                patient: "Diana Smith",
+                plan: {
+                    copay: 20, // for PCP
+                    deductible: 750,
+                    deductibleMetToDate: 750, // Deductible fully met
+                    coinsurance: 0.25 // 25%
+                },
+                visit: {
+                    service: "Primary Care Office Visit",
+                    allowedAmount: 90
+                },
+                correct: {
+                    copay: 20,
+                    deductibleApplied: 0,
+                    coinsurance: 22.50,
+                    totalBalance: 42.50
+                },
+                calculationSteps: `
+                    1. Collect Copay: $20.
+                    2. Deductible is already fully met. No amount applies to deductible.
+                    3. Calculate Coinsurance: $90 (Allowed Amount) * 25% = $22.50.
+                    4. Total Patient Balance: $20 (Copay) + $22.50 (Coinsurance) = $42.50.
+                `
+            }
+        ];
 
-        // --- Utility Functions (existing) ---
+
+        // --- Utility Functions (general) ---
 
         /**
          * Displays a message to the user in the message box.
@@ -723,6 +884,8 @@
             resetPaWalkthrough();
             // Hide quiz content by default
             quizContent.classList.add('hidden');
+            // Hide balance calculator content by default
+            balanceCalculatorContent.classList.add('hidden');
         };
 
         // --- Medical Billing Walkthrough Logic ---
@@ -805,7 +968,7 @@
             showMessage('Prior Authorization Walkthrough Reset.', 'success');
         }
 
-        // --- NEW Knowledge Quizzes Logic ---
+        // --- Knowledge Quizzes Logic ---
         let selectedQuizModule = null; // Stores the array of questions for the current module
         let currentQuizQuestionIndex = 0; // Tracks the current question in the module
 
@@ -900,6 +1063,103 @@
         quizEthicsBtn.addEventListener('click', () => loadQuizModule("Coding Ethics"));
         quizDenialsBtn.addEventListener('click', () => loadQuizModule("Denials & Appeals"));
 
+        // --- NEW Patient Balance Calculator Logic ---
+        let currentBalanceScenarioData = null;
+
+        loadBalanceScenarioBtn.addEventListener('click', () => {
+            const randomIndex = Math.floor(Math.random() * patientBalanceScenarios.length);
+            currentBalanceScenarioData = patientBalanceScenarios[randomIndex];
+            
+            balanceCalculatorContent.classList.remove('hidden');
+            balanceScenarioTitle.textContent = `Scenario for ${currentBalanceScenarioData.patient}:`;
+            balanceScenarioDetails.innerHTML = `
+                <p><strong>Plan Details:</strong></p>
+                <ul>
+                    <li>Copay: $${currentBalanceScenarioData.plan.copay.toFixed(2)}</li>
+                    <li>Deductible: $${currentBalanceScenarioData.plan.deductible.toFixed(2)}</li>
+                    <li>Deductible Met to Date: $${currentBalanceScenarioData.plan.deductibleMetToDate.toFixed(2)}</li>
+                    <li>Coinsurance: ${(currentBalanceScenarioData.plan.coinsurance * 100).toFixed(0)}%</li>
+                </ul>
+                <p><strong>Visit Details:</strong></p>
+                <ul>
+                    <li>Service: ${currentBalanceScenarioData.visit.service}</li>
+                    <li>Total Allowed Amount by Insurance: $${currentBalanceScenarioData.visit.allowedAmount.toFixed(2)}</li>
+                </ul>
+                <p class="font-bold mt-2">Calculate the Patient's Responsibility:</p>
+            `;
+            resetBalanceCalculator(); // Reset inputs and feedback
+            checkBalanceBtn.classList.remove('hidden');
+            resetBalanceBtn.classList.remove('hidden');
+        });
+
+        checkBalanceBtn.addEventListener('click', () => {
+            if (!currentBalanceScenarioData) {
+                balanceFeedback.innerHTML = '<p class="text-red-700 balance-feedback-text">Please load a scenario first!</p>';
+                return;
+            }
+
+            const userCopay = parseFloat(userCopayInput.value);
+            const userDeductibleApplied = parseFloat(userDeductibleInput.value);
+            const userCoinsurance = parseFloat(userCoinsuranceInput.value);
+            const userTotalBalance = parseFloat(userTotalBalanceInput.value);
+
+            let feedbackHtml = '';
+            let allCorrect = true;
+
+            // Check Copay
+            if (userCopay === currentBalanceScenarioData.correct.copay) {
+                feedbackHtml += `<p class="text-green-700">Copay: Correct! ($${currentBalanceScenarioData.correct.copay.toFixed(2)})</p>`;
+            } else {
+                feedbackHtml += `<p class="text-red-700">Copay: Incorrect. Expected $${currentBalanceScenarioData.correct.copay.toFixed(2)}.</p>`;
+                allCorrect = false;
+            }
+
+            // Check Deductible Applied
+            if (userDeductibleApplied === currentBalanceScenarioData.correct.deductibleApplied) {
+                feedbackHtml += `<p class="text-green-700">Deductible Applied: Correct! ($${currentBalanceScenarioData.correct.deductibleApplied.toFixed(2)})</p>`;
+            } else {
+                feedbackHtml += `<p class="text-red-700">Deductible Applied: Incorrect. Expected $${currentBalanceScenarioData.correct.deductibleApplied.toFixed(2)}.</p>`;
+                allCorrect = false;
+            }
+
+            // Check Coinsurance
+            if (userCoinsurance === currentBalanceScenarioData.correct.coinsurance) {
+                feedbackHtml += `<p class="text-green-700">Coinsurance: Correct! ($${currentBalanceScenarioData.correct.coinsurance.toFixed(2)})</p>`;
+            } else {
+                feedbackHtml += `<p class="text-red-700">Coinsurance: Incorrect. Expected $${currentBalanceScenarioData.correct.coinsurance.toFixed(2)}.</p>`;
+                allCorrect = false;
+            }
+
+            // Check Total Patient Balance
+            if (userTotalBalance === currentBalanceScenarioData.correct.totalBalance) {
+                feedbackHtml += `<p class="text-green-700 font-bold mt-2">Total Patient Balance: Correct! ($${currentBalanceScenarioData.correct.totalBalance.toFixed(2)})</p>`;
+            } else {
+                feedbackHtml += `<p class="text-red-700 font-bold mt-2">Total Patient Balance: Incorrect. Expected $${currentBalanceScenarioData.correct.totalBalance.toFixed(2)}.</p>`;
+                allCorrect = false;
+            }
+
+            // Overall feedback and detailed steps if incorrect
+            if (!allCorrect) {
+                feedbackHtml += `<p class="text-gray-700 mt-4 font-bold">Here's a breakdown of the correct calculation:</p>`;
+                feedbackHtml += `<pre class="bg-gray-100 p-2 rounded text-xs mt-1 whitespace-pre-wrap">${currentBalanceScenarioData.calculationSteps.trim()}</pre>`;
+                balanceFeedback.className = 'bg-red-50 p-3 rounded-lg border border-red-200 mt-4 min-h-[80px]';
+            } else {
+                 balanceFeedback.className = 'bg-green-50 p-3 rounded-lg border border-green-200 mt-4 min-h-[80px]';
+            }
+            
+            balanceFeedback.innerHTML = feedbackHtml;
+        });
+
+        resetBalanceBtn.addEventListener('click', resetBalanceCalculator);
+
+        function resetBalanceCalculator() {
+            userCopayInput.value = '';
+            userDeductibleInput.value = '';
+            userCoinsuranceInput.value = '';
+            userTotalBalanceInput.value = '';
+            balanceFeedback.innerHTML = '<p class="text-gray-500 balance-feedback-text">Feedback on your calculation will appear here.</p>';
+            balanceFeedback.className = 'bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]'; // Reset styling
+        }
     </script>
 </body>
 </html>
