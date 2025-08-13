@@ -88,21 +88,34 @@
         .hidden {
             display: none;
         }
-        .walkthrough-step-content {
+        .walkthrough-step-content, .quiz-content {
             background-color: #f8fafc; /* bg-blue-50 alternative */
             padding: 1rem;
             border-radius: 0.5rem;
             border: 1px solid #e2e8f0; /* border-gray-200 alternative */
             margin-top: 1rem;
         }
-        .walkthrough-step-title {
+        .walkthrough-step-title, .quiz-question-title {
             font-weight: 600; /* font-semibold */
             color: #1a202c; /* text-gray-900 */
             margin-bottom: 0.5rem;
         }
-        .walkthrough-instructions {
+        .walkthrough-instructions, .quiz-instructions, .quiz-feedback-text {
             font-size: 0.875rem; /* text-sm */
             color: #4a5568; /* text-gray-700 */
+        }
+        .quiz-option {
+            display: block;
+            padding: 8px 0;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-radius: 4px;
+        }
+        .quiz-option:hover {
+            background-color: #f0f4f8;
+        }
+        .quiz-option input[type="radio"] {
+            margin-right: 8px;
         }
     </style>
 </head>
@@ -195,7 +208,7 @@
             <button id="clearAllBtn" class="btn-secondary w-full mt-4">Clear All Data</button>
         </section>
 
-        <!-- New: Medical Billing Walkthrough Section -->
+        <!-- Medical Billing Walkthrough Section -->
         <section class="p-6 bg-indigo-50 rounded-lg mb-8">
             <h2 class="section-title text-indigo-800">5. Medical Billing Process Walkthrough 🚶‍♀️</h2>
             <p class="text-gray-700 mb-4">Click "Start Step" or "Next Step" to walk through the revenue cycle.</p>
@@ -204,14 +217,14 @@
                 <h3 id="walkthroughStepTitle" class="walkthrough-step-title text-indigo-700"></h3>
                 <div id="walkthroughStepInstructions" class="walkthrough-instructions"></div>
             </div>
-            
+           
             <button id="startBillingWalkthroughBtn" class="btn-primary w-full mb-4 bg-indigo-600 hover:bg-indigo-700">Start Billing Walkthrough</button>
             <button id="nextBillingWalkthroughBtn" class="btn-primary w-full mb-4 bg-indigo-600 hover:bg-indigo-700 hidden">Next Step</button>
             <button id="resetBillingWalkthroughBtn" class="btn-secondary w-full hidden">Reset Walkthrough</button>
         </section>
 
-        <!-- New: Prior Authorization Walkthrough Section -->
-        <section class="p-6 bg-orange-50 rounded-lg">
+        <!-- Prior Authorization Walkthrough Section -->
+        <section class="p-6 bg-orange-50 rounded-lg mb-8">
             <h2 class="section-title text-orange-800">6. Prior Authorization (PA) Walkthrough 🚦</h2>
             <p class="text-gray-700 mb-4">Follow the steps to understand a PA scenario.</p>
 
@@ -219,10 +232,38 @@
                 <h3 id="paWalkthroughStepTitle" class="walkthrough-step-title text-orange-700"></h3>
                 <div id="paWalkthroughStepInstructions" class="walkthrough-instructions"></div>
             </div>
-            
+           
             <button id="startPaWalkthroughBtn" class="btn-primary w-full mb-4 bg-orange-600 hover:bg-orange-700">Start PA Walkthrough</button>
             <button id="nextPaWalkthroughBtn" class="btn-primary w-full mb-4 bg-orange-600 hover:bg-orange-700 hidden">Next Step</button>
             <button id="resetPaWalkthroughBtn" class="btn-secondary w-full hidden">Reset PA Walkthrough</button>
+        </section>
+
+        <!-- NEW: Knowledge Quizzes Section -->
+        <section class="p-6 bg-pink-50 rounded-lg">
+            <h2 class="section-title text-pink-800">7. Knowledge Quizzes! 📚</h2>
+            <p class="text-gray-700 mb-4">Test your understanding of coding guidelines, healthcare laws, ethics, and denials & appeals!</p>
+
+            <div class="flex flex-wrap gap-3 mb-6">
+                <button id="quizGuidelinesBtn" class="btn-primary bg-pink-600 hover:bg-pink-700">Coding Guidelines</button>
+                <button id="quizLawsBtn" class="btn-primary bg-pink-600 hover:bg-pink-700">Healthcare Laws</button>
+                <button id="quizEthicsBtn" class="btn-primary bg-pink-600 hover:bg-pink-700">Coding Ethics</button>
+                <button id="quizDenialsBtn" class="btn-primary bg-pink-600 hover:bg-pink-700">Denials & Appeals</button>
+            </div>
+
+            <div id="quizContent" class="quiz-content hidden">
+                <h3 id="quizQuestionTitle" class="quiz-question-title text-pink-700"></h3>
+                <div id="quizOptions" class="mb-4">
+                    <!-- Options will be dynamically inserted here -->
+                </div>
+                
+                <button id="submitAnswerBtn" class="btn-primary bg-pink-600 hover:bg-pink-700 mb-4">Submit Answer</button>
+                <button id="nextQuestionBtn" class="btn-secondary hidden">Next Question</button>
+                <button id="resetQuizBtn" class="btn-secondary hidden">Reset Quiz</button>
+
+                <div id="quizFeedback" class="bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]">
+                    <p class="text-gray-500 quiz-feedback-text">Your feedback will appear here.</p>
+                </div>
+            </div>
         </section>
 
     </div>
@@ -230,7 +271,7 @@
     <script>
         // DOM Element References (existing sections)
         const patientNameInput = document.getElementById('patientName');
-        const patientDOBInput = document = document.getElementById('patientDOB');
+        const patientDOBInput = document.getElementById('patientDOB');
         const insuranceIDInput = document.getElementById('insuranceID');
         const registerPatientBtn = document.getElementById('registerPatientBtn');
 
@@ -249,7 +290,7 @@
         const clearAllBtn = document.getElementById('clearAllBtn');
         const messageBox = document.getElementById('messageBox');
 
-        // DOM Element References (NEW Medical Billing Walkthrough)
+        // DOM Element References (Medical Billing Walkthrough)
         const billingWalkthroughContent = document.getElementById('billingWalkthroughContent');
         const walkthroughStepTitle = document.getElementById('walkthroughStepTitle');
         const walkthroughStepInstructions = document.getElementById('walkthroughStepInstructions');
@@ -257,13 +298,26 @@
         const nextBillingWalkthroughBtn = document.getElementById('nextBillingWalkthroughBtn');
         const resetBillingWalkthroughBtn = document.getElementById('resetBillingWalkthroughBtn');
 
-        // DOM Element References (NEW Prior Authorization Walkthrough)
+        // DOM Element References (Prior Authorization Walkthrough)
         const paWalkthroughContent = document.getElementById('paWalkthroughContent');
         const paWalkthroughStepTitle = document.getElementById('paWalkthroughStepTitle');
         const paWalkthroughStepInstructions = document.getElementById('paWalkthroughStepInstructions');
         const startPaWalkthroughBtn = document.getElementById('startPaWalkthroughBtn');
         const nextPaWalkthroughBtn = document.getElementById('nextPaWalkthroughBtn');
         const resetPaWalkthroughBtn = document.getElementById('resetPaWalkthroughBtn');
+
+        // DOM Element References (NEW Knowledge Quizzes)
+        const quizGuidelinesBtn = document.getElementById('quizGuidelinesBtn');
+        const quizLawsBtn = document.getElementById('quizLawsBtn');
+        const quizEthicsBtn = document.getElementById('quizEthicsBtn');
+        const quizDenialsBtn = document.getElementById('quizDenialsBtn');
+        const quizContent = document.getElementById('quizContent');
+        const quizQuestionTitle = document.getElementById('quizQuestionTitle');
+        const quizOptions = document.getElementById('quizOptions');
+        const submitAnswerBtn = document.getElementById('submitAnswerBtn');
+        const nextQuestionBtn = document.getElementById('nextQuestionBtn');
+        const resetQuizBtn = document.getElementById('resetQuizBtn');
+        const quizFeedback = document.getElementById('quizFeedback');
 
 
         // --- Global Data Storage (for existing simulation) ---
@@ -272,7 +326,7 @@
         let procedures = [];
         let charges = [];
 
-        // --- Global Data Storage (NEW Medical Billing Walkthrough) ---
+        // --- Global Data Storage (Medical Billing Walkthrough) ---
         let currentBillingStep = 0;
         const billingSteps = [
             {
@@ -313,7 +367,7 @@
             },
         ];
 
-        // --- Global Data Storage (NEW Prior Authorization Walkthrough) ---
+        // --- Global Data Storage (Prior Authorization Walkthrough) ---
         let currentPaStep = 0;
         const paSteps = [
             {
@@ -348,6 +402,66 @@
             },
         ];
 
+        // --- Global Data Storage (NEW Knowledge Quizzes) ---
+        let currentQuizModule = null;
+        let currentQuestionIndex = 0;
+        const quizModules = {
+            "Coding Guidelines": [
+                {
+                    question: "What does a CPT code modifier indicate?",
+                    options: ["A. A new diagnosis", "B. The code has been altered in some way", "C. The patient has insurance", "D. The service was performed in a hospital"],
+                    answer: "B",
+                    explanation: "A CPT modifier is a two-digit code appended to a CPT code to provide additional information about the procedure or service, such as that it was altered or performed by more than one physician."
+                },
+                {
+                    question: "Which coding system is used for diagnosis codes?",
+                    options: ["A. CPT", "B. HCPCS Level II", "C. ICD-10-CM", "D. E&M"],
+                    answer: "C",
+                    explanation: "ICD-10-CM (International Classification of Diseases, 10th Revision, Clinical Modification) is the standard system for diagnosis codes in the U.S."
+                },
+                // Add more Coding Guidelines questions here
+            ],
+            "Healthcare Laws": [
+                {
+                    question: "What is the primary purpose of HIPAA for medical coders?",
+                    options: ["A. To ensure patients get timely appointments", "B. To protect the privacy and security of patient health information (PHI)", "C. To set reimbursement rates for services", "D. To standardize coding manuals"],
+                    answer: "B",
+                    explanation: "HIPAA's Privacy Rule and Security Rule mandate that Protected Health Information (PHI) is kept confidential and secure."
+                },
+                {
+                    question: "Submitting a claim with codes that you know are wrong to get a higher payment is a violation of which law?",
+                    options: ["A. Stark Law", "B. Anti-Kickback Statute", "C. False Claims Act (FCA)", "D. OIG Exclusions"],
+                    answer: "C",
+                    explanation: "The False Claims Act (FCA) imposes liability on persons and companies who knowingly submit false claims to the government."
+                },
+                // Add more Healthcare Laws questions here
+            ],
+            "Coding Ethics": [
+                {
+                    question: "Your boss tells you to change a code to one that provides higher reimbursement, even though the documentation doesn't support it. What is the most ethical action?",
+                    options: ["A. Do what your boss says to avoid conflict", "B. Report the incident to a compliance officer", "C. Change the code but make a note in your personal records", "D. Tell the patient to file a complaint"],
+                    answer: "B",
+                    explanation: "The most ethical and legally compliant action is to report fraudulent activities, such as upcoding, to a designated compliance officer or legal department. This protects you and the organization."
+                },
+                // Add more Coding Ethics questions here
+            ],
+            "Denials & Appeals": [
+                {
+                    question: "A claim is denied because the diagnosis code does not justify the procedure code. What is this denial reason called?",
+                    options: ["A. Medical necessity denial", "B. Bundling issue", "C. Payer policy change", "D. Inconsistent patient information"],
+                    answer: "A",
+                    explanation: "A denial for 'lack of medical necessity' means the payer believes the procedure performed was not necessary to treat the patient's documented diagnosis. The diagnosis code must support the procedure code."
+                },
+                {
+                    question: "What is the first step in appealing a denied claim?",
+                    options: ["A. Resubmit the claim with a new code", "B. Send a letter of protest to the payer's legal department", "C. Review the patient's chart and the denial reason", "D. Bill the patient directly for the full amount"],
+                    answer: "C",
+                    explanation: "The crucial first step in any appeal is to thoroughly review the patient’s documentation and compare it against the denial reason provided by the payer. This helps you identify if the issue is a simple coding error or a more complex medical necessity dispute."
+                },
+                // Add more Denials & Appeals questions here
+            ]
+        };
+
 
         // --- Utility Functions (existing) ---
 
@@ -371,12 +485,12 @@
         function addInputRow(parentList, className, placeholder) {
             const wrapper = document.createElement('div');
             wrapper.className = 'flex items-center gap-2';
-            
+           
             const input = document.createElement('input');
             input.type = 'text';
             input.className = `${className} flex-grow-1 focus:ring-${parentList.id.includes('diagnosis') ? 'green' : 'green'}-500 focus:border-${parentList.id.includes('diagnosis') ? 'green' : 'green'}-500`;
             input.placeholder = placeholder;
-            
+           
             const removeBtn = document.createElement('button');
             removeBtn.type = 'button';
             removeBtn.className = 'btn-secondary remove-item-btn';
@@ -607,6 +721,8 @@
             // Initialize walkthroughs
             resetBillingWalkthrough();
             resetPaWalkthrough();
+            // Hide quiz content by default
+            quizContent.classList.add('hidden');
         };
 
         // --- Medical Billing Walkthrough Logic ---
@@ -688,6 +804,102 @@
             paWalkthroughStepInstructions.innerHTML = '';
             showMessage('Prior Authorization Walkthrough Reset.', 'success');
         }
+
+        // --- NEW Knowledge Quizzes Logic ---
+        let selectedQuizModule = null; // Stores the array of questions for the current module
+        let currentQuizQuestionIndex = 0; // Tracks the current question in the module
+
+        // Function to load a specific quiz module
+        function loadQuizModule(moduleName) {
+            quizContent.classList.remove('hidden');
+            quizFeedback.innerHTML = '<p class="text-gray-500 quiz-feedback-text">Your feedback will appear here.</p>';
+            currentQuizModule = quizModules[moduleName];
+            currentQuizQuestionIndex = 0;
+            displayQuizQuestion();
+            submitAnswerBtn.classList.remove('hidden');
+            nextQuestionBtn.classList.add('hidden');
+            resetQuizBtn.classList.remove('hidden');
+        }
+
+        // Function to display the current quiz question
+        function displayQuizQuestion() {
+            if (!currentQuizModule || currentQuizQuestionIndex >= currentQuizModule.length) {
+                quizQuestionTitle.textContent = "Quiz Complete!";
+                quizOptions.innerHTML = `<p class="text-green-700 font-bold">You've completed this quiz module! Click 'Reset Quiz' or select another module.</p>`;
+                submitAnswerBtn.classList.add('hidden');
+                nextQuestionBtn.classList.add('hidden');
+                return;
+            }
+
+            const questionData = currentQuizModule[currentQuizQuestionIndex];
+            quizQuestionTitle.textContent = `Question ${currentQuizQuestionIndex + 1}: ${questionData.question}`;
+            quizOptions.innerHTML = ''; // Clear previous options
+            quizFeedback.innerHTML = '<p class="text-gray-500 quiz-feedback-text">Your feedback will appear here.</p>'; // Clear feedback for new question
+
+            questionData.options.forEach((option, index) => {
+                const label = document.createElement('label');
+                label.className = 'quiz-option';
+                const input = document.createElement('input');
+                input.type = 'radio';
+                input.name = 'quizAnswer';
+                input.value = option.charAt(0); // Get the A, B, C, D part
+                label.appendChild(input);
+                label.appendChild(document.createTextNode(option));
+                quizOptions.appendChild(label);
+            });
+
+            submitAnswerBtn.classList.remove('hidden');
+            nextQuestionBtn.classList.add('hidden');
+        }
+
+        // Function to check the user's answer
+        submitAnswerBtn.addEventListener('click', () => {
+            const selectedOption = document.querySelector('input[name="quizAnswer"]:checked');
+            if (!selectedOption) {
+                quizFeedback.innerHTML = '<p class="text-red-700 quiz-feedback-text">Please select an answer.</p>';
+                return;
+            }
+
+            const userAnswer = selectedOption.value;
+            const correctAnswer = currentQuizModule[currentQuizQuestionIndex].answer;
+            const explanation = currentQuizModule[currentQuizQuestionIndex].explanation;
+
+            if (userAnswer === correctAnswer) {
+                quizFeedback.innerHTML = `<p class="text-green-700 font-bold">Correct! Excellent job.</p><p class="quiz-feedback-text">Explanation: ${explanation}</p>`;
+            } else {
+                quizFeedback.innerHTML = `<p class="text-red-700 font-bold">Incorrect. Here's why:</p><p class="quiz-feedback-text">Explanation: ${explanation}</p>`;
+            }
+
+            submitAnswerBtn.classList.add('hidden');
+            nextQuestionBtn.classList.remove('hidden');
+
+            // Disable all radio buttons after submission
+            quizOptions.querySelectorAll('input[type="radio"]').forEach(radio => radio.disabled = true);
+        });
+
+        // Function to move to the next question
+        nextQuestionBtn.addEventListener('click', () => {
+            currentQuizQuestionIndex++;
+            displayQuizQuestion();
+        });
+
+        // Function to reset the current quiz module
+        resetQuizBtn.addEventListener('click', () => {
+            currentQuizQuestionIndex = 0;
+            displayQuizQuestion(); // Start from the beginning of the current module
+            quizFeedback.innerHTML = '<p class="text-gray-500 quiz-feedback-text">Your feedback will appear here.</p>';
+            submitAnswerBtn.classList.remove('hidden');
+            nextQuestionBtn.classList.add('hidden');
+            // Re-enable radio buttons for the new question
+            quizOptions.querySelectorAll('input[type="radio"]').forEach(radio => radio.disabled = false);
+        });
+
+        // Event listeners for quiz module selection buttons
+        quizGuidelinesBtn.addEventListener('click', () => loadQuizModule("Coding Guidelines"));
+        quizLawsBtn.addEventListener('click', () => loadQuizModule("Healthcare Laws"));
+        quizEthicsBtn.addEventListener('click', () => loadQuizModule("Coding Ethics"));
+        quizDenialsBtn.addEventListener('click', () => loadQuizModule("Denials & Appeals"));
+
     </script>
 </body>
 </html>
