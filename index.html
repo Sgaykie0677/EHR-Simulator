@@ -88,19 +88,19 @@
         .hidden {
             display: none;
         }
-        .walkthrough-step-content, .quiz-content, .balance-calculator-content {
+        .walkthrough-step-content, .quiz-content, .balance-calculator-content, .modifier-challenge-content {
             background-color: #f8fafc; /* bg-blue-50 alternative */
             padding: 1rem;
             border-radius: 0.5rem;
             border: 1px solid #e2e8f0; /* border-gray-200 alternative */
             margin-top: 1rem;
         }
-        .walkthrough-step-title, .quiz-question-title, .balance-scenario-title {
+        .walkthrough-step-title, .quiz-question-title, .balance-scenario-title, .modifier-challenge-title {
             font-weight: 600; /* font-semibold */
             color: #1a202c; /* text-gray-900 */
             margin-bottom: 0.5rem;
         }
-        .walkthrough-instructions, .quiz-instructions, .quiz-feedback-text, .balance-scenario-text, .balance-feedback-text {
+        .walkthrough-instructions, .quiz-instructions, .quiz-feedback-text, .balance-scenario-text, .balance-feedback-text, .modifier-scenario-text, .modifier-feedback-text {
             font-size: 0.875rem; /* text-sm */
             color: #4a5568; /* text-gray-700 */
         }
@@ -248,6 +248,7 @@
                 <button id="quizLawsBtn" class="btn-primary bg-pink-600 hover:bg-pink-700">Healthcare Laws</button>
                 <button id="quizEthicsBtn" class="btn-primary bg-pink-600 hover:bg-pink-700">Coding Ethics</button>
                 <button id="quizDenialsBtn" class="btn-primary bg-pink-600 hover:bg-pink-700">Denials & Appeals</button>
+                <button id="quizInsuranceNuanceBtn" class="btn-primary bg-pink-600 hover:bg-pink-700">Insurance Nuances</button> <!-- NEW BUTTON -->
             </div>
 
             <div id="quizContent" class="quiz-content hidden">
@@ -266,8 +267,8 @@
             </div>
         </section>
 
-        <!-- NEW: Patient Balance Calculator Section -->
-        <section class="p-6 bg-teal-50 rounded-lg">
+        <!-- Patient Balance Calculator Section -->
+        <section class="p-6 bg-teal-50 rounded-lg mb-8">
             <h2 class="section-title text-teal-800">8. Patient Balance Calculator 💰</h2>
             <p class="text-gray-700 mb-4">Practice calculating patient responsibility based on common scenarios.</p>
 
@@ -304,6 +305,38 @@
                 </div>
             </div>
         </section>
+
+        <!-- NEW: Advanced Modifier Application Challenge Section -->
+        <section class="p-6 bg-yellow-50 rounded-lg mb-8">
+            <h2 class="section-title text-yellow-800">9. Advanced Modifier Application Challenge 🌟</h2>
+            <p class="text-gray-700 mb-4">Analyze the scenario and apply the appropriate CPT code and modifier.</p>
+
+            <button id="loadModifierScenarioBtn" class="btn-primary w-full mb-6 bg-yellow-600 hover:bg-yellow-700">Load New Scenario</button>
+
+            <div id="modifierChallengeContent" class="modifier-challenge-content hidden">
+                <h3 id="modifierScenarioTitle" class="modifier-challenge-title text-yellow-700"></h3>
+                <div id="modifierScenarioDetails" class="modifier-scenario-text mb-4"></div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="userModifierCPT" class="block text-gray-700 text-sm font-bold mb-2">Your CPT Code:</label>
+                        <input type="text" id="userModifierCPT" placeholder="e.g., 99213" class="focus:ring-yellow-500 focus:border-yellow-500 uppercase">
+                    </div>
+                    <div>
+                        <label for="userModifier" class="block text-gray-700 text-sm font-bold mb-2">Your Modifier(s) (e.g., 25, 59):</label>
+                        <input type="text" id="userModifier" placeholder="e.g., 25" class="focus:ring-yellow-500 focus:border-yellow-500 uppercase">
+                    </div>
+                </div>
+                
+                <button id="checkModifierBtn" class="btn-primary bg-yellow-600 hover:bg-yellow-700 mb-4">Check My Modifier</button>
+                <button id="resetModifierBtn" class="btn-secondary hidden">Reset Scenario</button>
+
+                <div id="modifierFeedback" class="bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]">
+                    <p class="text-gray-500 modifier-feedback-text">Feedback on your modifier application will appear here.</p>
+                </div>
+            </div>
+        </section>
+
 
     </div>
 
@@ -350,6 +383,7 @@
         const quizLawsBtn = document.getElementById('quizLawsBtn');
         const quizEthicsBtn = document.getElementById('quizEthicsBtn');
         const quizDenialsBtn = document.getElementById('quizDenialsBtn');
+        const quizInsuranceNuanceBtn = document.getElementById('quizInsuranceNuanceBtn'); // NEW
         const quizContent = document.getElementById('quizContent');
         const quizQuestionTitle = document.getElementById('quizQuestionTitle');
         const quizOptions = document.getElementById('quizOptions');
@@ -358,7 +392,7 @@
         const resetQuizBtn = document.getElementById('resetQuizBtn');
         const quizFeedback = document.getElementById('quizFeedback');
 
-        // DOM Element References (NEW Patient Balance Calculator)
+        // DOM Element References (Patient Balance Calculator)
         const loadBalanceScenarioBtn = document.getElementById('loadBalanceScenarioBtn');
         const balanceCalculatorContent = document.getElementById('balanceCalculatorContent');
         const balanceScenarioTitle = document.getElementById('balanceScenarioTitle');
@@ -370,6 +404,17 @@
         const checkBalanceBtn = document.getElementById('checkBalanceBtn');
         const resetBalanceBtn = document.getElementById('resetBalanceBtn');
         const balanceFeedback = document.getElementById('balanceFeedback');
+
+        // DOM Element References (NEW Modifier Application Challenge)
+        const loadModifierScenarioBtn = document.getElementById('loadModifierScenarioBtn');
+        const modifierChallengeContent = document.getElementById('modifierChallengeContent');
+        const modifierScenarioTitle = document.getElementById('modifierScenarioTitle');
+        const modifierScenarioDetails = document.getElementById('modifierScenarioDetails');
+        const userModifierCPTInput = document.getElementById('userModifierCPT');
+        const userModifierInput = document.getElementById('userModifier');
+        const checkModifierBtn = document.getElementById('checkModifierBtn');
+        const resetModifierBtn = document.getElementById('resetModifierBtn');
+        const modifierFeedback = document.getElementById('modifierFeedback');
 
 
         // --- Global Data Storage (for existing simulation) ---
@@ -455,8 +500,8 @@
         ];
 
         // --- Global Data Storage (Knowledge Quizzes) ---
-        let currentQuizModule = null;
-        let currentQuizQuestionIndex = 0;
+        let selectedQuizModule = null; // Stores the array of questions for the current module
+        let currentQuizQuestionIndex = 0; // Tracks the current question in the module
         const quizModules = {
             "Coding Guidelines": [
                 {
@@ -511,10 +556,31 @@
                     explanation: "The crucial first step in any appeal is to thoroughly review the patient’s documentation and compare it against the denial reason provided by the payer. This helps you identify if the issue is a simple coding error or a more complex medical necessity dispute."
                 },
                 // Add more Denials & Appeals questions here
+            ],
+            // NEW: Insurance Nuances Quiz Module
+            "Insurance Nuances": [
+                {
+                    question: "Which type of insurance plan typically requires a referral from a Primary Care Provider (PCP) to see a specialist?",
+                    options: ["A. PPO", "B. HMO", "C. Medicare Part B", "D. Fee-for-Service"],
+                    answer: "B",
+                    explanation: "HMO (Health Maintenance Organization) plans generally require a referral from a PCP to see a specialist, as they focus on managed care within a network."
+                },
+                {
+                    question: "When a patient has both active Medicare and Medicaid, which payer is usually considered primary?",
+                    options: ["A. Medicaid", "B. Medicare", "C. The patient's choice", "D. Whichever plan has been active longer"],
+                    answer: "B",
+                    explanation: "Medicare is almost always the primary payer when a patient has both Medicare and Medicaid. Medicaid then acts as the payer of last resort, covering what Medicare doesn't."
+                },
+                {
+                    question: "Medicare Part B typically covers what percentage of approved physician services after the deductible is met?",
+                    options: ["A. 100%", "B. 50%", "C. 80%", "D. 20%"],
+                    answer: "C",
+                    explanation: "Medicare Part B covers 80% of approved physician services after the annual deductible is met, with the patient responsible for the remaining 20% (coinsurance)."
+                }
             ]
         };
 
-        // --- Global Data Storage (NEW Patient Balance Calculator) ---
+        // --- Global Data Storage (Patient Balance Calculator) ---
         let currentBalanceScenario = null;
         const patientBalanceScenarios = [
             {
@@ -620,6 +686,46 @@
                     3. Calculate Coinsurance: $90 (Allowed Amount) * 25% = $22.50.
                     4. Total Patient Balance: $20 (Copay) + $22.50 (Coinsurance) = $42.50.
                 `
+            }
+        ];
+
+        // --- Global Data Storage (NEW Modifier Application Challenge) ---
+        let currentModifierScenario = null;
+        const modifierScenarios = [
+            {
+                id: 1,
+                scenario: `Patient presents for a routine annual physical exam (CPT 99395). During the same visit, the patient expresses concern about a new, painful mole on their arm. The physician performs a separate, distinct evaluation and management (E/M) service to assess and manage the mole. The E/M service for the mole is significant and separately identifiable from the preventive exam.`,
+                cptCodeToInput: "99213", // Problem-focused E/M (e.g., 99213 for mole evaluation)
+                correctModifier: "25",
+                explanation: "Modifier -25 is used when a significant, separately identifiable Evaluation and Management (E/M) service is performed on the same day as a preventive service or other procedure by the same physician. In this case, the mole evaluation (99213) is separate from the routine physical (99395)."
+            },
+            {
+                id: 2,
+                scenario: `A patient undergoes a complex surgical procedure (e.g., CPT 20680 - Removal of implant; deep (e.g., buried) bone fixation material; knee). During the post-operative period (global period) of this surgery, the patient comes back to the office for an E/M visit due to a severe, acute upper respiratory infection, which is completely unrelated to the knee surgery.`,
+                cptCodeToInput: "99213", // E/M service for URI
+                correctModifier: "24",
+                explanation: "Modifier -24 is appended to an E/M service code to indicate that the E/M service was performed during a post-operative global period for a procedure, and the E/M service was unrelated to the original surgical procedure. Here, the URI (99213) is unrelated to the knee surgery (20680)."
+            },
+            {
+                id: 3,
+                scenario: `A surgeon performs a diagnostic arthroscopy of the knee (CPT 29870). During the same surgical session, they identify a torn meniscus and immediately perform a meniscectomy (CPT 29881). The diagnostic procedure leads directly to the therapeutic procedure. You should use a modifier that indicates a distinct procedural service.`,
+                cptCodeToInput: "29870", // Diagnostic Arthroscopy
+                correctModifier: "59",
+                explanation: "Modifier -59 (Distinct Procedural Service) is used to identify a procedure or service as distinct or independent from other non-E/M services performed on the same day. In this case, the diagnostic arthroscopy (29870) was distinct and necessary to identify the need for the meniscectomy (29881), even though it was performed in the same session. Many payers bundle diagnostic into therapeutic without -59."
+            },
+            {
+                id: 4,
+                scenario: `A patient has a scheduled ultrasound (CPT 76801) for the abdomen. The technical component (use of equipment, technician time) is provided by the facility, but the radiologist provides the professional interpretation of the images. You are billing for the radiologist's service.`,
+                cptCodeToInput: "76801", // Ultrasound code
+                correctModifier: "26",
+                explanation: "Modifier -26 (Professional Component) is used when billing for only the professional (physician’s) portion of a service that has both technical and professional components, such as radiology or pathology services. The radiologist's interpretation is the professional component."
+            },
+            {
+                id: 5,
+                scenario: `A patient is seen for an office visit. During the visit, a minor surgical procedure (CPT 17110 - destruction of benign lesions) is performed. The office visit (CPT 99213) is separate and significant from the procedure performed.`,
+                cptCodeToInput: "99213", // E/M service
+                correctModifier: "25",
+                explanation: "Modifier -25 indicates a significant, separately identifiable evaluation and management service by the same physician on the same day of a procedure. The office visit for general symptoms is distinct from the minor procedure."
             }
         ];
 
@@ -886,6 +992,8 @@
             quizContent.classList.add('hidden');
             // Hide balance calculator content by default
             balanceCalculatorContent.classList.add('hidden');
+            // Hide modifier challenge content by default
+            modifierChallengeContent.classList.add('hidden');
         };
 
         // --- Medical Billing Walkthrough Logic ---
@@ -1062,8 +1170,9 @@
         quizLawsBtn.addEventListener('click', () => loadQuizModule("Healthcare Laws"));
         quizEthicsBtn.addEventListener('click', () => loadQuizModule("Coding Ethics"));
         quizDenialsBtn.addEventListener('click', () => loadQuizModule("Denials & Appeals"));
+        quizInsuranceNuanceBtn.addEventListener('click', () => loadQuizModule("Insurance Nuances")); // NEW
 
-        // --- NEW Patient Balance Calculator Logic ---
+        // --- Patient Balance Calculator Logic ---
         let currentBalanceScenarioData = null;
 
         loadBalanceScenarioBtn.addEventListener('click', () => {
@@ -1160,6 +1269,73 @@
             balanceFeedback.innerHTML = '<p class="text-gray-500 balance-feedback-text">Feedback on your calculation will appear here.</p>';
             balanceFeedback.className = 'bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]'; // Reset styling
         }
+
+        // --- NEW Modifier Application Challenge Logic ---
+        let currentModifierChallenge = null;
+
+        loadModifierScenarioBtn.addEventListener('click', () => {
+            const randomIndex = Math.floor(Math.random() * modifierScenarios.length);
+            currentModifierChallenge = modifierScenarios[randomIndex];
+            
+            modifierChallengeContent.classList.remove('hidden');
+            modifierScenarioTitle.textContent = `Scenario: ${currentModifierChallenge.id}`;
+            modifierScenarioDetails.innerHTML = `<p class="text-sm text-yellow-800 italic">${currentModifierChallenge.scenario}</p>
+                <p class="mt-2"><strong>Required CPT Code to Input:</strong> ${currentModifierChallenge.cptCodeToInput}</p>
+                <p class="font-bold mt-2">Enter the CPT Code (if different from the required) and the appropriate Modifier(s).</p>
+            `;
+            userModifierCPTInput.value = '';
+            userModifierInput.value = '';
+            modifierFeedback.innerHTML = '<p class="text-gray-500 modifier-feedback-text">Feedback on your modifier application will appear here.</p>';
+            modifierFeedback.className = 'bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]'; // Reset styling
+            checkModifierBtn.classList.remove('hidden');
+            resetModifierBtn.classList.remove('hidden');
+        });
+
+        checkModifierBtn.addEventListener('click', () => {
+            if (!currentModifierChallenge) {
+                modifierFeedback.innerHTML = '<p class="text-red-700 modifier-feedback-text">Please load a scenario first!</p>';
+                return;
+            }
+
+            const userCPT = userModifierCPTInput.value.trim().toUpperCase();
+            const userMod = userModifierInput.value.trim().toUpperCase();
+
+            let feedbackHtml = '';
+            let isCorrect = true;
+
+            // Check CPT code
+            if (userCPT !== currentModifierChallenge.cptCodeToInput.trim().toUpperCase()) {
+                feedbackHtml += `<p class="text-red-700">CPT Code: Incorrect. Expected "${currentModifierChallenge.cptCodeToInput}".</p>`;
+                isCorrect = false;
+            } else {
+                feedbackHtml += `<p class="text-green-700">CPT Code: Correct! ("${currentModifierChallenge.cptCodeToInput}")</p>`;
+            }
+
+            // Check Modifier
+            if (userMod !== currentModifierChallenge.correctModifier.trim().toUpperCase()) {
+                feedbackHtml += `<p class="text-red-700">Modifier: Incorrect. Expected "${currentModifierChallenge.correctModifier}".</p>`;
+                isCorrect = false;
+            } else {
+                feedbackHtml += `<p class="text-green-700">Modifier: Correct! ("${currentModifierChallenge.correctModifier}")</p>`;
+            }
+
+            if (isCorrect) {
+                modifierFeedback.innerHTML = `<p class="text-green-700 font-bold">Excellent! Your CPT code and modifier application are correct.</p>`;
+            } else {
+                modifierFeedback.innerHTML += `<p class="text-gray-700 mt-4 font-bold">Explanation:</p><p class="modifier-feedback-text">${currentModifierChallenge.explanation}</p>`;
+            }
+            modifierFeedback.className = isCorrect ? 'bg-green-50 p-3 rounded-lg border border-green-200 mt-4 min-h-[80px]' : 'bg-red-50 p-3 rounded-lg border border-red-200 mt-4 min-h-[80px]';
+        });
+
+        resetModifierBtn.addEventListener('click', () => {
+            userModifierCPTInput.value = '';
+            userModifierInput.value = '';
+            modifierFeedback.innerHTML = '<p class="text-gray-500 modifier-feedback-text">Feedback on your modifier application will appear here.</p>';
+            modifierFeedback.className = 'bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]'; // Reset styling
+            checkModifierBtn.classList.remove('hidden');
+            resetModifierBtn.classList.remove('hidden');
+        });
+
     </script>
 </body>
 </html>
