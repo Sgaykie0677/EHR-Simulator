@@ -88,19 +88,19 @@
         .hidden {
             display: none;
         }
-        .walkthrough-step-content, .quiz-content, .balance-calculator-content, .modifier-challenge-content, .matching-game-content, .scrubber-challenge-content, .denial-challenge-content {
+        .walkthrough-step-content, .quiz-content, .balance-calculator-content, .modifier-challenge-content, .matching-game-content, .scrubber-challenge-content, .denial-challenge-content, .soap-challenge-content {
             background-color: #f8fafc; /* bg-blue-50 alternative */
             padding: 1rem;
             border-radius: 0.5rem;
             border: 1px solid #e2e8f0; /* border-gray-200 alternative */
             margin-top: 1rem;
         }
-        .walkthrough-step-title, .quiz-question-title, .balance-scenario-title, .modifier-challenge-title, .matching-game-title, .scrubber-challenge-title, .denial-challenge-title {
+        .walkthrough-step-title, .quiz-question-title, .balance-scenario-title, .modifier-challenge-title, .matching-game-title, .scrubber-challenge-title, .denial-challenge-title, .soap-challenge-title {
             font-weight: 600; /* font-semibold */
             color: #1a202c; /* text-gray-900 */
             margin-bottom: 0.5rem;
         }
-        .walkthrough-instructions, .quiz-instructions, .quiz-feedback-text, .balance-scenario-text, .balance-feedback-text, .modifier-scenario-text, .modifier-feedback-text, .matching-game-text, .scrubber-scenario-text, .scrubber-feedback-text, .denial-scenario-text, .denial-feedback-text {
+        .walkthrough-instructions, .quiz-instructions, .quiz-feedback-text, .balance-scenario-text, .balance-feedback-text, .modifier-scenario-text, .modifier-feedback-text, .matching-game-text, .scrubber-scenario-text, .scrubber-feedback-text, .denial-scenario-text, .denial-feedback-text, .soap-scenario-text, .soap-feedback-text {
             font-size: 0.875rem; /* text-sm */
             color: #4a5568; /* text-gray-700 */
         }
@@ -190,6 +190,18 @@
         }
         .match-card.is-flipped .card-back {
             transform: rotateY(360deg);
+        }
+        #soapNoteDisplay {
+            background-color: #f0f4f8; /* Light blue-gray */
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 15px;
+            white-space: pre-wrap; /* Preserves formatting */
+            font-family: monospace; /* Monospace for code-like text */
+            font-size: 0.85rem;
+            max-height: 400px; /* Limit height */
+            overflow-y: auto; /* Enable scrolling */
+            margin-bottom: 20px;
         }
     </style>
 </head>
@@ -466,8 +478,8 @@
             </div>
         </section>
 
-        <!-- NEW: Denial Code Interpreter & Action Plan Simulator Section -->
-        <section class="p-6 bg-purple-100 rounded-lg">
+        <!-- Denial Code Interpreter & Action Plan Simulator Section -->
+        <section class="p-6 bg-purple-100 rounded-lg mb-8">
             <h2 class="section-title text-purple-800">12. Denial Code Interpreter & Action Plan Simulator 🚫</h2>
             <p class="text-gray-700 mb-4">Interpret the denial code and plan your next steps to resolve the claim.</p>
 
@@ -490,6 +502,54 @@
 
                 <div id="denialFeedback" class="bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]">
                     <p class="text-gray-500 denial-feedback-text">Feedback on your denial resolution plan will appear here.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- NEW: SOAP Note Coder & Extractor Challenge Section -->
+        <section class="p-6 bg-teal-100 rounded-lg">
+            <h2 class="section-title text-teal-800">13. SOAP Note Coder & Extractor Challenge 📋</h2>
+            <p class="text-gray-700 mb-4">Review the SOAP note below and extract the relevant coding and plan information.</p>
+
+            <button id="loadSoapScenarioBtn" class="btn-primary w-full mb-6 bg-teal-600 hover:bg-teal-700">Load New SOAP Note Scenario</button>
+
+            <div id="soapChallengeContent" class="soap-challenge-content hidden">
+                <h3 id="soapScenarioTitle" class="soap-challenge-title text-teal-700"></h3>
+                <p id="soapScenarioDescription" class="soap-scenario-text mb-4"></p>
+                
+                <div id="soapNoteDisplay" class="mb-4">
+                    <!-- SOAP note content will be loaded here -->
+                </div>
+
+                <p class="font-bold text-gray-700 mb-2">Your Extracted Information:</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="md:col-span-2">
+                        <label for="userSoapChiefComplaint" class="block text-gray-700 text-sm font-bold mb-2">Chief Complaint:</label>
+                        <input type="text" id="userSoapChiefComplaint" placeholder="Patient's main reason for visit" class="focus:ring-teal-500 focus:border-teal-500">
+                    </div>
+                    <div>
+                        <label for="userSoapICD" class="block text-gray-700 text-sm font-bold mb-2">Primary ICD-10 Code(s):</label>
+                        <input type="text" id="userSoapICD" placeholder="e.g., J02.0 (comma-separated if multiple)" class="focus:ring-teal-500 focus:border-teal-500 uppercase">
+                    </div>
+                    <div>
+                        <label for="userSoapCPT" class="block text-gray-700 text-sm font-bold mb-2">Primary CPT Code(s):</label>
+                        <input type="text" id="userSoapCPT" placeholder="e.g., 99213, 87880 (comma-separated if multiple)" class="focus:ring-teal-500 focus:border-teal-500 uppercase">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="userSoapModifier" class="block text-gray-700 text-sm font-bold mb-2">Modifier(s) (if any):</label>
+                        <input type="text" id="userSoapModifier" placeholder="e.g., 25 (or 'None')" class="focus:ring-teal-500 focus:border-teal-500 uppercase">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="userSoapPlan" class="block text-gray-700 text-sm font-bold mb-2">Key Elements of the Plan:</label>
+                        <textarea id="userSoapPlan" rows="4" placeholder="Summarize medication, follow-up, education etc." class="focus:ring-teal-500 focus:border-teal-500"></textarea>
+                    </div>
+                </div>
+                
+                <button id="checkSoapBtn" class="btn-primary bg-teal-600 hover:bg-teal-700 mb-4">Check My Extraction</button>
+                <button id="resetSoapBtn" class="btn-secondary hidden">Reset Scenario</button>
+
+                <div id="soapFeedback" class="bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]">
+                    <p class="text-gray-500 soap-feedback-text">Feedback on your extraction will appear here.</p>
                 </div>
             </div>
         </section>
@@ -596,7 +656,7 @@
         const resetScrubberBtn = document.getElementById('resetScrubberBtn');
         const scrubberFeedback = document.getElementById('scrubberFeedback');
 
-        // DOM Element References (NEW Denial Code Interpreter)
+        // DOM Element References (Denial Code Interpreter)
         const loadDenialScenarioBtn = document.getElementById('loadDenialScenarioBtn');
         const denialChallengeContent = document.getElementById('denialChallengeContent');
         const denialScenarioTitle = document.getElementById('denialScenarioTitle');
@@ -606,6 +666,21 @@
         const checkDenialBtn = document.getElementById('checkDenialBtn');
         const resetDenialBtn = document.getElementById('resetDenialBtn');
         const denialFeedback = document.getElementById('denialFeedback');
+
+        // DOM Element References (NEW SOAP Note Challenge)
+        const loadSoapScenarioBtn = document.getElementById('loadSoapScenarioBtn');
+        const soapChallengeContent = document.getElementById('soapChallengeContent');
+        const soapScenarioTitle = document.getElementById('soapScenarioTitle');
+        const soapScenarioDescription = document.getElementById('soapScenarioDescription');
+        const soapNoteDisplay = document.getElementById('soapNoteDisplay');
+        const userSoapChiefComplaintInput = document.getElementById('userSoapChiefComplaint');
+        const userSoapICDInput = document.getElementById('userSoapICD');
+        const userSoapCPTInput = document.getElementById('userSoapCPT');
+        const userSoapModifierInput = document.getElementById('userSoapModifier');
+        const userSoapPlanInput = document.getElementById('userSoapPlan');
+        const checkSoapBtn = document.getElementById('checkSoapBtn');
+        const resetSoapBtn = document.getElementById('resetSoapBtn');
+        const soapFeedback = document.getElementById('soapFeedback');
 
 
         // --- Global Data Storage (for existing simulation) ---
@@ -1001,7 +1076,7 @@
             }
         ];
 
-        // --- Global Data Storage (NEW Denial Code Interpreter) ---
+        // --- Global Data Storage (Denial Code Interpreter) ---
         let currentDenialScenario = null;
         const denialScenarios = [
             {
@@ -1068,6 +1143,134 @@
                 ],
                 correctActionPlanKeywords: ["INFORM PATIENT", "BILL PATIENT (IF ABN SIGNED)", "NON-COVERED"],
                 explanation: "CO 236 means 'This procedure/service is not covered by the patient's current benefits/plan.' This indicates a fundamental lack of coverage for the service. If an Advance Beneficiary Notice (ABN) or similar waiver was signed by the patient, the patient can be billed. Otherwise, it may need to be written off. Verify the patient's specific benefit plan details."
+            }
+        ];
+
+        // --- Global Data Storage (NEW SOAP Note Challenge) ---
+        let currentSoapScenario = null;
+        const soapNoteScenarios = [
+            {
+                id: 1,
+                title: "Acute Sore Throat Patient",
+                description: "Review this SOAP note for a patient presenting with an acute sore throat and extract key coding and plan details.",
+                soapNote: `
+**Patient Name:** Emily Davis
+**Date of Birth:** 11/22/2005
+**Date of Visit:** 2025-08-16
+**Provider:** Dr. Samantha Lee
+
+**S (Subjective):**
+* Chief Complaint: "Sore throat and difficulty swallowing for 3 days."
+* HPI: Ms. Davis reports onset of severe sore throat 3 days ago, which has progressively worsened, making it painful to swallow liquids and solids. Associated with mild fever (up to 100.5°F at home), body aches, and fatigue. Denies cough, runny nose, congestion, or rash. No known sick contacts. Has been taking Tylenol for fever with minimal relief.
+* ROS: No recent strep exposure. Denies nausea, vomiting, abdominal pain, or dysuria. Last menstrual period 2 weeks ago.
+
+**O (Objective):**
+* Vitals:
+    * BP: 118/78 mmHg
+    * HR: 88 bpm
+    * RR: 18 bpm
+    * Temp: 100.8°F (oral)
+    * Wt: 130 lbs
+* Physical Exam:
+    * General: Appears tired, mild distress due to throat pain.
+    * HEENT:
+        * Throat: Erythematous pharynx. Tonsils 2+ enlarged, with white exudates bilaterally. No peritonsillar swelling.
+        * Neck: Anterior cervical lymphadenopathy, tender to palpation.
+        * Nose: Clear nasal passages, no discharge.
+        * Ears: Tympanic membranes clear bilaterally.
+    * Lungs: Clear to auscultation bilaterally.
+* Rapid Strep Test: Positive
+
+**A (Assessment):**
+* 1. Acute streptococcal pharyngitis (J02.0): Confirmed by positive rapid strep test and classic Centor criteria symptoms (tonsillar exudates, swollen/tender anterior cervical nodes, fever, absence of cough).
+
+**P (Plan):**
+* 1. Acute streptococcal pharyngitis:
+    * Medication: Prescribed Amoxicillin 500mg, 2 tablets by mouth twice daily for 10 days. Advised to complete full course of antibiotics even if symptoms improve.
+    * Symptomatic Relief: Advised warm salt water gargles, lozenges, and continued use of Tylenol/ibuprofen as needed for pain and fever.
+    * Education: Discussed contagiousness and importance of hand hygiene. Advised to stay home from work/school for 24 hours after starting antibiotics and once afebrile.
+    * Complications: Educated on potential complications of untreated strep throat (rheumatic fever, glomerulonephritis) and importance of completing antibiotics.
+* Follow-up: Return to clinic if symptoms worsen, develop rash, or no improvement in 48-72 hours.
+                `.trim(),
+                expected: {
+                    chiefComplaint: "Sore throat and difficulty swallowing for 3 days.",
+                    icd10: "J02.0",
+                    cpt: "99213,87880", // Assuming established patient visit (99213) and Rapid Strep Test (87880)
+                    modifier: "NONE",
+                    planKeywords: ["AMOXICILLIN", "ANTIBIOTICS", "SALT WATER", "TYLENOL", "HAND HYGIENE", "STAY HOME", "FOLLOW-UP"]
+                },
+                explanation: `
+**Chief Complaint:** Directly stated under 'S'.
+**Primary ICD-10:** J02.0 for Acute streptococcal pharyngitis is clearly stated in the 'A' section.
+**Primary CPT Code(s):** An established patient office visit (e.g., 99213) is implied for the encounter, and a Rapid Strep Test (87880) is explicitly mentioned and positive.
+**Modifier(s):** No specific modifiers are indicated by the scenario for these services.
+**Key Elements of the Plan:** The plan (P) includes medication (Amoxicillin, antibiotics), symptomatic relief (salt water gargles, Tylenol), education (hand hygiene, staying home), and follow-up instructions.
+                `.trim()
+            },
+            {
+                id: 2,
+                title: "Hypertension Follow-up Patient",
+                description: "Review this SOAP note for a follow-up visit regarding hypertension and extract key coding and plan details.",
+                soapNote: `
+**Patient Name:** John Doe
+**Date of Birth:** 03/15/1970
+**Date of Visit:** 2025-08-16
+**Provider:** Dr. Alex Chen
+
+**S (Subjective):**
+* Chief Complaint: "Follow-up for blood pressure."
+* HPI: Mr. Doe reports his home blood pressure readings have been consistently in the range of 130-140/80-90 mmHg daily since his last visit. Denies headaches, dizziness, chest pain, or vision changes. Reports adherence to prescribed Lisinopril 20mg daily. States he has been walking 30 minutes, 4 times a week, and trying to reduce sodium intake. Denies any side effects from medication.
+* ROS: No new complaints. Denies fever, cough, shortness of breath, nausea, vomiting, diarrhea, constipation, or urinary symptoms.
+
+**O (Objective):**
+* Vitals:
+    * BP: 138/86 mmHg (right arm, sitting)
+    * HR: 72 bpm
+    * RR: 16 bpm
+    * Temp: 98.6°F (oral)
+    * Wt: 185 lbs (down 2 lbs from last visit)
+* Physical Exam:
+    * General: Alert, oriented, appears comfortable.
+    * CV: Regular rhythm, no murmurs, rubs, or gallops. Normal S1/S2.
+    * Pulmonary: Lungs clear to auscultation bilaterally. No wheezes, rales, or rhonchi.
+    * Extremities: No edema. Peripheral pulses 2+ and symmetric.
+* Labs (from 2 weeks prior):
+    * BMP: Na 140, K 4.1, Cr 0.9, Glucose 102
+    * HbA1c: 5.7%
+    * Lipid Panel: Total Chol 180, HDL 55, LDL 90, Trig 120
+
+**A (Assessment):**
+* 1. Essential Hypertension (I10): Stable blood pressure readings at target. Patient reports good medication adherence and lifestyle modifications. Labs are stable.
+* 2. Prediabetes (R73.03): HbA1c remains stable. Continue lifestyle modifications.
+* 3. Hyperlipidemia (E78.5): LDL well-controlled on current diet and exercise.
+
+**P (Plan):**
+* 1. Essential Hypertension:
+    * Continue Lisinopril 20mg daily.
+    * Encourage continued home BP monitoring; bring log to next visit.
+    * Continue DASH diet and regular exercise.
+* 2. Prediabetes:
+    * Continue emphasizing diet and exercise.
+    * Recheck HbA1c in 6 months.
+* 3. Hyperlipidemia:
+    * Continue current diet and exercise.
+    * Recheck Lipid Panel in 1 year.
+* Follow-up: Return to clinic in 3 months for recheck of BP and overall health. Patient advised to call earlier if any concerns.
+                `.trim(),
+                expected: {
+                    chiefComplaint: "Follow-up for blood pressure.",
+                    icd10: "I10,R73.03,E78.5", // Multiple diagnoses
+                    cpt: "99213", // Assuming a standard established patient office visit
+                    modifier: "NONE",
+                    planKeywords: ["LISINOPRIL", "BP MONITORING", "DASH DIET", "EXERCISE", "HBA1C", "LIPID PANEL", "FOLLOW-UP"]
+                },
+                explanation: `
+**Chief Complaint:** Directly stated under 'S'.
+**Primary ICD-10:** All three diagnoses (I10, R73.03, E78.5) are listed in the 'A' section.
+**Primary CPT Code(s):** A standard established patient office visit (e.g., 99213) is the most appropriate CPT code for this type of follow-up.
+**Modifier(s):** No specific modifiers are indicated by the scenario.
+**Key Elements of the Plan:** The plan (P) includes continuing medication (Lisinopril), monitoring (home BP), lifestyle (DASH diet, exercise), and follow-up for multiple conditions (HbA1c, Lipid Panel, clinic visit).
+                `.trim()
             }
         ];
 
@@ -1342,6 +1545,8 @@
             scrubberChallengeContent.classList.add('hidden');
             // Hide denial challenge content by default
             denialChallengeContent.classList.add('hidden');
+            // Hide SOAP challenge content by default
+            soapChallengeContent.classList.add('hidden');
         };
 
         // --- Medical Billing Walkthrough Logic ---
@@ -1875,7 +2080,7 @@ Modifier(s): ${currentScrubberScenarioData.presentedClaim.modifier}
             if (!compareInput(userModifier, currentScrubberScenarioData.expectedInputs.correctedModifier.toUpperCase())) {
                 const error = currentScrubberScenarioData.errors.find(e => e.type === 'modifier');
                  feedbackHtml += `<p class="text-red-700">Modifier(s): Incorrect. Expected "${currentScrubberScenarioData.expectedInputs.correctedModifier}".</p>`;
-                 if (error) feedbackHtml += `<p class="text-gray-700 text-sm mt-1">${error.explanation}</p>`;
+                 if (error) feedbackHtml += `<p class="text-gray-700 text-sm mt-1">${error.explanation}</p`;
                  allCorrect = false;
             } else {
                 feedbackHtml += `<p class="text-green-700">Modifier(s): Correct! ("${currentScrubberScenarioData.expectedInputs.correctedModifier}")</p>`;
@@ -1901,7 +2106,7 @@ Modifier(s): ${currentScrubberScenarioData.presentedClaim.modifier}
             scrubberFeedback.className = 'bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]'; // Reset styling
         }
 
-        // --- NEW Denial Code Interpreter Logic ---
+        // --- Denial Code Interpreter Logic ---
         let currentDenialScenarioData = null;
 
         loadDenialScenarioBtn.addEventListener('click', () => {
@@ -2019,6 +2224,156 @@ Modifier(s): ${currentScrubberScenarioData.presentedClaim.modifier}
             denialInterpretationOptions.querySelectorAll('input[type="radio"]').forEach(radio => radio.disabled = false);
             denialFeedback.innerHTML = '<p class="text-gray-500 denial-feedback-text">Feedback on your denial resolution plan will appear here.</p>';
             denialFeedback.className = 'bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]'; // Reset styling
+        }
+
+        // --- NEW SOAP Note Coder & Extractor Logic ---
+        let currentSoapScenarioData = null;
+
+        loadSoapScenarioBtn.addEventListener('click', () => {
+            const randomIndex = Math.floor(Math.random() * soapNoteScenarios.length);
+            currentSoapScenarioData = soapNoteScenarios[randomIndex];
+            
+            soapChallengeContent.classList.remove('hidden');
+            soapScenarioTitle.textContent = `SOAP Note Challenge: ${currentSoapScenarioData.title}`;
+            soapScenarioDescription.textContent = currentSoapScenarioData.description;
+            soapNoteDisplay.textContent = currentSoapScenarioData.soapNote;
+            
+            resetSoapInputsAndFeedback();
+            checkSoapBtn.classList.remove('hidden');
+            resetSoapBtn.classList.remove('hidden');
+        });
+
+        checkSoapBtn.addEventListener('click', () => {
+            if (!currentSoapScenarioData) {
+                soapFeedback.innerHTML = '<p class="text-red-700 soap-feedback-text">Please load a scenario first!</p>';
+                return;
+            }
+
+            const userChiefComplaint = userSoapChiefComplaintInput.value.trim();
+            const userICD = userSoapICDInput.value.trim().toUpperCase().split(',').map(s => s.trim()).filter(s => s !== '');
+            const userCPT = userSoapCPTInput.value.trim().toUpperCase().split(',').map(s => s.trim()).filter(s => s !== '');
+            const userModifier = userSoapModifierInput.value.trim().toUpperCase();
+            const userPlan = userSoapPlanInput.value.trim().toUpperCase();
+
+            let feedbackHtml = '';
+            let allCorrect = true;
+
+            // Helper to compare arrays of codes, ignoring order
+            const compareCodeArrays = (userArray, expectedArray) => {
+                if (userArray.length !== expectedArray.length) return false;
+                const sortedUser = [...userArray].sort();
+                const sortedExpected = [...expectedArray].sort();
+                for (let i = 0; i < sortedUser.length; i++) {
+                    if (sortedUser[i] !== sortedExpected[i]) return false;
+                }
+                return true;
+            };
+
+            // Check Chief Complaint
+            if (userChiefComplaint.toLowerCase() === currentSoapScenarioData.expected.chiefComplaint.toLowerCase()) {
+                feedbackHtml += `<p class="text-green-700">Chief Complaint: Correct! ("${currentSoapScenarioData.expected.chiefComplaint}")</p>`;
+            } else {
+                feedbackHtml += `<p class="text-red-700">Chief Complaint: Incorrect. Expected: "${currentSoapScenarioData.expected.chiefComplaint}".</p>`;
+                allCorrect = false;
+            }
+
+            // Check Primary ICD-10
+            const expectedICD = currentSoapScenarioData.expected.icd10.split(',').map(s => s.trim().toUpperCase());
+            if (compareCodeArrays(userICD, expectedICD)) {
+                feedbackHtml += `<p class="text-green-700">Primary ICD-10 Code(s): Correct! ("${currentSoapScenarioData.expected.icd10}")</p>`;
+            } else {
+                feedbackHtml += `<p class="text-red-700">Primary ICD-10 Code(s): Incorrect. Expected: "${currentSoapScenarioData.expected.icd10}".</p>`;
+                allCorrect = false;
+            }
+
+            // Check Primary CPT
+            const expectedCPT = currentSoapScenarioData.expected.cpt.split(',').map(s => s.trim().toUpperCase());
+            if (compareCodeArrays(userCPT, expectedCPT)) {
+                feedbackHtml += `<p class="text-green-700">Primary CPT Code(s): Correct! ("${currentSoapScenarioData.expected.cpt}")</p>`;
+            } else {
+                feedbackHtml += `<p class="text-red-700">Primary CPT Code(s): Incorrect. Expected: "${currentSoapScenarioData.expected.cpt}".</p>`;
+                allCorrect = false;
+            }
+
+            // Check Modifier
+            const expectedModifier = currentSoapScenarioData.expected.modifier.toUpperCase();
+            const userModNormalized = (userSoapModifierInput.value.trim().toUpperCase() === 'NONE' || userSoapModifierInput.value.trim() === '') ? 'NONE' : userSoapModifierInput.value.trim().toUpperCase();
+
+            if (userModNormalized === expectedModifier) {
+                feedbackHtml += `<p class="text-green-700">Modifier(s): Correct! ("${expectedModifier}")</p>`;
+            } else {
+                feedbackHtml += `<p class="text-red-700">Modifier(s): Incorrect. Expected: "${expectedModifier}".</p>`;
+                allCorrect = false;
+            }
+
+            // Check Key Plan Elements (using keywords)
+            const expectedPlanKeywords = currentSoapScenarioData.expected.planKeywords.map(k => k.toUpperCase());
+            const userPlanWords = userPlan.split(/\s|,\s*|\.\s*|;\s*/).filter(word => word !== '').map(word => word.toUpperCase());
+            
+            let planCorrect = true;
+            let missingPlanKeywords = [];
+            let extraPlanKeywords = [];
+
+            expectedPlanKeywords.forEach(keyword => {
+                if (!userPlanWords.some(word => word.includes(keyword))) { // Check if any user word contains the keyword
+                    missingPlanKeywords.push(keyword);
+                    planCorrect = false;
+                }
+            });
+
+            userPlanWords.forEach(word => {
+                 // Check if the user's word is not directly one of the expected keywords AND doesn't contain an expected keyword
+                if (!expectedPlanKeywords.includes(word) && !expectedPlanKeywords.some(kw => word.includes(kw))) {
+                    extraPlanKeywords.push(word);
+                }
+            });
+
+            if (planCorrect && extraPlanKeywords.length === 0) {
+                feedbackHtml += `<p class="text-green-700 mt-2">Key Plan Elements: Well done! Your summary covers the main points.</p>`;
+            } else {
+                feedbackHtml += `<p class="text-red-700 mt-2">Key Plan Elements: Review your plan summary.</p>`;
+                if (missingPlanKeywords.length > 0) {
+                    feedbackHtml += `<p class="text-red-700 text-sm">Missing key elements: ${missingPlanKeywords.join(', ')}.</p>`;
+                }
+                if (extraPlanKeywords.length > 0) {
+                    feedbackHtml += `<p class="text-red-700 text-sm">You included some unexpected elements: ${extraPlanKeywords.join(', ')}.</p>`;
+                }
+                allCorrect = false;
+            }
+
+            // Overall feedback
+            if (allCorrect) {
+                soapFeedback.innerHTML = `<p class="text-green-700 font-bold">Excellent! You correctly extracted all key information from the SOAP note.</p>`;
+                soapFeedback.className = 'bg-green-50 p-3 rounded-lg border border-green-200 mt-4 min-h-[80px]';
+            } else {
+                soapFeedback.innerHTML = `<p class="text-red-700 font-bold">Not quite perfect. Review the feedback and explanation:</p>` + feedbackHtml;
+                soapFeedback.className = 'bg-red-50 p-3 rounded-lg border border-red-200 mt-4 min-h-[80px]';
+            }
+            soapFeedback.innerHTML += `<p class="text-gray-700 mt-4 font-bold">Detailed Explanation:</p><p class="soap-feedback-text">${currentSoapScenarioData.explanation}</p>`;
+
+            // Disable inputs after checking
+            userSoapChiefComplaintInput.disabled = true;
+            userSoapICDInput.disabled = true;
+            userSoapCPTInput.disabled = true;
+            userSoapModifierInput.disabled = true;
+            userSoapPlanInput.disabled = true;
+        });
+
+        resetSoapBtn.addEventListener('click', resetSoapInputsAndFeedback);
+
+        function resetSoapInputsAndFeedback() {
+            userSoapChiefComplaintInput.value = '';
+            userSoapICDInput.value = '';
+            userSoapCPTInput.value = '';
+            userSoapModifierInput.value = '';
+            userSoapPlanInput.value = '';
+            userSoapChiefComplaintInput.disabled = false;
+            userSoapICDInput.disabled = false;
+            userSoapCPTInput.disabled = false;
+            userSoapModifierInput.disabled = false;
+            userSoapPlanInput.disabled = false;
+            soapFeedback.innerHTML = '<p class="text-gray-500 soap-feedback-text">Feedback on your extraction will appear here.</p>';
+            soapFeedback.className = 'bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]'; // Reset styling
         }
 
     </script>
