@@ -88,19 +88,19 @@
         .hidden {
             display: none;
         }
-        .walkthrough-step-content, .quiz-content, .balance-calculator-content, .modifier-challenge-content {
+        .walkthrough-step-content, .quiz-content, .balance-calculator-content, .modifier-challenge-content, .matching-game-content, .scrubber-challenge-content {
             background-color: #f8fafc; /* bg-blue-50 alternative */
             padding: 1rem;
             border-radius: 0.5rem;
             border: 1px solid #e2e8f0; /* border-gray-200 alternative */
             margin-top: 1rem;
         }
-        .walkthrough-step-title, .quiz-question-title, .balance-scenario-title, .modifier-challenge-title {
+        .walkthrough-step-title, .quiz-question-title, .balance-scenario-title, .modifier-challenge-title, .matching-game-title, .scrubber-challenge-title {
             font-weight: 600; /* font-semibold */
             color: #1a202c; /* text-gray-900 */
             margin-bottom: 0.5rem;
         }
-        .walkthrough-instructions, .quiz-instructions, .quiz-feedback-text, .balance-scenario-text, .balance-feedback-text, .modifier-scenario-text, .modifier-feedback-text {
+        .walkthrough-instructions, .quiz-instructions, .quiz-feedback-text, .balance-scenario-text, .balance-feedback-text, .modifier-scenario-text, .modifier-feedback-text, .matching-game-text, .scrubber-scenario-text, .scrubber-feedback-text {
             font-size: 0.875rem; /* text-sm */
             color: #4a5568; /* text-gray-700 */
         }
@@ -116,6 +116,80 @@
         }
         .quiz-option input[type="radio"] {
             margin-right: 8px;
+        }
+        .match-card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Responsive grid */
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .match-card {
+            background-color: #cbd5e0; /* gray-300 */
+            border-radius: 8px;
+            padding: 15px;
+            height: 120px; /* Fixed height for consistency */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-weight: 600;
+            color: #2d3748; /* gray-800 */
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            transform-style: preserve-3d;
+            position: relative;
+        }
+        .match-card.flipped {
+            background-color: #fff;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .match-card.matched {
+            background-color: #a7f3d0; /* green-200 */
+            color: #065f46; /* green-800 */
+            cursor: default;
+            pointer-events: none; /* Disable clicks on matched cards */
+        }
+        .match-card.incorrect {
+            background-color: #fca5a5; /* red-300 */
+            color: #991b1b; /* red-800 */
+        }
+        .card-inner {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backface-visibility: hidden;
+            position: absolute;
+        }
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backface-visibility: hidden;
+            border-radius: 8px;
+            padding: 15px;
+            box-sizing: border-box;
+            font-size: 0.9em;
+        }
+        .card-front {
+            background-color: #cbd5e0; /* gray-300 */
+            color: #2d3748; /* gray-800 */
+            font-weight: 600;
+        }
+        .card-back {
+            background-color: #fff;
+            color: #2d3748;
+            transform: rotateY(180deg);
+        }
+        .match-card.is-flipped .card-front {
+            transform: rotateY(180deg);
+        }
+        .match-card.is-flipped .card-back {
+            transform: rotateY(360deg);
         }
     </style>
 </head>
@@ -248,7 +322,7 @@
                 <button id="quizLawsBtn" class="btn-primary bg-pink-600 hover:bg-pink-700">Healthcare Laws</button>
                 <button id="quizEthicsBtn" class="btn-primary bg-pink-600 hover:bg-pink-700">Coding Ethics</button>
                 <button id="quizDenialsBtn" class="btn-primary bg-pink-600 hover:bg-pink-700">Denials & Appeals</button>
-                <button id="quizInsuranceNuanceBtn" class="btn-primary bg-pink-600 hover:bg-pink-700">Insurance Nuances</button> <!-- NEW BUTTON -->
+                <button id="quizInsuranceNuanceBtn" class="btn-primary bg-pink-600 hover:bg-pink-700">Insurance Nuances</button>
             </div>
 
             <div id="quizContent" class="quiz-content hidden">
@@ -306,7 +380,7 @@
             </div>
         </section>
 
-        <!-- NEW: Advanced Modifier Application Challenge Section -->
+        <!-- Advanced Modifier Application Challenge Section -->
         <section class="p-6 bg-yellow-50 rounded-lg mb-8">
             <h2 class="section-title text-yellow-800">9. Advanced Modifier Application Challenge 🌟</h2>
             <p class="text-gray-700 mb-4">Analyze the scenario and apply the appropriate CPT code and modifier.</p>
@@ -337,8 +411,66 @@
             </div>
         </section>
 
+        <!-- Medical Terminology Matching Game -->
+        <section class="p-6 bg-blue-50 rounded-lg mb-8">
+            <h2 class="section-title text-blue-800">10. Medical Terminology Matching Game 🧠</h2>
+            <p class="text-gray-700 mb-4">Match the medical billing terms/acronyms with their correct definitions.</p>
+
+            <button id="startGameBtn" class="btn-primary w-full mb-6 bg-blue-600 hover:bg-blue-700">Start New Game</button>
+
+            <div id="matchingGameContent" class="matching-game-content hidden">
+                <p id="gameMessage" class="text-center text-lg font-bold mb-4"></p>
+                <div id="cardGrid" class="match-card-grid">
+                    <!-- Cards will be dynamically inserted here -->
+                </div>
+                <button id="resetGameBtn" class="btn-secondary w-full mt-6 hidden">Reset Game</button>
+            </div>
+        </section>
+
+        <!-- Claim Scrubber / Error Finder Challenge Section -->
+        <section class="p-6 bg-orange-100 rounded-lg">
+            <h2 class="section-title text-orange-800">11. Claim Scrubber / Error Finder Challenge 🔍</h2>
+            <p class="text-gray-700 mb-4">Review the presented claim scenario and identify/correct the errors.</p>
+
+            <button id="loadScrubberScenarioBtn" class="btn-primary w-full mb-6 bg-orange-600 hover:bg-orange-700">Load New Scenario</button>
+
+            <div id="scrubberChallengeContent" class="scrubber-challenge-content hidden">
+                <h3 id="scrubberScenarioTitle" class="scrubber-challenge-title text-orange-700"></h3>
+                <div id="scrubberScenarioDetails" class="scrubber-scenario-text mb-4"></div>
+                
+                <p class="font-bold text-gray-700 mb-2">Presented Claim Details:</p>
+                <pre id="presentedClaimOutput" class="bg-gray-50 p-3 rounded-lg border border-gray-200 text-sm whitespace-pre-wrap mb-4"></pre>
+
+                <p class="font-bold text-gray-700 mb-2">Your Corrected Codes/Modifiers:</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div>
+                        <label for="userScrubberICD" class="block text-gray-700 text-sm font-bold mb-2">Corrected ICD-10:</label>
+                        <input type="text" id="userScrubberICD" placeholder="e.g., I10" class="focus:ring-orange-500 focus:border-orange-500 uppercase">
+                    </div>
+                    <div>
+                        <label for="userScrubberCPT" class="block text-gray-700 text-sm font-bold mb-2">Corrected CPT:</label>
+                        <input type="text" id="userScrubberCPT" placeholder="e.g., 99213" class="focus:ring-orange-500 focus:border-orange-500 uppercase">
+                    </div>
+                    <div>
+                        <label for="userScrubberModifier" class="block text-gray-700 text-sm font-bold mb-2">Corrected Modifier(s):</label>
+                        <input type="text" id="userScrubberModifier" placeholder="e.g., 25, 59 (or 'None')" class="focus:ring-orange-500 focus:border-orange-500 uppercase">
+                    </div>
+                </div>
+                
+                <button id="checkScrubberBtn" class="btn-primary bg-orange-600 hover:bg-orange-700 mb-4">Check My Corrections</button>
+                <button id="resetScrubberBtn" class="btn-secondary hidden">Reset Scenario</button>
+
+                <div id="scrubberFeedback" class="bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]">
+                    <p class="text-gray-500 scrubber-feedback-text">Feedback on your corrections will appear here.</p>
+                </div>
+            </div>
+        </section>
 
     </div>
+
+    <footer class="text-center text-gray-600 text-sm mt-10 pb-5">
+        &copy; 2025 Chandra M Harris
+    </footer>
 
     <script>
         // DOM Element References (existing sections)
@@ -383,7 +515,7 @@
         const quizLawsBtn = document.getElementById('quizLawsBtn');
         const quizEthicsBtn = document.getElementById('quizEthicsBtn');
         const quizDenialsBtn = document.getElementById('quizDenialsBtn');
-        const quizInsuranceNuanceBtn = document.getElementById('quizInsuranceNuanceBtn'); // NEW
+        const quizInsuranceNuanceBtn = document.getElementById('quizInsuranceNuanceBtn');
         const quizContent = document.getElementById('quizContent');
         const quizQuestionTitle = document.getElementById('quizQuestionTitle');
         const quizOptions = document.getElementById('quizOptions');
@@ -405,7 +537,7 @@
         const resetBalanceBtn = document.getElementById('resetBalanceBtn');
         const balanceFeedback = document.getElementById('balanceFeedback');
 
-        // DOM Element References (NEW Modifier Application Challenge)
+        // DOM Element References (Modifier Application Challenge)
         const loadModifierScenarioBtn = document.getElementById('loadModifierScenarioBtn');
         const modifierChallengeContent = document.getElementById('modifierChallengeContent');
         const modifierScenarioTitle = document.getElementById('modifierScenarioTitle');
@@ -415,6 +547,26 @@
         const checkModifierBtn = document.getElementById('checkModifierBtn');
         const resetModifierBtn = document.getElementById('resetModifierBtn');
         const modifierFeedback = document.getElementById('modifierFeedback');
+
+        // DOM Element References (Matching Game)
+        const startGameBtn = document.getElementById('startGameBtn');
+        const matchingGameContent = document.getElementById('matchingGameContent');
+        const cardGrid = document.getElementById('cardGrid');
+        const gameMessage = document.getElementById('gameMessage');
+        const resetGameBtn = document.getElementById('resetGameBtn');
+
+        // DOM Element References (Claim Scrubber)
+        const loadScrubberScenarioBtn = document.getElementById('loadScrubberScenarioBtn');
+        const scrubberChallengeContent = document.getElementById('scrubberChallengeContent');
+        const scrubberScenarioTitle = document.getElementById('scrubberScenarioTitle');
+        const scrubberScenarioDetails = document.getElementById('scrubberScenarioDetails');
+        const presentedClaimOutput = document.getElementById('presentedClaimOutput');
+        const userScrubberICDInput = document.getElementById('userScrubberICD');
+        const userScrubberCPTInput = document.getElementById('userScrubberCPT');
+        const userScrubberModifierInput = document.getElementById('userScrubberModifier');
+        const checkScrubberBtn = document.getElementById('checkScrubberBtn');
+        const resetScrubberBtn = document.getElementById('resetScrubberBtn');
+        const scrubberFeedback = document.getElementById('scrubberFeedback');
 
 
         // --- Global Data Storage (for existing simulation) ---
@@ -557,7 +709,7 @@
                 },
                 // Add more Denials & Appeals questions here
             ],
-            // NEW: Insurance Nuances Quiz Module
+            // Insurance Nuances Quiz Module
             "Insurance Nuances": [
                 {
                     question: "Which type of insurance plan typically requires a referral from a Primary Care Provider (PCP) to see a specialist?",
@@ -689,8 +841,8 @@
             }
         ];
 
-        // --- Global Data Storage (NEW Modifier Application Challenge) ---
-        let currentModifierScenario = null;
+        // --- Global Data Storage (Modifier Application Challenge) ---
+        let currentModifierChallenge = null;
         const modifierScenarios = [
             {
                 id: 1,
@@ -726,6 +878,87 @@
                 cptCodeToInput: "99213", // E/M service
                 correctModifier: "25",
                 explanation: "Modifier -25 indicates a significant, separately identifiable evaluation and management service by the same physician on the same day of a procedure. The office visit for general symptoms is distinct from the minor procedure."
+            }
+        ];
+
+        // --- Global Data Storage (Matching Game) ---
+        const termPairs = [
+            { term: "EOB", definition: "Explanation of Benefits" },
+            { term: "ERA", definition: "Electronic Remittance Advice" },
+            { term: "HIPAA", definition: "Health Insurance Portability and Accountability Act" },
+            { term: "PHI", definition: "Protected Health Information" },
+            { term: "NPI", definition: "National Provider Identifier" },
+            { term: "CPT", definition: "Current Procedural Terminology" },
+            { term: "ICD-10-CM", definition: "International Classification of Diseases, 10th Revision, Clinical Modification" },
+            { term: "HCPCS", definition: "Healthcare Common Procedure Coding System" },
+            { term: "CMS-1500", definition: "Standard claim form for professional services" },
+            { term: "UB-04", definition: "Standard claim form for institutional services" }
+        ];
+
+        let cards = [];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let gameActive = false;
+
+        // --- Global Data Storage (Claim Scrubber) ---
+        let currentScrubberScenario = null;
+        const claimScrubberScenarios = [
+            {
+                id: 1,
+                title: "Scenario 1: Outdated Diagnosis Code",
+                description: "A 65-year-old patient presented with symptoms of an acute myocardial infarction (heart attack). The physician documented a diagnosis of 'Acute Myocardial Infarction'. The claim was submitted with an old ICD-9 code.",
+                presentedClaim: {
+                    diagnosis: "410.10 (Acute MI, initial episode of care)", // ICD-9 - ERROR
+                    cpt: "99214 (Office visit)",
+                    modifier: "None",
+                    notes: "Patient seen urgently for chest pain. EKG changes noted."
+                },
+                errors: [
+                    { type: "diagnosis", correctValue: "I21.01", explanation: "Outdated ICD-9 code used. ICD-9 codes are no longer valid for billing since October 1, 2015. The correct ICD-10-CM code for an acute anterior wall STEMI is I21.01." }
+                ],
+                expectedInputs: {
+                    correctedICD: "I21.01",
+                    correctedCPT: "99214",
+                    correctedModifier: "NONE" // Assume 'None' or empty string for no modifier
+                }
+            },
+            {
+                id: 2,
+                title: "Scenario 2: Missing Modifier - Same Day E/M and Procedure",
+                description: "A patient came in for a routine follow-up E/M visit (CPT 99213) for chronic hypertension. During the same visit, the physician performed a separately identifiable lesion removal (CPT 11100). The claim was submitted without a modifier on the E/M service.",
+                presentedClaim: {
+                    diagnosis: "I10 (Essential Hypertension)",
+                    cpt: "99213, 11100",
+                    modifier: "None", // ERROR: 99213 needs a modifier
+                    notes: "Routine follow-up for HTN. Also evaluated and removed a skin lesion."
+                },
+                errors: [
+                    { type: "modifier", correctValue: "25", explanation: "Missing modifier on E/M service. Modifier -25 (Significant, Separately Identifiable E/M Service) is required on the E/M code (99213) when a distinct E/M service is performed on the same day as a minor procedure (11100)." }
+                ],
+                expectedInputs: {
+                    correctedICD: "I10",
+                    correctedCPT: "99213", // User should input 99213 for this specific problem in the context of the modifier.
+                    correctedModifier: "25"
+                }
+            },
+            {
+                id: 3,
+                title: "Scenario 3: Procedure Not Supported by Diagnosis",
+                description: "A patient was seen for a cough and fever. The physician ordered a chest X-ray. The diagnosis provided on the claim for the X-ray was 'Fatigue'.",
+                presentedClaim: {
+                    diagnosis: "R53.81 (Fatigue)", // ERROR: Does not support Chest X-ray
+                    cpt: "71045 (Radiologic examination, chest; single view, frontal)",
+                    modifier: "None",
+                    notes: "Patient complaints of cough and fever. Chest X-ray performed."
+                },
+                errors: [
+                    { type: "diagnosis", correctValue: "R05, R50.9", explanation: "The diagnosis 'Fatigue' does not support the medical necessity for a chest X-ray. More appropriate diagnoses based on the chief complaint would be 'Cough' (R05) and 'Fever, unspecified' (R50.9)." }
+                ],
+                expectedInputs: {
+                    correctedICD: "R05,R50.9", // Allow comma-separated
+                    correctedCPT: "71045",
+                    correctedModifier: "NONE"
+                }
             }
         ];
 
@@ -994,6 +1227,10 @@
             balanceCalculatorContent.classList.add('hidden');
             // Hide modifier challenge content by default
             modifierChallengeContent.classList.add('hidden');
+            // Hide matching game content by default
+            matchingGameContent.classList.add('hidden');
+            // Hide scrubber challenge content by default
+            scrubberChallengeContent.classList.add('hidden');
         };
 
         // --- Medical Billing Walkthrough Logic ---
@@ -1170,7 +1407,7 @@
         quizLawsBtn.addEventListener('click', () => loadQuizModule("Healthcare Laws"));
         quizEthicsBtn.addEventListener('click', () => loadQuizModule("Coding Ethics"));
         quizDenialsBtn.addEventListener('click', () => loadQuizModule("Denials & Appeals"));
-        quizInsuranceNuanceBtn.addEventListener('click', () => loadQuizModule("Insurance Nuances")); // NEW
+        quizInsuranceNuanceBtn.addEventListener('click', () => loadQuizModule("Insurance Nuances"));
 
         // --- Patient Balance Calculator Logic ---
         let currentBalanceScenarioData = null;
@@ -1270,7 +1507,7 @@
             balanceFeedback.className = 'bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]'; // Reset styling
         }
 
-        // --- NEW Modifier Application Challenge Logic ---
+        // --- Modifier Application Challenge Logic ---
         let currentModifierChallenge = null;
 
         loadModifierScenarioBtn.addEventListener('click', () => {
@@ -1313,7 +1550,7 @@
 
             // Check Modifier
             if (userMod !== currentModifierChallenge.correctModifier.trim().toUpperCase()) {
-                feedbackHtml += `<p class="text-red-700">Modifier: Incorrect. Expected "${currentModifierChallenge.correctModifier}".</p>`;
+                feedbackHtml += `<p class="text-red-700">Modifier: Incorrect. Expected "${currentModifierChallenge.correctModifier}".</p الأمريكية
                 isCorrect = false;
             } else {
                 feedbackHtml += `<p class="text-green-700">Modifier: Correct! ("${currentModifierChallenge.correctModifier}")</p>`;
@@ -1335,6 +1572,219 @@
             checkModifierBtn.classList.remove('hidden');
             resetModifierBtn.classList.remove('hidden');
         });
+
+        // --- Matching Game Logic ---
+
+        startGameBtn.addEventListener('click', startGame);
+        resetGameBtn.addEventListener('click', resetGame);
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function createCards() {
+            cardGrid.innerHTML = ''; // Clear previous cards
+            gameMessage.textContent = '';
+            flippedCards = [];
+            matchedPairs = 0;
+            gameActive = true;
+
+            cards = [];
+            termPairs.forEach((pair, index) => {
+                cards.push({ id: `term-${index}`, type: 'term', value: pair.term, pairId: index });
+                cards.push({ id: `def-${index}`, type: 'definition', value: pair.definition, pairId: index });
+            });
+
+            shuffle(cards);
+
+            cards.forEach(cardData => {
+                const cardElement = document.createElement('div');
+                cardElement.classList.add('match-card');
+                cardElement.dataset.id = cardData.id;
+                cardElement.dataset.pairId = cardData.pairId;
+                cardElement.dataset.type = cardData.type;
+
+                const cardFront = document.createElement('div');
+                cardFront.classList.add('card-front');
+                cardFront.textContent = '?'; // Placeholder for the back of the card
+
+                const cardBack = document.createElement('div');
+                cardBack.classList.add('card-back');
+                cardBack.textContent = cardData.value;
+
+                cardElement.appendChild(cardFront);
+                cardElement.appendChild(cardBack);
+                cardGrid.appendChild(cardElement);
+
+                cardElement.addEventListener('click', () => flipCard(cardElement, cardData));
+            });
+        }
+
+        function flipCard(cardElement, cardData) {
+            if (!gameActive || flippedCards.length === 2 || cardElement.classList.contains('is-flipped') || cardElement.classList.contains('matched')) {
+                return; // Do nothing if game not active, two cards already flipped, or card already flipped/matched
+            }
+
+            cardElement.classList.add('is-flipped');
+            flippedCards.push({ element: cardElement, data: cardData });
+
+            if (flippedCards.length === 2) {
+                checkForMatch();
+            }
+        }
+
+        function checkForMatch() {
+            const [card1, card2] = flippedCards;
+            const isMatch = card1.data.pairId === card2.data.pairId;
+
+            if (isMatch) {
+                card1.element.classList.add('matched');
+                card2.element.classList.add('matched');
+                gameMessage.textContent = 'Match found!';
+                matchedPairs++;
+                if (matchedPairs === termPairs.length) {
+                    gameMessage.textContent = 'Congratulations! You matched all pairs!';
+                    gameActive = false;
+                }
+                flippedCards = []; // Clear flipped cards for next turn
+            } else {
+                gameMessage.textContent = 'No match. Try again!';
+                // Add incorrect class temporarily for visual feedback
+                card1.element.classList.add('incorrect');
+                card2.element.classList.add('incorrect');
+
+                setTimeout(() => {
+                    card1.element.classList.remove('is-flipped', 'incorrect');
+                    card2.element.classList.remove('is-flipped', 'incorrect');
+                    flippedCards = []; // Clear flipped cards
+                    gameMessage.textContent = ''; // Clear message
+                }, 1000); // Flip back after 1 second
+            }
+        }
+
+        function startGame() {
+            matchingGameContent.classList.remove('hidden');
+            startGameBtn.classList.add('hidden');
+            resetGameBtn.classList.remove('hidden');
+            createCards();
+            gameMessage.textContent = 'Find the matching pairs!';
+        }
+
+        function resetGame() {
+            matchingGameContent.classList.add('hidden');
+            startGameBtn.classList.remove('hidden');
+            resetGameBtn.classList.add('hidden');
+            cardGrid.innerHTML = '';
+            gameMessage.textContent = '';
+            flippedCards = [];
+            matchedPairs = 0;
+            gameActive = false;
+            showMessage('Matching Game Reset.', 'success');
+        }
+
+        // --- Claim Scrubber Logic ---
+        let currentScrubberScenarioData = null;
+
+        loadScrubberScenarioBtn.addEventListener('click', () => {
+            const randomIndex = Math.floor(Math.random() * claimScrubberScenarios.length);
+            currentScrubberScenarioData = claimScrubberScenarios[randomIndex];
+            
+            scrubberChallengeContent.classList.remove('hidden');
+            scrubberScenarioTitle.textContent = `Claim Scrubber: ${currentScrubberScenarioData.title}`;
+            scrubberScenarioDetails.innerHTML = `<p class="text-sm text-orange-800 italic">${currentScrubberScenarioData.description}</p>
+                <p class="mt-2 font-bold">${currentScrubberScenarioData.correctionPrompt}</p>
+            `;
+            presentedClaimOutput.textContent = `
+Patient Notes: ${currentScrubberScenarioData.presentedClaim.notes}
+Diagnosis: ${currentScrubberScenarioData.presentedClaim.diagnosis}
+CPT Code(s): ${currentScrubberScenarioData.presentedClaim.cpt}
+Modifier(s): ${currentScrubberScenarioData.presentedClaim.modifier}
+            `.trim();
+            
+            resetScrubberInputsAndFeedback(); // Reset inputs and feedback
+            checkScrubberBtn.classList.remove('hidden');
+            resetScrubberBtn.classList.remove('hidden');
+        });
+
+        checkScrubberBtn.addEventListener('click', () => {
+            if (!currentScrubberScenarioData) {
+                scrubberFeedback.innerHTML = '<p class="text-red-700 scrubber-feedback-text">Please load a scenario first!</p>';
+                return;
+            }
+
+            const userICD = userScrubberICDInput.value.trim().toUpperCase();
+            const userCPT = userScrubberCPTInput.value.trim().toUpperCase();
+            const userModifier = userScrubberModifierInput.value.trim().toUpperCase();
+
+            let feedbackHtml = '';
+            let allCorrect = true;
+
+            // Helper to compare inputs, treating "NONE" or empty as the same for modifiers
+            const compareInput = (userInput, expectedValue) => {
+                if (expectedValue.toLowerCase() === 'none' || expectedValue.toLowerCase() === '') {
+                    return userInput === '' || userInput.toLowerCase() === 'none';
+                }
+                // For ICDs, allow comma-separated and check if all expected are present.
+                if (expectedValue.includes(',')) {
+                    const expectedParts = expectedValue.split(',').map(p => p.trim());
+                    const userParts = userInput.split(',').map(p => p.trim());
+                    return expectedParts.every(part => userParts.includes(part));
+                }
+                return userInput === expectedValue;
+            };
+
+            // Check ICD
+            if (!compareInput(userICD, currentScrubberScenarioData.expectedInputs.correctedICD)) {
+                const error = currentScrubberScenarioData.errors.find(e => e.type === 'diagnosis' || e.type === 'diagnosis-medical-necessity');
+                feedbackHtml += `<p class="text-red-700">ICD-10 Code: Incorrect. Expected "${currentScrubberScenarioData.expectedInputs.correctedICD}".</p>`;
+                if (error) feedbackHtml += `<p class="text-gray-700 text-sm mt-1">${error.explanation}</p>`;
+                allCorrect = false;
+            } else {
+                feedbackHtml += `<p class="text-green-700">ICD-10 Code: Correct! ("${currentScrubberScenarioData.expectedInputs.correctedICD}")</p>`;
+            }
+
+            // Check CPT
+            if (!compareInput(userCPT, currentScrubberScenarioData.expectedInputs.correctedCPT)) {
+                const error = currentScrubberScenarioData.errors.find(e => e.type === 'cpt');
+                feedbackHtml += `<p class="text-red-700">CPT Code: Incorrect. Expected "${currentScrubberScenarioData.expectedInputs.correctedCPT}".</p>`;
+                if (error) feedbackHtml += `<p class="text-gray-700 text-sm mt-1">${error.explanation}</p>`;
+                allCorrect = false;
+            } else {
+                feedbackHtml += `<p class="text-green-700">CPT Code: Correct! ("${currentScrubberScenarioData.expectedInputs.correctedCPT}")</p>`;
+            }
+
+            // Check Modifier
+            if (!compareInput(userModifier, currentScrubberScenarioData.expectedInputs.correctedModifier)) {
+                const error = currentScrubberScenarioData.errors.find(e => e.type === 'modifier');
+                 feedbackHtml += `<p class="text-red-700">Modifier(s): Incorrect. Expected "${currentScrubberScenarioData.expectedInputs.correctedModifier}".</p>`;
+                 if (error) feedbackHtml += `<p class="text-gray-700 text-sm mt-1">${error.explanation}</p>`;
+                 allCorrect = false;
+            } else {
+                feedbackHtml += `<p class="text-green-700">Modifier(s): Correct! ("${currentScrubberScenarioData.expectedInputs.correctedModifier}")</p>`;
+            }
+
+            if (allCorrect) {
+                scrubberFeedback.innerHTML = `<p class="text-green-700 font-bold">Excellent! You found and corrected all errors in this claim.</p>`;
+                scrubberFeedback.className = 'bg-green-50 p-3 rounded-lg border border-green-200 mt-4 min-h-[80px]';
+            } else {
+                // If there were specific error explanations, they are already added to feedbackHtml
+                scrubberFeedback.innerHTML = `<p class="text-red-700 font-bold">Not quite right. Review the feedback:</p>` + feedbackHtml;
+                scrubberFeedback.className = 'bg-red-50 p-3 rounded-lg border border-red-200 mt-4 min-h-[80px]';
+            }
+        });
+
+        resetScrubberBtn.addEventListener('click', resetScrubberInputsAndFeedback);
+
+        function resetScrubberInputsAndFeedback() {
+            userScrubberICDInput.value = '';
+            userScrubberCPTInput.value = '';
+            userScrubberModifierInput.value = '';
+            scrubberFeedback.innerHTML = '<p class="text-gray-500 scrubber-feedback-text">Feedback on your corrections will appear here.</p>';
+            scrubberFeedback.className = 'bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]'; // Reset styling
+        }
 
     </script>
 </body>
