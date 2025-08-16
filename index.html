@@ -88,33 +88,33 @@
         .hidden {
             display: none;
         }
-        .walkthrough-step-content, .quiz-content, .balance-calculator-content, .modifier-challenge-content, .matching-game-content, .scrubber-challenge-content {
+        .walkthrough-step-content, .quiz-content, .balance-calculator-content, .modifier-challenge-content, .matching-game-content, .scrubber-challenge-content, .denial-challenge-content {
             background-color: #f8fafc; /* bg-blue-50 alternative */
             padding: 1rem;
             border-radius: 0.5rem;
             border: 1px solid #e2e8f0; /* border-gray-200 alternative */
             margin-top: 1rem;
         }
-        .walkthrough-step-title, .quiz-question-title, .balance-scenario-title, .modifier-challenge-title, .matching-game-title, .scrubber-challenge-title {
+        .walkthrough-step-title, .quiz-question-title, .balance-scenario-title, .modifier-challenge-title, .matching-game-title, .scrubber-challenge-title, .denial-challenge-title {
             font-weight: 600; /* font-semibold */
             color: #1a202c; /* text-gray-900 */
             margin-bottom: 0.5rem;
         }
-        .walkthrough-instructions, .quiz-instructions, .quiz-feedback-text, .balance-scenario-text, .balance-feedback-text, .modifier-scenario-text, .modifier-feedback-text, .matching-game-text, .scrubber-scenario-text, .scrubber-feedback-text {
+        .walkthrough-instructions, .quiz-instructions, .quiz-feedback-text, .balance-scenario-text, .balance-feedback-text, .modifier-scenario-text, .modifier-feedback-text, .matching-game-text, .scrubber-scenario-text, .scrubber-feedback-text, .denial-scenario-text, .denial-feedback-text {
             font-size: 0.875rem; /* text-sm */
             color: #4a5568; /* text-gray-700 */
         }
-        .quiz-option {
+        .quiz-option, .denial-option {
             display: block;
             padding: 8px 0;
             cursor: pointer;
             transition: background-color 0.2s;
             border-radius: 4px;
         }
-        .quiz-option:hover {
+        .quiz-option:hover, .denial-option:hover {
             background-color: #f0f4f8;
         }
-        .quiz-option input[type="radio"] {
+        .quiz-option input[type="radio"], .denial-option input[type="radio"] {
             margin-right: 8px;
         }
         .match-card-grid {
@@ -428,7 +428,7 @@
         </section>
 
         <!-- Claim Scrubber / Error Finder Challenge Section -->
-        <section class="p-6 bg-orange-100 rounded-lg">
+        <section class="p-6 bg-orange-100 rounded-lg mb-8">
             <h2 class="section-title text-orange-800">11. Claim Scrubber / Error Finder Challenge 🔍</h2>
             <p class="text-gray-700 mb-4">Review the presented claim scenario and identify/correct the errors.</p>
 
@@ -462,6 +462,34 @@
 
                 <div id="scrubberFeedback" class="bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]">
                     <p class="text-gray-500 scrubber-feedback-text">Feedback on your corrections will appear here.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- NEW: Denial Code Interpreter & Action Plan Simulator Section -->
+        <section class="p-6 bg-purple-100 rounded-lg">
+            <h2 class="section-title text-purple-800">12. Denial Code Interpreter & Action Plan Simulator 🚫</h2>
+            <p class="text-gray-700 mb-4">Interpret the denial code and plan your next steps to resolve the claim.</p>
+
+            <button id="loadDenialScenarioBtn" class="btn-primary w-full mb-6 bg-purple-600 hover:bg-purple-700">Load New Denial Scenario</button>
+
+            <div id="denialChallengeContent" class="denial-challenge-content hidden">
+                <h3 id="denialScenarioTitle" class="denial-challenge-title text-purple-700"></h3>
+                <div id="denialScenarioDetails" class="denial-scenario-text mb-4"></div>
+                
+                <p class="font-bold text-gray-700 mb-2">Interpret the Denial Code:</p>
+                <div id="denialInterpretationOptions" class="mb-4">
+                    <!-- Options for interpretation will be dynamically inserted here -->
+                </div>
+
+                <p class="font-bold text-gray-700 mb-2">Your Action Plan (be specific):</p>
+                <textarea id="userActionPlan" rows="4" placeholder="e.g., Research payer policy, appeal with medical records, bill patient..." class="focus:ring-purple-500 focus:border-purple-500 mb-4"></textarea>
+                
+                <button id="checkDenialBtn" class="btn-primary bg-purple-600 hover:bg-purple-700 mb-4">Check My Plan</button>
+                <button id="resetDenialBtn" class="btn-secondary hidden">Reset Scenario</button>
+
+                <div id="denialFeedback" class="bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]">
+                    <p class="text-gray-500 denial-feedback-text">Feedback on your denial resolution plan will appear here.</p>
                 </div>
             </div>
         </section>
@@ -567,6 +595,17 @@
         const checkScrubberBtn = document.getElementById('checkScrubberBtn');
         const resetScrubberBtn = document.getElementById('resetScrubberBtn');
         const scrubberFeedback = document.getElementById('scrubberFeedback');
+
+        // DOM Element References (NEW Denial Code Interpreter)
+        const loadDenialScenarioBtn = document.getElementById('loadDenialScenarioBtn');
+        const denialChallengeContent = document.getElementById('denialChallengeContent');
+        const denialScenarioTitle = document.getElementById('denialScenarioTitle');
+        const denialScenarioDetails = document.getElementById('denialScenarioDetails');
+        const denialInterpretationOptions = document.getElementById('denialInterpretationOptions');
+        const userActionPlanInput = document.getElementById('userActionPlan');
+        const checkDenialBtn = document.getElementById('checkDenialBtn');
+        const resetDenialBtn = document.getElementById('resetDenialBtn');
+        const denialFeedback = document.getElementById('denialFeedback');
 
 
         // --- Global Data Storage (for existing simulation) ---
@@ -962,6 +1001,76 @@
             }
         ];
 
+        // --- Global Data Storage (NEW Denial Code Interpreter) ---
+        let currentDenialScenario = null;
+        const denialScenarios = [
+            {
+                id: 1,
+                denialCode: "CO 16",
+                context: "CPT 99213 denied. The claim submission was missing the referring physician's NPI.",
+                interpretations: [
+                    { text: "The service was not medically necessary.", correct: false },
+                    { text: "The claim was submitted after the timely filing limit.", correct: false },
+                    { text: "The claim lacks information required for processing.", correct: true },
+                    { text: "The charge submitted exceeded the allowed amount.", correct: false }
+                ],
+                correctActionPlanKeywords: ["CORRECT", "RESUBMIT", "MISSING NPI"],
+                explanation: "CO 16 means 'Claim/service lacks information which is needed for adjudication, or has been altered.' In this case, the missing referring physician's NPI needs to be added, and the claim should be corrected and resubmitted."
+            },
+            {
+                id: 2,
+                denialCode: "CO 45",
+                context: "CPT 88305 (Pathology) denied. The billed amount was $150, but the payer's allowed amount is $100.",
+                interpretations: [
+                    { text: "The service requires prior authorization.", correct: false },
+                    { text: "The charge submitted exceeds the allowed fee schedule amount.", correct: true },
+                    { text: "The patient's deductible has not been met.", correct: false },
+                    { text: "The claim has a coding error.", correct: false }
+                ],
+                correctActionPlanKeywords: ["ADJUST", "WRITE-OFF", "PATIENT RESPONSIBILITY (IF APPLICABLE)"],
+                explanation: "CO 45 indicates 'Charge exceeds fee schedule/maximum allowable or contracted rate.' The billed amount was higher than what the payer allows. The provider must adjust the fee to the allowed amount. Any remaining balance, after deductible/coinsurance, should be written off as a contractual adjustment, unless the plan allows for balance billing (rare for in-network)."
+            },
+            {
+                id: 3,
+                denialCode: "CO 29",
+                context: "CPT 99203 denied. The date of service was 18 months ago, and the payer's timely filing limit is 12 months.",
+                interpretations: [
+                    { text: "The service was not medically necessary.", correct: false },
+                    { text: "The claim was submitted after the timely filing limit.", correct: true },
+                    { text: "The patient's policy terminated.", correct: false },
+                    { text: "There was a duplicate claim submission.", correct: false }
+                ],
+                correctActionPlanKeywords: ["WRITE OFF", "CHECK FILING LIMITS"],
+                explanation: "CO 29 means 'The time limit for filing has expired.' If the claim was genuinely submitted late and no exception applies (e.g., patient eligibility retroactive), the balance should be written off. Always verify the payer's specific timely filing limits."
+            },
+            {
+                id: 4,
+                denialCode: "CO 150",
+                context: "CPT 72148 (MRI Lumbar Spine) denied. The patient's documentation did not clearly state conservative treatment was tried and failed.",
+                interpretations: [
+                    { text: "The payer determined the service was not medically necessary.", correct: true },
+                    { text: "A modifier is missing from the CPT code.", correct: false },
+                    { text: "The patient has other insurance that is primary.", correct: false },
+                    { text: "The CPT code is incorrect for the service provided.", correct: false }
+                ],
+                correctActionPlanKeywords: ["APPEAL", "MEDICAL RECORDS", "PROVIDER REVIEW", "CLINICAL JUSTIFICATION"],
+                explanation: "CO 150 indicates 'Payment adjusted because the payer deems the information submitted does not support this many/frequency/duration of services/items.' This is a medical necessity denial. An appeal, including comprehensive medical records (physician notes, treatment history, rationale for the service), is required to justify the service. Sometimes a peer-to-peer review with the ordering provider is necessary."
+            },
+            {
+                id: 5,
+                denialCode: "CO 236",
+                context: "CPT 90832 (Psychotherapy) denied. The patient's mental health benefits specify no coverage for outpatient psychotherapy.",
+                interpretations: [
+                    { text: "The service requires prior authorization.", correct: false },
+                    { text: "The procedure is bundled with another service.", correct: false },
+                    { text: "This procedure/service is not covered by the patient's plan.", correct: true },
+                    { text: "The patient has not met their deductible.", correct: false }
+                ],
+                correctActionPlanKeywords: ["INFORM PATIENT", "BILL PATIENT (IF ABN SIGNED)", "NON-COVERED"],
+                explanation: "CO 236 means 'This procedure/service is not covered by the patient's current benefits/plan.' This indicates a fundamental lack of coverage for the service. If an Advance Beneficiary Notice (ABN) or similar waiver was signed by the patient, the patient can be billed. Otherwise, it may need to be written off. Verify the patient's specific benefit plan details."
+            }
+        ];
+
 
         // --- Utility Functions (general) ---
 
@@ -1231,6 +1340,8 @@
             matchingGameContent.classList.add('hidden');
             // Hide scrubber challenge content by default
             scrubberChallengeContent.classList.add('hidden');
+            // Hide denial challenge content by default
+            denialChallengeContent.classList.add('hidden');
         };
 
         // --- Medical Billing Walkthrough Logic ---
@@ -1550,7 +1661,7 @@
 
             // Check Modifier
             if (userMod !== currentModifierChallenge.correctModifier.trim().toUpperCase()) {
-                feedbackHtml += `<p class="text-red-700">Modifier: Incorrect. Expected "${currentModifierChallenge.correctModifier}".</p الأمريكية
+                feedbackHtml += `<p class="text-red-700">Modifier: Incorrect. Expected "${currentModifierChallenge.correctModifier}".</p>`;
                 isCorrect = false;
             } else {
                 feedbackHtml += `<p class="text-green-700">Modifier: Correct! ("${currentModifierChallenge.correctModifier}")</p>`;
@@ -1695,7 +1806,7 @@
             scrubberChallengeContent.classList.remove('hidden');
             scrubberScenarioTitle.textContent = `Claim Scrubber: ${currentScrubberScenarioData.title}`;
             scrubberScenarioDetails.innerHTML = `<p class="text-sm text-orange-800 italic">${currentScrubberScenarioData.description}</p>
-                <p class="mt-2 font-bold">${currentScrubberScenarioData.correctionPrompt}</p>
+                <p class="mt-2 font-bold">Your Task: Correct the errors in the presented claim details below.</p>
             `;
             presentedClaimOutput.textContent = `
 Patient Notes: ${currentScrubberScenarioData.presentedClaim.notes}
@@ -1731,13 +1842,17 @@ Modifier(s): ${currentScrubberScenarioData.presentedClaim.modifier}
                 if (expectedValue.includes(',')) {
                     const expectedParts = expectedValue.split(',').map(p => p.trim());
                     const userParts = userInput.split(',').map(p => p.trim());
-                    return expectedParts.every(part => userParts.includes(part));
+                    // Check if all expected parts are in user's input, regardless of order
+                    const allExpectedFound = expectedParts.every(part => userParts.includes(part));
+                    // Check if user didn't add extra unexpected parts
+                    const noExtraParts = userParts.every(part => expectedParts.includes(part));
+                    return allExpectedFound && noExtraParts;
                 }
                 return userInput === expectedValue;
             };
 
             // Check ICD
-            if (!compareInput(userICD, currentScrubberScenarioData.expectedInputs.correctedICD)) {
+            if (!compareInput(userICD, currentScrubberScenarioData.expectedInputs.correctedICD.toUpperCase())) {
                 const error = currentScrubberScenarioData.errors.find(e => e.type === 'diagnosis' || e.type === 'diagnosis-medical-necessity');
                 feedbackHtml += `<p class="text-red-700">ICD-10 Code: Incorrect. Expected "${currentScrubberScenarioData.expectedInputs.correctedICD}".</p>`;
                 if (error) feedbackHtml += `<p class="text-gray-700 text-sm mt-1">${error.explanation}</p>`;
@@ -1747,7 +1862,7 @@ Modifier(s): ${currentScrubberScenarioData.presentedClaim.modifier}
             }
 
             // Check CPT
-            if (!compareInput(userCPT, currentScrubberScenarioData.expectedInputs.correctedCPT)) {
+            if (!compareInput(userCPT, currentScrubberScenarioData.expectedInputs.correctedCPT.toUpperCase())) {
                 const error = currentScrubberScenarioData.errors.find(e => e.type === 'cpt');
                 feedbackHtml += `<p class="text-red-700">CPT Code: Incorrect. Expected "${currentScrubberScenarioData.expectedInputs.correctedCPT}".</p>`;
                 if (error) feedbackHtml += `<p class="text-gray-700 text-sm mt-1">${error.explanation}</p>`;
@@ -1757,7 +1872,7 @@ Modifier(s): ${currentScrubberScenarioData.presentedClaim.modifier}
             }
 
             // Check Modifier
-            if (!compareInput(userModifier, currentScrubberScenarioData.expectedInputs.correctedModifier)) {
+            if (!compareInput(userModifier, currentScrubberScenarioData.expectedInputs.correctedModifier.toUpperCase())) {
                 const error = currentScrubberScenarioData.errors.find(e => e.type === 'modifier');
                  feedbackHtml += `<p class="text-red-700">Modifier(s): Incorrect. Expected "${currentScrubberScenarioData.expectedInputs.correctedModifier}".</p>`;
                  if (error) feedbackHtml += `<p class="text-gray-700 text-sm mt-1">${error.explanation}</p>`;
@@ -1784,6 +1899,126 @@ Modifier(s): ${currentScrubberScenarioData.presentedClaim.modifier}
             userScrubberModifierInput.value = '';
             scrubberFeedback.innerHTML = '<p class="text-gray-500 scrubber-feedback-text">Feedback on your corrections will appear here.</p>';
             scrubberFeedback.className = 'bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]'; // Reset styling
+        }
+
+        // --- NEW Denial Code Interpreter Logic ---
+        let currentDenialScenarioData = null;
+
+        loadDenialScenarioBtn.addEventListener('click', () => {
+            const randomIndex = Math.floor(Math.random() * denialScenarios.length);
+            currentDenialScenarioData = denialScenarios[randomIndex];
+            
+            denialChallengeContent.classList.remove('hidden');
+            denialScenarioTitle.textContent = `Denial Challenge: ${currentDenialScenarioData.denialCode}`;
+            denialScenarioDetails.innerHTML = `<p class="text-sm text-purple-800 italic">Context: ${currentDenialScenarioData.context}</p>
+            `;
+            
+            denialInterpretationOptions.innerHTML = ''; // Clear previous options
+            currentDenialScenarioData.interpretations.forEach((interpretation, index) => {
+                const label = document.createElement('label');
+                label.className = 'denial-option';
+                const input = document.createElement('input');
+                input.type = 'radio';
+                input.name = 'denialInterpretation';
+                input.value = index; // Use index to map back to the interpretation object
+                label.appendChild(input);
+                label.appendChild(document.createTextNode(interpretation.text));
+                denialInterpretationOptions.appendChild(label);
+            });
+
+            resetDenialInputsAndFeedback();
+            checkDenialBtn.classList.remove('hidden');
+            resetDenialBtn.classList.remove('hidden');
+        });
+
+        checkDenialBtn.addEventListener('click', () => {
+            if (!currentDenialScenarioData) {
+                denialFeedback.innerHTML = '<p class="text-red-700 denial-feedback-text">Please load a scenario first!</p>';
+                return;
+            }
+
+            const selectedInterpretationOption = document.querySelector('input[name="denialInterpretation"]:checked');
+            const userActionPlan = userActionPlanInput.value.trim().toUpperCase();
+
+            let feedbackHtml = '';
+            let allCorrect = true;
+
+            // Check Interpretation
+            if (!selectedInterpretationOption) {
+                feedbackHtml += `<p class="text-red-700">Interpretation: Please select an interpretation.</p>`;
+                allCorrect = false;
+            } else {
+                const selectedInterpretationIndex = parseInt(selectedInterpretationOption.value);
+                const isInterpretationCorrect = currentDenialScenarioData.interpretations[selectedInterpretationIndex].correct;
+                
+                if (isInterpretationCorrect) {
+                    feedbackHtml += `<p class="text-green-700">Interpretation: Correct! ("${currentDenialScenarioData.interpretations[selectedInterpretationIndex].text}")</p>`;
+                } else {
+                    const correctText = currentDenialScenarioData.interpretations.find(i => i.correct).text;
+                    feedbackHtml += `<p class="text-red-700">Interpretation: Incorrect. The correct interpretation is: "${correctText}".</p>`;
+                    allCorrect = false;
+                }
+            }
+
+            // Check Action Plan (using keywords)
+            const correctActionKeywords = currentDenialScenarioData.correctActionPlanKeywords.map(k => k.toUpperCase());
+            const userActionWords = userActionPlan.split(/\s|,\s*/).filter(word => word !== '').map(word => word.toUpperCase());
+            
+            let actionPlanCorrect = true;
+            let missingKeywords = [];
+            let extraKeywords = [];
+
+            correctActionKeywords.forEach(keyword => {
+                if (!userActionWords.includes(keyword)) {
+                    missingKeywords.push(keyword);
+                    actionPlanCorrect = false;
+                }
+            });
+
+            // Check for extraneous words that are not expected for a perfectly correct answer
+            userActionWords.forEach(word => {
+                if (!correctActionKeywords.includes(word)) {
+                    extraKeywords.push(word);
+                }
+            });
+
+            if (actionPlanCorrect && extraKeywords.length === 0) { // All correct keywords present, no extra unexpected ones
+                feedbackHtml += `<p class="text-green-700 mt-2">Action Plan: Well done! Your action plan is comprehensive.</p>`;
+            } else {
+                feedbackHtml += `<p class="text-red-700 mt-2">Action Plan: Review your action plan.</p>`;
+                if (missingKeywords.length > 0) {
+                    feedbackHtml += `<p class="text-red-700 text-sm">Missing key elements: ${missingKeywords.join(', ')}.</p>`;
+                }
+                if (extraKeywords.length > 0) {
+                    feedbackHtml += `<p class="text-red-700 text-sm">You included some unexpected elements: ${extraKeywords.join(', ')}.</p>`;
+                }
+                allCorrect = false;
+            }
+
+            // Overall feedback
+            if (allCorrect) {
+                denialFeedback.innerHTML = `<p class="text-green-700 font-bold">Excellent! You correctly interpreted the denial and formulated the ideal action plan.</p>`;
+                denialFeedback.className = 'bg-green-50 p-3 rounded-lg border border-green-200 mt-4 min-h-[80px]';
+            } else {
+                denialFeedback.innerHTML = `<p class="text-red-700 font-bold">Not quite perfect. Review the feedback and explanation:</p>` + feedbackHtml;
+                denialFeedback.className = 'bg-red-50 p-3 rounded-lg border border-red-200 mt-4 min-h-[80px]';
+            }
+            denialFeedback.innerHTML += `<p class="text-gray-700 mt-4 font-bold">Detailed Explanation for Resolution:</p><p class="denial-feedback-text">${currentDenialScenarioData.explanation}</p>`;
+
+            // Disable inputs after checking
+            denialInterpretationOptions.querySelectorAll('input[type="radio"]').forEach(radio => radio.disabled = true);
+            userActionPlanInput.disabled = true;
+        });
+
+        resetDenialBtn.addEventListener('click', resetDenialInputsAndFeedback);
+
+        function resetDenialInputsAndFeedback() {
+            denialInterpretationOptions.innerHTML = '<p class="text-gray-500 denial-scenario-text">Select an interpretation.</p>'; // Reset radio buttons
+            userActionPlanInput.value = '';
+            userActionPlanInput.disabled = false;
+            denialInterpretationOptions.querySelectorAll('input[type="radio"]').forEach(radio => radio.disabled = false);
+            denialFeedback.innerHTML = '<p class="text-gray-500 denial-feedback-text">Feedback on your denial resolution plan will appear here.</p>';
+            denialFeedback.className = 'bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]'; // Reset styling
         }
 
     </script>
