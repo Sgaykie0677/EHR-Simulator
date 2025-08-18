@@ -251,15 +251,15 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                     <label for="patientName" class="block text-gray-700 text-sm font-bold mb-2">Patient Name:</label>
-                    <input type="text" id="patientName" placeholder="John Doe" class="focus:ring-blue-500 focus:border-blue-500">
+                    <input type="text" id="patientName" name="patientName" placeholder="John Doe" class="focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div>
                     <label for="patientDOB" class="block text-gray-700 text-sm font-bold mb-2">Date of Birth:</label>
-                    <input type="date" id="patientDOB" class="focus:ring-blue-500 focus:border-blue-500">
+                    <input type="date" id="patientDOB" name="patientDOB" class="focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div class="md:col-span-2">
                     <label for="insuranceID" class="block text-gray-700 text-sm font-bold mb-2">Insurance ID:</label>
-                    <input type="text" id="insuranceID" placeholder="ABC123456789" class="focus:ring-blue-500 focus:border-blue-500">
+                    <input type="text" id="insuranceID" name="insuranceID" placeholder="ABC123456789" class="focus:ring-blue-500 focus:border-blue-500">
                 </div>
             </div>
             <button id="registerPatientBtn" class="btn-primary w-full">Register Patient</button>
@@ -271,18 +271,18 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                     <label for="encounterDate" class="block text-gray-700 text-sm font-bold mb-2">Encounter Date:</label>
-                    <input type="date" id="encounterDate" class="focus:ring-green-500 focus:border-green-500">
+                    <input type="date" id="encounterDate" name="encounterDate" class="focus:ring-green-500 focus:border-green-500">
                 </div>
                 <div class="md:col-span-2">
                     <label for="chiefComplaint" class="block text-gray-700 text-sm font-bold mb-2">Chief Complaint:</label>
-                    <input type="text" id="chiefComplaint" placeholder="Patient reports sore throat and fever" class="focus:ring-green-500 focus:border-green-500">
+                    <input type="text" id="chiefComplaint" name="chiefComplaint" placeholder="Patient reports sore throat and fever" class="focus:ring-green-500 focus:border-green-500">
                 </div>
             </div>
 
             <div id="diagnosisList" class="mb-4 space-y-3">
                 <label class="block text-gray-700 text-sm font-bold mb-2">Diagnoses (ICD Codes):</label>
                 <div class="flex items-center gap-2">
-                    <input type="text" class="diagnosis-code flex-grow-1 focus:ring-green-500 focus:border-green-500" placeholder="e.g., J02.9 (Acute pharyngitis)">
+                    <input type="text" class="diagnosis-code flex-grow-1 focus:ring-green-500 focus:border-green-500" name="diagnosisCode" placeholder="e.g., J02.9 (Acute pharyngitis)">
                     <button type="button" class="btn-secondary remove-item-btn">Remove</button>
                 </div>
             </div>
@@ -291,7 +291,7 @@
             <div id="procedureList" class="mb-4 space-y-3">
                 <label class="block text-gray-700 text-sm font-bold mb-2">Procedures (CPT/HCPCS Codes):</label>
                 <div class="flex items-center gap-2">
-                    <input type="text" class="procedure-code flex-grow-1 focus:ring-green-500 focus:border-green-500" placeholder="e.g., 99213 (Office visit)">
+                    <input type="text" class="procedure-code flex-grow-1 focus:ring-green-500 focus:border-green-500" name="procedureCode" placeholder="e.g., 99213 (Office visit)">
                     <button type="button" class="btn-secondary remove-item-btn">Remove</button>
                 </div>
             </div>
@@ -304,10 +304,10 @@
             <div id="chargeList" class="mb-4 space-y-3">
                 <label class="block text-gray-700 text-sm font-bold mb-2">Services Rendered:</label>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-2 service-item">
-                    <input type="text" class="service-description col-span-1 md:col-span-1 focus:ring-purple-500 focus:border-purple-500" placeholder="Service Description">
-                    <input type="text" class="service-cpt-code col-span-1 md:col-span-1 focus:ring-purple-500 focus:border-purple-500" placeholder="CPT Code">
+                    <input type="text" class="service-description col-span-1 md:col-span-1 focus:ring-purple-500 focus:border-purple-500" name="serviceDescription" placeholder="Service Description">
+                    <input type="text" class="service-cpt-code col-span-1 md:col-span-1 focus:ring-purple-500 focus:border-purple-500" name="serviceCptCode" placeholder="CPT Code">
                     <div class="flex gap-2 col-span-1 md:col-span-1">
-                        <input type="number" class="service-price flex-grow-1 focus:ring-purple-500 focus:border-purple-500" placeholder="Price ($)" min="0" step="0.01">
+                        <input type="number" class="service-price flex-grow-1 focus:ring-purple-500 focus:border-purple-500" name="servicePrice" placeholder="Price ($)" min="0" step="0.01">
                         <button type="button" class="btn-secondary remove-item-btn">Remove</button>
                     </div>
                 </div>
@@ -400,19 +400,19 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
                         <label for="userCopay" class="block text-gray-700 text-sm font-bold mb-2">Your Calculated Copay ($):</label>
-                        <input type="number" id="userCopay" placeholder="0.00" min="0" step="0.01" class="focus:ring-teal-500 focus:border-teal-500">
+                        <input type="number" id="userCopay" name="userCopay" placeholder="0.00" min="0" step="0.01" class="focus:ring-teal-500 focus:border-teal-500">
                     </div>
                     <div>
-                        <label for="userDeductible" class="block text-gray-700 text-sm font-bold mb-2">Your Calculated Deductible Applied ($):</label>
-                        <input type="number" id="userDeductible" placeholder="0.00" min="0" step="0.01" class="focus:ring-teal-500 focus:border-teal-500">
+                        <label for="userDeductibleInput" class="block text-gray-700 text-sm font-bold mb-2">Your Calculated Deductible Applied ($):</label>
+                        <input type="number" id="userDeductibleInput" name="userDeductibleInput" placeholder="0.00" min="0" step="0.01" class="focus:ring-teal-500 focus:border-teal-500">
                     </div>
                     <div>
                         <label for="userCoinsurance" class="block text-gray-700 text-sm font-bold mb-2">Your Calculated Coinsurance ($):</label>
-                        <input type="number" id="userCoinsurance" placeholder="0.00" min="0" step="0.01" class="focus:ring-teal-500 focus:border-teal-500">
+                        <input type="number" id="userCoinsurance" name="userCoinsurance" placeholder="0.00" min="0" step="0.01" class="focus:ring-teal-500 focus:border-teal-500">
                     </div>
                     <div>
                         <label for="userTotalBalance" class="block text-gray-700 text-sm font-bold mb-2">Your Calculated Total Patient Balance ($):</label>
-                        <input type="number" id="userTotalBalance" placeholder="0.00" min="0" step="0.01" class="font-bold focus:ring-teal-500 focus:border-teal-500">
+                        <input type="number" id="userTotalBalance" name="userTotalBalance" placeholder="0.00" min="0" step="0.01" class="font-bold focus:ring-teal-500 focus:border-teal-500">
                     </div>
                 </div>
                 
@@ -439,11 +439,11 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
                         <label for="userModifierCPT" class="block text-gray-700 text-sm font-bold mb-2">Your CPT Code:</label>
-                        <input type="text" id="userModifierCPT" placeholder="e.g., 99213" class="focus:ring-yellow-500 focus:border-yellow-500 uppercase">
+                        <input type="text" id="userModifierCPT" name="userModifierCPT" placeholder="e.g., 99213" class="focus:ring-yellow-500 focus:border-yellow-500 uppercase">
                     </div>
                     <div>
                         <label for="userModifier" class="block text-gray-700 text-sm font-bold mb-2">Your Modifier(s) (e.g., 25, 59):</label>
-                        <input type="text" id="userModifier" placeholder="e.g., 25" class="focus:ring-yellow-500 focus:border-yellow-500 uppercase">
+                        <input type="text" id="userModifier" name="userModifier" placeholder="e.g., 25" class="focus:ring-yellow-500 focus:border-yellow-500 uppercase">
                     </div>
                 </div>
                 
@@ -490,15 +490,15 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                     <div>
                         <label for="userScrubberICD" class="block text-gray-700 text-sm font-bold mb-2">Corrected ICD-10:</label>
-                        <input type="text" id="userScrubberICD" placeholder="e.g., I10" class="focus:ring-orange-500 focus:border-orange-500 uppercase">
+                        <input type="text" id="userScrubberICD" name="userScrubberICD" placeholder="e.g., I10" class="focus:ring-orange-500 focus:border-orange-500 uppercase">
                     </div>
                     <div>
                         <label for="userScrubberCPT" class="block text-gray-700 text-sm font-bold mb-2">Corrected CPT:</label>
-                        <input type="text" id="userScrubberCPT" placeholder="e.g., 99213" class="focus:ring-orange-500 focus:border-orange-500 uppercase">
+                        <input type="text" id="userScrubberCPT" name="userScrubberCPT" placeholder="e.g., 99213" class="focus:ring-orange-500 focus:border-orange-500 uppercase">
                     </div>
                     <div>
                         <label for="userScrubberModifier" class="block text-gray-700 text-sm font-bold mb-2">Corrected Modifier(s):</label>
-                        <input type="text" id="userScrubberModifier" placeholder="e.g., 25, 59 (or 'None')" class="focus:ring-orange-500 focus:border-orange-500 uppercase">
+                        <input type="text" id="userScrubberModifier" name="userScrubberModifier" placeholder="e.g., 25, 59 (or 'None')" class="focus:ring-orange-500 focus:border-orange-500 uppercase">
                     </div>
                 </div>
                 
@@ -528,7 +528,7 @@
                 </div>
 
                 <p class="font-bold text-gray-700 mb-2">Your Action Plan (be specific):</p>
-                <textarea id="userActionPlan" rows="4" placeholder="e.g., Research payer policy, appeal with medical records, bill patient..." class="focus:ring-purple-500 focus:border-purple-500 mb-4"></textarea>
+                <textarea id="userActionPlan" name="userActionPlan" rows="4" placeholder="e.g., Research payer policy, appeal with medical records, bill patient..." class="focus:ring-purple-500 focus:border-purple-500 mb-4"></textarea>
                 
                 <button id="checkDenialBtn" class="btn-primary bg-purple-600 hover:bg-purple-700 mb-4">Check My Plan</button>
                 <button id="resetDenialBtn" class="btn-secondary hidden">Reset Scenario</button>
@@ -558,23 +558,23 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div class="md:col-span-2">
                         <label for="userSoapChiefComplaint" class="block text-gray-700 text-sm font-bold mb-2">Chief Complaint:</label>
-                        <input type="text" id="userSoapChiefComplaint" placeholder="Patient's main reason for visit" class="focus:ring-teal-500 focus:border-teal-500">
+                        <input type="text" id="userSoapChiefComplaint" name="userSoapChiefComplaint" placeholder="Patient's main reason for visit" class="focus:ring-teal-500 focus:border-teal-500">
                     </div>
                     <div>
                         <label for="userSoapICD" class="block text-gray-700 text-sm font-bold mb-2">Primary ICD-10 Code(s):</label>
-                        <input type="text" id="userSoapICD" placeholder="e.g., J02.0 (comma-separated if multiple)" class="focus:ring-teal-500 focus:border-teal-500 uppercase">
+                        <input type="text" id="userSoapICD" name="userSoapICD" placeholder="e.g., J02.0 (comma-separated if multiple)" class="focus:ring-teal-500 focus:border-teal-500 uppercase">
                     </div>
                     <div>
                         <label for="userSoapCPT" class="block text-gray-700 text-sm font-bold mb-2">Primary CPT Code(s):</label>
-                        <input type="text" id="userSoapCPT" placeholder="e.g., 99213, 87880 (comma-separated if multiple)" class="focus:ring-teal-500 focus:border-teal-500 uppercase">
+                        <input type="text" id="userSoapCPT" name="userSoapCPT" placeholder="e.g., 99213, 87880 (comma-separated if multiple)" class="focus:ring-teal-500 focus:border-teal-500 uppercase">
                     </div>
                     <div class="md:col-span-2">
                         <label for="userSoapModifier" class="block text-gray-700 text-sm font-bold mb-2">Modifier(s) (if any):</label>
-                        <input type="text" id="userSoapModifier" placeholder="e.g., 25 (or 'None')" class="focus:ring-teal-500 focus:border-teal-500 uppercase">
+                        <input type="text" id="userSoapModifier" name="userSoapModifier" placeholder="e.g., 25 (or 'None')" class="focus:ring-teal-500 focus:border-teal-500 uppercase">
                     </div>
                     <div class="md:col-span-2">
                         <label for="userSoapPlan" class="block text-gray-700 text-sm font-bold mb-2">Key Elements of the Plan:</label>
-                        <textarea id="userSoapPlan" rows="4" placeholder="Summarize medication, follow-up, education etc." class="focus:ring-teal-500 focus:border-teal-500"></textarea>
+                        <textarea id="userSoapPlan" name="userSoapPlan" rows="4" placeholder="Summarize medication, follow-up, education etc." class="focus:ring-teal-500 focus:border-teal-500"></textarea>
                     </div>
                 </div>
                 
@@ -595,7 +595,7 @@
             <div id="codeLookupContent" class="code-lookup-content">
                 <div class="mb-4">
                     <label for="codeLookupInput" class="block text-gray-700 text-sm font-bold mb-2">Enter Code (e.g., J02.0, 99213):</label>
-                    <input type="text" id="codeLookupInput" placeholder="Enter ICD-10 or CPT code" class="focus:ring-yellow-500 focus:border-yellow-500 uppercase">
+                    <input type="text" id="codeLookupInput" name="codeLookupInput" placeholder="Enter ICD-10 or CPT code" class="focus:ring-yellow-500 focus:border-yellow-500 uppercase">
                 </div>
                 <button id="lookupCodeBtn" class="btn-primary w-full mb-4 bg-yellow-600 hover:bg-yellow-700">Lookup Code</button>
                 <div id="codeLookupResult" class="bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]">
@@ -716,7 +716,7 @@
         const balanceScenarioTitle = document.getElementById('balanceScenarioTitle');
         const balanceScenarioDetails = document.getElementById('balanceScenarioDetails');
         const userCopayInput = document.getElementById('userCopay');
-        const userDeductibleInput = document.getElementById('balanceDeductible');
+        const userDeductibleInput = document.getElementById('userDeductibleInput'); // Corrected ID
         const userCoinsuranceInput = document.getElementById('userCoinsurance');
         const userTotalBalanceInput = document.getElementById('userTotalBalance');
         const checkBalanceBtn = document.getElementById('checkBalanceBtn');
@@ -1276,7 +1276,7 @@
         ];
 
         // --- Global Data Storage (SOAP Note Challenge) ---
-        let currentSoapScenarioData = null;
+        let currentSoapScenarioData = null; // Declare once globally
         const soapNoteScenarios = [
             {
                 id: 1,
@@ -1446,7 +1446,7 @@
                 explanation: `
 **Chief Complaint:** Clearly stated under 'S'.
 **Primary ICD-10:** D22.5 for Melanocytic nevi of trunk, left upper quadrant is derived from the assessment.
-**Primary CPT Code(s):** An established patient office visit (99213) is for the initial evaluation. Excisional biopsy of the lesion (e.g., 11401 for 0.8 cm lesion on trunk) is the planned procedure.
+**Primary CPT Code(s):** An established patient office visit (e.g., 99213) is for the initial evaluation. Excisional biopsy of the lesion (e.g., 11401 for 0.8 cm lesion on trunk) is the planned procedure.
 **Modifier(s):** Modifier -25 is required on the E/M code (99213) because a significant, separately identifiable E/M service was performed on the same day as a minor surgical procedure (lesion excision).
 **Key Elements of the Plan:** The plan (P) explicitly outlines the excisional biopsy, wound care, pathology submission, and future follow-up.
                 `.trim()
@@ -1560,6 +1560,8 @@
             const input = document.createElement('input');
             input.type = 'text';
             input.className = `${className} flex-grow-1 focus:ring-${parentList.id.includes('diagnosis') ? 'green' : 'green'}-500 focus:border-${parentList.id.includes('diagnosis') ? 'green' : 'green'}-500`;
+            // Add name attribute for accessibility/best practices
+            input.name = className.replace('-', ''); 
             input.placeholder = placeholder;
            
             const removeBtn = document.createElement('button');
@@ -1583,11 +1585,13 @@
             const descriptionInput = document.createElement('input');
             descriptionInput.type = 'text';
             descriptionInput.className = 'service-description col-span-1 md:col-span-1 focus:ring-purple-500 focus:border-purple-500';
+            descriptionInput.name = 'serviceDescription'; // Added name attribute
             descriptionInput.placeholder = 'Service Description';
 
             const cptInput = document.createElement('input');
             cptInput.type = 'text';
             cptInput.className = 'service-cpt-code col-span-1 md:col-span-1 focus:ring-purple-500 focus:border-purple-500';
+            cptInput.name = 'serviceCptCode'; // Added name attribute
             cptInput.placeholder = 'CPT Code';
 
             const priceWrapper = document.createElement('div');
@@ -1596,6 +1600,7 @@
             const priceInput = document.createElement('input');
             priceInput.type = 'number';
             priceInput.className = 'service-price flex-grow-1 focus:ring-purple-500 focus:border-purple-500';
+            priceInput.name = 'servicePrice'; // Added name attribute
             priceInput.placeholder = 'Price ($)';
             priceInput.min = "0";
             priceInput.step = "0.01";
@@ -1929,8 +1934,10 @@
                 label.className = 'quiz-option';
                 const input = document.createElement('input');
                 input.type = 'radio';
-                input.name = 'quizAnswer';
+                input.name = 'quizAnswer'; // Ensure name attribute is set
+                input.id = `quizOption${index}`; // Add unique ID for the radio button
                 input.value = option.charAt(0); // Get the A, B, C, D part
+                label.setAttribute('for', `quizOption${index}`); // Link label to input via 'for'
                 label.appendChild(input);
                 label.appendChild(document.createTextNode(option));
                 quizOptions.appendChild(label);
@@ -2025,7 +2032,8 @@
             }
 
             const userCopay = parseFloat(userCopayInput.value);
-            const userDeductibleApplied = parseFloat(userDeductibleInput.value);
+            // Ensure the correct input element is referenced
+            const userDeductibleApplied = parseFloat(document.getElementById('userDeductibleInput').value); 
             const userCoinsurance = parseFloat(userCoinsuranceInput.value);
             const userTotalBalance = parseFloat(userTotalBalanceInput.value);
 
@@ -2080,7 +2088,7 @@
 
         function resetBalanceCalculator() {
             userCopayInput.value = '';
-            userDeductibleInput.value = '';
+            document.getElementById('userDeductibleInput').value = ''; // Corrected ID
             userCoinsuranceInput.value = '';
             userTotalBalanceInput.value = '';
             balanceFeedback.innerHTML = '<p class="text-gray-500 balance-feedback-text">Feedback on your calculation will appear here.</p>';
@@ -2391,7 +2399,9 @@ Modifier(s): ${currentScrubberScenarioData.presentedClaim.modifier}
                 const input = document.createElement('input');
                 input.type = 'radio';
                 input.name = 'denialInterpretation';
+                input.id = `denialOption${index}`; // Add unique ID for the radio button
                 input.value = index; // Use index to map back to the interpretation object
+                label.setAttribute('for', `denialOption${index}`); // Link label to input via 'for'
                 label.appendChild(input);
                 label.appendChild(document.createTextNode(interpretation.text));
                 denialInterpretationOptions.appendChild(label);
@@ -2493,7 +2503,8 @@ Modifier(s): ${currentScrubberScenarioData.presentedClaim.modifier}
         }
 
         // --- SOAP Note Coder & Extractor Logic ---
-        let currentSoapScenarioData = null;
+        // currentSoapScenarioData is already declared globally, no 'let' here.
+        currentSoapScenarioData = null;
 
         loadSoapScenarioBtn.addEventListener('click', () => {
             const randomIndex = Math.floor(Math.random() * soapNoteScenarios.length);
@@ -2683,7 +2694,7 @@ Modifier(s): ${currentScrubberScenarioData.presentedClaim.modifier}
                         <p><strong>Days Old:</strong> ${claim.daysOld}</p>
                     </div>
                     <label for="arAction-${index}" class="block text-gray-700 text-sm font-bold mb-2">Your Action:</label>
-                    <select id="arAction-${index}" class="ar-action-select focus:ring-red-500 focus:border-red-500 w-full">
+                    <select id="arAction-${index}" name="arAction-${index}" class="ar-action-select focus:ring-red-500 focus:border-red-500 w-full">
                         <option value="">-- Select Action --</option>
                         <option value="check_status_online">Check claim status online (payer portal).</option>
                         <option value="call_payer">Call payer (provider services) for status/details.</option>
