@@ -590,16 +590,16 @@
         <!-- Code Lookup Tool Section -->
         <section class="p-6 bg-yellow-100 rounded-lg mb-8">
             <h2 class="section-title text-yellow-800">14. Code Lookup Tool 📚</h2>
-            <p class="text-gray-700 mb-4">Search for common ICD-10 or CPT codes to see their descriptions.</p>
+            <p class="text-gray-700 mb-4">Enter a code (e.g., J02.0, 99213, G0439) or a medical phrase (e.g., "headache", "diabetes type 2") to find descriptions.</p>
 
             <div id="codeLookupContent" class="code-lookup-content">
                 <div class="mb-4">
-                    <label for="codeLookupInput" class="block text-gray-700 text-sm font-bold mb-2">Enter Code (e.g., J02.0, 99213):</label>
-                    <input type="text" id="codeLookupInput" name="codeLookupInput" placeholder="Enter ICD-10 or CPT code" class="focus:ring-yellow-500 focus:border-yellow-500 uppercase">
+                    <label for="codeLookupInput" class="block text-gray-700 text-sm font-bold mb-2">Search Code or Phrase:</label>
+                    <input type="text" id="codeLookupInput" name="codeLookupInput" placeholder="Enter code or medical phrase" class="focus:ring-yellow-500 focus:border-yellow-500">
                 </div>
-                <button id="lookupCodeBtn" class="btn-primary w-full mb-4 bg-yellow-600 hover:bg-yellow-700">Lookup Code</button>
+                <button id="lookupCodeBtn" class="btn-primary w-full mb-4 bg-yellow-600 hover:bg-yellow-700">Lookup</button>
                 <div id="codeLookupResult" class="bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]">
-                    <p class="text-gray-500">Code description will appear here.</p>
+                    <p class="text-gray-500">Code description(s) will appear here.</p>
                 </div>
             </div>
         </section>
@@ -1311,8 +1311,9 @@ P:
             }
         ];
 
-        // Global Data Storage (Code Lookup Tool)
+        // Global Data Storage (Code Lookup Tool) - EXPANDED
         const codeDatabase = {
+            // --- ICD-10-CM Codes ---
             "J02.0": "Acute pharyngitis, unspecified",
             "J02.9": "Acute pharyngitis, unspecified",
             "I10": "Essential (primary) hypertension",
@@ -1327,9 +1328,24 @@ P:
             "S83.91XA": "Sprain of unspecified ligament of right knee, initial encounter",
             "M25.461": "Effusion, right knee",
             "J18.9": "Pneumonia, unspecified organism",
+            "M54.5": "Low back pain",
+            "G43.909": "Migraine, unspecified, not intractable, without status migrainosus",
+            "E11.9": "Type 2 diabetes mellitus without complications",
+            "K21.9": "Gastro-esophageal reflux disease without esophagitis",
+            "J45.909": "Unspecified asthma, uncomplicated",
+            "N39.0": "Urinary tract infection, site not specified",
+            "H61.20": "Impacted cerumen, unspecified ear",
+            "A09": "Infectious gastroenteritis and colitis, unspecified",
+            "F41.1": "Generalized anxiety disorder",
+            "Z12.31": "Encounter for screening mammogram for malignant neoplasm of breast",
+            "D22.31": "Benign neoplasm of skin of right upper limb, including shoulder",
+            "L03.116": "Cellulitis of right lower limb",
+            "J30.9": "Allergic rhinitis, unspecified",
+            "M17.11": "Unilateral primary osteoarthrosis, right knee",
 
-            "99203": "Office or other outpatient visit for the evaluation and management of a new patient, which requires a medically appropriate history and/or examination and high complexity medical decision making. When counseling and/or coordination of care with other physicians, other qualified health care professionals, or agencies are provided consistent with the nature of the problem(s) and the patient's and/or family's needs, time is a key factor to qualify for reporting this code. (30-44 minutes)",
-            "99213": "Office or other outpatient visit for the evaluation and management of an established patient, which requires a medically appropriate history and/or examination and moderate complexity medical decision making. When counseling and/or coordination of care with other physicians, other qualified health care professionals, or agencies are provided consistent with the nature of the problem(s) and the patient's and/or family's needs, time is a key factor to qualify for reporting this code. (20-29 minutes)",
+            // --- CPT Codes ---
+            "99203": "Office or other outpatient visit for the evaluation and management of a new patient, which requires a medically appropriate history and/or examination and high complexity medical decision making. (30-44 minutes)",
+            "99213": "Office or other outpatient visit for the evaluation and management of an established patient, which requires a medically appropriate history and/or examination and moderate complexity medical decision making. (20-29 minutes)",
             "99395": "Periodic comprehensive preventive medicine reevaluation and management of an individual including an age and gender appropriate history, examination, counseling/anticipatory guidance/risk factor reduction interventions, and the ordering of laboratory/diagnostic procedures, established patient; 40-64 years.",
             "17110": "Destruction (e.g., laser surgery, electrosurgery, cryosurgery, chemosurgery, surgical curettement), of benign lesions other than skin tags or cutaneous vascular proliferative lesions; up to 14 lesions",
             "87804": "Influenza virus antigen detection, immunoassay, with direct optical observation; with optical instrument analysis",
@@ -1337,7 +1353,22 @@ P:
             "20610": "Arthrocentesis, aspiration and/or injection; major joint or bursa (e.g., shoulder, hip, knee, subacromial bursa)",
             "73560": "Radiologic examination, knee; 1 or 2 views",
             "G0438": "Annual wellness visit; includes a personalized prevention plan of service (pps), initial visit",
-            "G0439": "Annual wellness visit, subsequent"
+            "G0439": "Annual wellness visit, subsequent",
+            "99214": "Office or other outpatient visit for the evaluation and management of an established patient, which requires at least 2 of 3 key components: a comprehensive history; a comprehensive examination; medical decision making of moderate complexity. (30-39 minutes)",
+            "99215": "Office or other outpatient visit for the evaluation and management of an established patient, which requires at least 2 of 3 key components: a comprehensive history; a comprehensive examination; medical decision making of high complexity. (40-54 minutes)",
+            "99490": "Chronic care management services, at least 20 minutes of clinical staff time directed by a physician or other qualified health care professional, per calendar month...",
+            "90471": "Immunization administration (includes percutaneous, intradermal, subcutaneous, or intramuscular injections); 1 vaccine",
+            "81002": "Urinalysis, by dipstick or tablet reagent for bilirubin, glucose, hemoglobin, ketone, leukocytes, nitrite, pH, protein, urobilinogen, specific gravity, any number of these constituents; non-automated, without microscopy",
+            "97110": "Therapeutic procedure, one or more areas, each 15 minutes; therapeutic exercises to develop strength and endurance, range of motion, and flexibility",
+            "64490": "Injection(s), diagnostic or therapeutic agent, paravertebral facet joint (s) (e.g., C2-C5, L2-L5) or sacra-iliac joint, cervical or thoracic; single level, unilateral or bilateral",
+            "43239": "Esophagogastroduodenoscopy, flexible, transoral; with biopsy(s), single or multiple",
+            "45378": "Colonoscopy, flexible, proximal to splenic flexure; diagnostic, including collection of specimen(s) by brushing or washing, when performed (separate procedure); with biopsy(s), single or multiple",
+
+            // --- HCPCS Level II Codes (examples) ---
+            "A0428": "Ambulance service, basic life support, non-emergency transport (BLS)",
+            "J0897": "Injection, EPO, recombinant, for use in patients with chronic renal failure...",
+            "K0001": "Standard wheelchair",
+            "E0424": "Stationary oxygen concentrator, requires an HCPCS code for durable medical equipment"
         };
 
         // Global Data Storage (A/R Aging Simulation)
@@ -1531,7 +1562,7 @@ P:
                     console.log("Loaded patient data from Firestore:", patientData);
                 } else {
                     console.log("No saved patient data found for this user.");
-                    showMessage('No saved patient data found. Start by registering a new patient!', 'info');
+                    // showMessage('No saved patient data found. Start by registering a new patient!', 'info');
                 }
             } catch (e) {
                 console.error("Error loading patient data from Firestore:", e);
@@ -2553,23 +2584,53 @@ Modifier(s): ${currentScrubberScenarioData.presentedClaim.modifier}
             soapFeedback.className = 'bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]'; // Reset styling
         }
 
-        // Code Lookup Tool Event Listeners
+        // Code Lookup Tool Event Listeners (MODIFIED)
         lookupCodeBtn.addEventListener('click', () => {
-            const code = codeLookupInput.value.trim().toUpperCase();
-            if (code === '') {
-                showMessage('Please enter a code to look up.', 'error');
-                codeLookupResult.innerHTML = '<p class="text-red-700">Please enter a code to look up.</p>';
+            const searchTerm = codeLookupInput.value.trim();
+            if (searchTerm === '') {
+                showMessage('Please enter a code or phrase to look up.', 'error');
+                codeLookupResult.innerHTML = '<p class="text-red-700">Please enter a code or phrase to look up.</p>';
                 codeLookupResult.className = 'bg-red-50 p-3 rounded-lg border border-red-200 mt-4 min-h-[80px]';
                 return;
             }
 
-            const description = codeDatabase[code];
-            if (description) {
-                codeLookupResult.innerHTML = `<p class="text-green-700 font-bold">Code found:</p><p class="code-lookup-text">${code}: ${description}</p>`;
-                codeLookupResult.className = 'bg-green-50 p-3 rounded-lg border border-green-200 mt-4 min-h-[80px]';
+            // Determine if the input is likely a code or a phrase
+            // Simple regex: ICD-10 usually has letter-number.number or letter.number, CPT/HCPCS are usually 5 digits or letter-number-letter-number.
+            const isCode = /^[A-Z]\d{2}(\.\d{1,4})?$|^\d{5}$|^[A-Z]\d{4}$/i.test(searchTerm); // A12.3456, 12345, A1234
+
+            if (isCode) {
+                const code = searchTerm.toUpperCase();
+                const description = codeDatabase[code];
+                if (description) {
+                    codeLookupResult.innerHTML = `<p class="text-green-700 font-bold">Code found:</p><p class="code-lookup-text">${code}: ${description}</p>`;
+                    codeLookupResult.className = 'bg-green-50 p-3 rounded-lg border border-green-200 mt-4 min-h-[80px]';
+                } else {
+                    codeLookupResult.innerHTML = `<p class="text-red-700 font-bold">Code not found.</p><p class="code-lookup-text">"${code}" is not in our current database. Please try another common ICD-10, CPT, or HCPCS code (e.g., J02.0, 99213, G0439).</p>`;
+                    codeLookupResult.className = 'bg-red-50 p-3 rounded-lg border border-red-200 mt-4 min-h-[80px]';
+                }
             } else {
-                codeLookupResult.innerHTML = `<p class="text-red-700 font-bold">Code not found.</p><p class="code-lookup-text">"${code}" is not in our current database. Please try another common ICD-10 or CPT code (e.g., J02.0, 99213).</p>`;
-                codeLookupResult.className = 'bg-red-50 p-3 rounded-lg border border-red-200 mt-4 min-h-[80px]';
+                // Search by phrase
+                const lowerCaseSearchTerm = searchTerm.toLowerCase();
+                let matchingCodes = [];
+                for (const code in codeDatabase) {
+                    const description = codeDatabase[code];
+                    if (description.toLowerCase().includes(lowerCaseSearchTerm)) {
+                        matchingCodes.push({ code: code, description: description });
+                    }
+                }
+
+                if (matchingCodes.length > 0) {
+                    let resultsHtml = `<p class="text-green-700 font-bold">Matches for "${searchTerm}":</p><ul class="list-disc list-inside mt-2 text-gray-800">`;
+                    matchingCodes.forEach(match => {
+                        resultsHtml += `<li class="code-lookup-text"><strong>${match.code}:</strong> ${match.description}</li>`;
+                    });
+                    resultsHtml += `</ul>`;
+                    codeLookupResult.innerHTML = resultsHtml;
+                    codeLookupResult.className = 'bg-green-50 p-3 rounded-lg border border-green-200 mt-4 min-h-[80px]';
+                } else {
+                    codeLookupResult.innerHTML = `<p class="text-red-700 font-bold">No descriptions found containing "${searchTerm}".</p><p class="code-lookup-text">Try a different phrase or a specific code.</p>`;
+                    codeLookupResult.className = 'bg-red-50 p-3 rounded-lg border border-red-200 mt-4 min-h-[80px]';
+                }
             }
         });
 
