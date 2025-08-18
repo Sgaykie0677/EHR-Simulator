@@ -2088,7 +2088,9 @@
         }
 
         // --- Modifier Application Challenge Logic ---
-        let currentModifierChallenge = null;
+        // 'currentModifierChallenge' is already declared globally at the top of the script.
+        // The original error was due to redeclaring it with 'let' here.
+        currentModifierChallenge = null; // Initialize it without 'let' or 'const'
 
         loadModifierScenarioBtn.addEventListener('click', () => {
             const randomIndex = Math.floor(Math.random() * modifierScenarios.length);
@@ -2337,7 +2339,7 @@ Modifier(s): ${currentScrubberScenarioData.presentedClaim.modifier}
                 if (error) feedbackHtml += `<p class="text-gray-700 text-sm mt-1">${error.explanation}</p>`;
                 allCorrect = false;
             } else {
-                feedbackHtml += `<p class="text-green-700">CPT Code: Correct! ("${currentScrubberScenarioData.expectedInputs.correctedCPT}")</pレーター: Correct! ("${currentScrubberScenarioData.expectedInputs.correctedCPT}")</p>`;
+                feedbackHtml += `<p class="text-green-700">CPT Code: Correct! ("${currentScrubberScenarioData.expectedInputs.correctedCPT}")</p>`;
             }
 
             // Check Modifier
