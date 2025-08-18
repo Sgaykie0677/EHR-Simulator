@@ -28,7 +28,7 @@
             padding-bottom: 8px;
             border-bottom: 2px solid #e5e7eb;
         }
-        input[type="text"], input[type="date"], input[type="number"], textarea {
+        input[type="text"], input[type="date"], input[type="number"], textarea, select {
             padding: 10px 12px;
             border: 1px solid #d1d5db;
             border-radius: 8px;
@@ -36,7 +36,7 @@
             box-sizing: border-box;
             transition: border-color 0.2s;
         }
-        input[type="text"]:focus, input[type="date"]:focus, input[type="number"]:focus, textarea:focus {
+        input[type="text"]:focus, input[type="date"]:focus, input[type="number"]:focus, textarea:focus, select:focus {
             outline: none;
             border-color: #3b82f6;
         }
@@ -88,19 +88,19 @@
         .hidden {
             display: none;
         }
-        .walkthrough-step-content, .quiz-content, .balance-calculator-content, .modifier-challenge-content, .matching-game-content, .scrubber-challenge-content, .denial-challenge-content, .soap-challenge-content {
+        .walkthrough-step-content, .quiz-content, .balance-calculator-content, .modifier-challenge-content, .matching-game-content, .scrubber-challenge-content, .denial-challenge-content, .soap-challenge-content, .code-lookup-content, .ar-aging-content, .form-repository-content {
             background-color: #f8fafc; /* bg-blue-50 alternative */
             padding: 1rem;
             border-radius: 0.5rem;
             border: 1px solid #e2e8f0; /* border-gray-200 alternative */
             margin-top: 1rem;
         }
-        .walkthrough-step-title, .quiz-question-title, .balance-scenario-title, .modifier-challenge-title, .matching-game-title, .scrubber-challenge-title, .denial-challenge-title, .soap-challenge-title {
+        .walkthrough-step-title, .quiz-question-title, .balance-scenario-title, .modifier-challenge-title, .matching-game-title, .scrubber-challenge-title, .denial-challenge-title, .soap-challenge-title, .code-lookup-title, .ar-aging-title, .form-repository-title {
             font-weight: 600; /* font-semibold */
             color: #1a202c; /* text-gray-900 */
             margin-bottom: 0.5rem;
         }
-        .walkthrough-instructions, .quiz-instructions, .quiz-feedback-text, .balance-scenario-text, .balance-feedback-text, .modifier-scenario-text, .modifier-feedback-text, .matching-game-text, .scrubber-scenario-text, .scrubber-feedback-text, .denial-scenario-text, .denial-feedback-text, .soap-scenario-text, .soap-feedback-text {
+        .walkthrough-instructions, .quiz-instructions, .quiz-feedback-text, .balance-scenario-text, .balance-feedback-text, .modifier-scenario-text, .modifier-feedback-text, .matching-game-text, .scrubber-scenario-text, .scrubber-feedback-text, .denial-scenario-text, .denial-feedback-text, .soap-scenario-text, .soap-feedback-text, .code-lookup-text, .ar-aging-text, .form-repository-text {
             font-size: 0.875rem; /* text-sm */
             color: #4a5568; /* text-gray-700 */
         }
@@ -202,6 +202,39 @@
             max-height: 400px; /* Limit height */
             overflow-y: auto; /* Enable scrolling */
             margin-bottom: 20px;
+        }
+        .ar-claim-item {
+            background-color: #f0f4f8;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .ar-claim-details {
+            font-size: 0.9rem;
+            color: #4a5568;
+            margin-bottom: 10px;
+        }
+        .ar-claim-feedback {
+            margin-top: 10px;
+            padding: 8px;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+        .ar-claim-feedback.correct {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .ar-claim-feedback.incorrect {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        .form-item {
+            padding: 10px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .form-item:last-child {
+            border-bottom: none;
         }
     </style>
 </head>
@@ -506,8 +539,8 @@
             </div>
         </section>
 
-        <!-- NEW: SOAP Note Coder & Extractor Challenge Section -->
-        <section class="p-6 bg-teal-100 rounded-lg">
+        <!-- SOAP Note Coder & Extractor Challenge Section -->
+        <section class="p-6 bg-teal-100 rounded-lg mb-8">
             <h2 class="section-title text-teal-800">13. SOAP Note Coder & Extractor Challenge 📋</h2>
             <p class="text-gray-700 mb-4">Review the SOAP note below and extract the relevant coding and plan information.</p>
 
@@ -550,6 +583,71 @@
 
                 <div id="soapFeedback" class="bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]">
                     <p class="text-gray-500 soap-feedback-text">Feedback on your extraction will appear here.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Code Lookup Tool Section -->
+        <section class="p-6 bg-yellow-100 rounded-lg mb-8">
+            <h2 class="section-title text-yellow-800">14. Code Lookup Tool 📚</h2>
+            <p class="text-gray-700 mb-4">Search for common ICD-10 or CPT codes to see their descriptions.</p>
+
+            <div id="codeLookupContent" class="code-lookup-content">
+                <div class="mb-4">
+                    <label for="codeLookupInput" class="block text-gray-700 text-sm font-bold mb-2">Enter Code (e.g., J02.0, 99213):</label>
+                    <input type="text" id="codeLookupInput" placeholder="Enter ICD-10 or CPT code" class="focus:ring-yellow-500 focus:border-yellow-500 uppercase">
+                </div>
+                <button id="lookupCodeBtn" class="btn-primary w-full mb-4 bg-yellow-600 hover:bg-yellow-700">Lookup Code</button>
+                <div id="codeLookupResult" class="bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]">
+                    <p class="text-gray-500">Code description will appear here.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Accounts Receivable (A/R) Aging Simulation Section -->
+        <section class="p-6 bg-red-100 rounded-lg mb-8">
+            <h2 class="section-title text-red-800">15. Accounts Receivable (A/R) Aging Simulation 📈</h2>
+            <p class="text-gray-700 mb-4">Practice analyzing aging claims and determining the correct follow-up action. Select an action for each claim.</p>
+
+            <button id="loadArScenarioBtn" class="btn-primary w-full mb-6 bg-red-600 hover:bg-red-700">Load New A/R Scenario</button>
+
+            <div id="arAgingContent" class="ar-aging-content hidden">
+                <div id="arClaimList">
+                    <!-- A/R claims will be dynamically inserted here -->
+                </div>
+                <button id="checkArActionsBtn" class="btn-primary w-full mt-4 bg-red-600 hover:bg-red-700">Check My Actions</button>
+                <button id="resetArScenarioBtn" class="btn-secondary w-full mt-2 hidden">Reset A/R Scenario</button>
+                <div id="arFeedback" class="bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]">
+                    <p class="text-gray-500">Feedback on your A/R actions will appear here.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- NEW: Medical Billing Form Repository Section -->
+        <section class="p-6 bg-blue-100 rounded-lg mb-8">
+            <h2 class="section-title text-blue-800">16. Medical Billing Form Repository 📂</h2>
+            <p class="text-gray-700 mb-4">Explore descriptions of common forms used in medical billing and where to find their blank templates online for practice.</p>
+
+            <div id="formRepositoryContent" class="form-repository-content">
+                <div class="form-item">
+                    <h3 class="form-repository-title text-blue-700">CMS-1500 Claim Form</h3>
+                    <p class="form-repository-text">This is the universal claim form for professional (physician and non-institutional) services. It captures patient demographics, insurance information, diagnoses (ICD-10), procedures (CPT/HCPCS), and charges. It's the most common form you'll encounter for outpatient billing.</p>
+                    <p class="form-repository-text mt-1 text-xs italic">You can find blank CMS-1500 templates by searching online for "CMS-1500 form fillable PDF" or "NUCC CMS-1500 form".</p>
+                </div>
+                <div class="form-item">
+                    <h3 class="form-repository-title text-blue-700">UB-04 Claim Form (CMS-1450)</h3>
+                    <p class="form-repository-text">This is the claim form used by institutional providers (like hospitals, skilled nursing facilities, ambulatory surgical centers) for inpatient and outpatient services. It captures facility charges, revenue codes, and patient stay details.</p>
+                    <p class="form-repository-text mt-1 text-xs italic">You can find blank UB-04 templates by searching online for "UB-04 form fillable PDF" or "NUBC UB-04 form".</p>
+                </div>
+                <div class="form-item">
+                    <h3 class="form-repository-title text-blue-700">Advance Beneficiary Notice of Noncoverage (ABN)</h3>
+                    <p class="form-repository-text">A form given to Medicare beneficiaries when a service may not be covered by Medicare. It informs the patient they may be responsible for payment if Medicare denies the service, requiring their signature before service delivery. This protects the provider's right to bill the patient.</p>
+                    <p class="form-repository-text mt-1 text-xs italic">You can find blank ABN forms (CMS-R-131) on the CMS website or by searching for "CMS ABN form".</p>
+                </div>
+                 <div class="form-item">
+                    <h3 class="form-repository-title text-blue-700">Explanation of Benefits (EOB) / Electronic Remittance Advice (ERA)</h3>
+                    <p class="form-repository-text">These are not "forms" you fill out, but rather documents generated by insurance companies. The EOB is sent to the patient and provider, detailing how a claim was processed (what was paid, denied, applied to deductible, etc.). The ERA is the electronic version sent to the provider, allowing for automated payment posting.</p>
+                    <p class="form-repository-text mt-1 text-xs italic">Practice interpreting EOBs/ERAs by requesting sample EOBs from your insurance provider (if they offer them) or by searching online for "sample EOB Medicare" or "sample ERA medical billing".</p>
                 </div>
             </div>
         </section>
@@ -618,7 +716,7 @@
         const balanceScenarioTitle = document.getElementById('balanceScenarioTitle');
         const balanceScenarioDetails = document.getElementById('balanceScenarioDetails');
         const userCopayInput = document.getElementById('userCopay');
-        const userDeductibleInput = document.getElementById('userDeductible');
+        const userDeductibleInput = document.getElementById('balanceDeductible');
         const userCoinsuranceInput = document.getElementById('userCoinsurance');
         const userTotalBalanceInput = document.getElementById('userTotalBalance');
         const checkBalanceBtn = document.getElementById('checkBalanceBtn');
@@ -667,7 +765,7 @@
         const resetDenialBtn = document.getElementById('resetDenialBtn');
         const denialFeedback = document.getElementById('denialFeedback');
 
-        // DOM Element References (NEW SOAP Note Challenge)
+        // DOM Element References (SOAP Note Challenge)
         const loadSoapScenarioBtn = document.getElementById('loadSoapScenarioBtn');
         const soapChallengeContent = document.getElementById('soapChallengeContent');
         const soapScenarioTitle = document.getElementById('soapScenarioTitle');
@@ -681,6 +779,23 @@
         const checkSoapBtn = document.getElementById('checkSoapBtn');
         const resetSoapBtn = document.getElementById('resetSoapBtn');
         const soapFeedback = document.getElementById('soapFeedback');
+
+        // Code Lookup Tool DOM Elements
+        const codeLookupInput = document.getElementById('codeLookupInput');
+        const lookupCodeBtn = document.getElementById('lookupCodeBtn');
+        const codeLookupResult = document.getElementById('codeLookupResult');
+        const codeLookupContent = document.getElementById('codeLookupContent');
+
+        // NEW: A/R Aging Simulation DOM Elements
+        const loadArScenarioBtn = document.getElementById('loadArScenarioBtn');
+        const arAgingContent = document.getElementById('arAgingContent');
+        const arClaimList = document.getElementById('arClaimList');
+        const checkArActionsBtn = document.getElementById('checkArActionsBtn');
+        const resetArScenarioBtn = document.getElementById('resetArScenarioBtn');
+        const arFeedback = document.getElementById('arFeedback');
+
+        // NEW: Form Repository DOM Elements (no dynamic parts, just content)
+        const formRepositoryContent = document.getElementById('formRepositoryContent');
 
 
         // --- Global Data Storage (for existing simulation) ---
@@ -768,6 +883,7 @@
         // --- Global Data Storage (Knowledge Quizzes) ---
         let selectedQuizModule = null; // Stores the array of questions for the current module
         let currentQuizQuestionIndex = 0; // Tracks the current question in the module
+
         const quizModules = {
             "Coding Guidelines": [
                 {
@@ -1129,7 +1245,7 @@
                     { text: "The CPT code is incorrect for the service provided.", correct: false }
                 ],
                 correctActionPlanKeywords: ["APPEAL", "MEDICAL RECORDS", "PROVIDER REVIEW", "CLINICAL JUSTIFICATION"],
-                explanation: "CO 150 indicates 'Payment adjusted because the payer deems the information submitted does not support this many/frequency/duration of services/items.' This is a medical necessity denial. An appeal, including comprehensive medical records (physician notes, treatment history, rationale for the service), is required to justify the service. Sometimes a peer-to-peer review with the ordering provider is necessary."
+                explanation: "CO 150 means 'Payment adjusted because the payer deems the information submitted does not support this many/frequency/duration of services/items.' This is a medical necessity denial. An appeal, including comprehensive medical records (physician notes, treatment history, rationale for the service), is required to justify the service. Sometimes a peer-to-peer review with the ordering provider is necessary."
             },
             {
                 id: 5,
@@ -1143,11 +1259,24 @@
                 ],
                 correctActionPlanKeywords: ["INFORM PATIENT", "BILL PATIENT (IF ABN SIGNED)", "NON-COVERED"],
                 explanation: "CO 236 means 'This procedure/service is not covered by the patient's current benefits/plan.' This indicates a fundamental lack of coverage for the service. If an Advance Beneficiary Notice (ABN) or similar waiver was signed by the patient, the patient can be billed. Otherwise, it may need to be written off. Verify the patient's specific benefit plan details."
+            },
+            {
+                id: 6,
+                denialCode: "CO 18",
+                context: "CPT 99213 denied. This is the second submission of the exact same claim, and the first one was already paid.",
+                interpretations: [
+                    { text: "The claim was a duplicate submission.", correct: true },
+                    { text: "The service was not documented.", correct: false },
+                    { text: "The patient's insurance was inactive.", correct: false },
+                    { text: "The CPT code needs a modifier.", correct: false }
+                ],
+                correctActionPlanKeywords: ["NO ACTION", "DUPLICATE", "PREVENT DUPLICATES"], // Simplified keywords
+                explanation: "CO 18 means 'Duplicate claim/service.' This denial occurs when a claim has already been paid or processed. No action is typically needed unless the previous payment was incorrect. Implement measures to prevent future duplicate submissions."
             }
         ];
 
-        // --- Global Data Storage (NEW SOAP Note Challenge) ---
-        let currentSoapScenario = null;
+        // --- Global Data Storage (SOAP Note Challenge) ---
+        let currentSoapScenarioData = null;
         const soapNoteScenarios = [
             {
                 id: 1,
@@ -1271,6 +1400,136 @@
 **Modifier(s):** No specific modifiers are indicated by the scenario.
 **Key Elements of the Plan:** The plan (P) includes continuing medication (Lisinopril), monitoring (home BP), lifestyle (DASH diet, exercise), and follow-up for multiple conditions (HbA1c, Lipid Panel, clinic visit).
                 `.trim()
+            },
+            {
+                id: 3,
+                title: "Dermatology: Skin Lesion Evaluation",
+                description: "Review this SOAP note for a patient presenting with a skin lesion and extract key coding and plan details.",
+                soapNote: `
+**Patient Name:** Sarah Lee
+**Date of Birth:** 07/07/1995
+**Date of Visit:** 2025-08-16
+**Provider:** Dr. Maria Rodriguez (Dermatology)
+
+**S (Subjective):**
+* Chief Complaint: "Concern about a mole on my back, it looks different."
+* HPI: Ms. Lee reports noticing a new, dark mole on her upper back approximately 3 months ago. She states it has grown slightly and recently became itchy. Denies bleeding or pain. No family history of melanoma. Denies excessive sun exposure.
+* ROS: No fevers, chills, nausea, vomiting. Otherwise healthy.
+
+**O (Objective):**
+* Vitals: Stable. BP 120/75, HR 70, RR 16, Temp 98.6°F.
+* Physical Exam:
+    * Skin: On the upper left back, a solitary, irregularly shaped pigmented lesion is noted. Approximately 0.8 cm in greatest diameter. Color varies from dark brown to black, with some areas of lighter pigmentation. Borders are asymmetric and somewhat ill-defined. No erythema or discharge.
+    * Palpation: Non-tender to palpation.
+    * Lymph Nodes: No palpable regional lymphadenopathy.
+* Dermoscopy performed: Lesion features concerning for atypical nevus.
+
+**A (Assessment):**
+* 1. Atypical Nevus (D22.5 - Melanocytic nevi of trunk, left upper quadrant): Suspicious lesion requiring excisional biopsy for definitive diagnosis.
+
+**P (Plan):**
+* 1. Atypical Nevus (Left upper back):
+    * Procedure: Recommend excisional biopsy of the lesion. Discussed risks, benefits, and alternatives. Patient consents.
+    * Anesthesia: Local anesthesia will be used.
+    * Supplies: Sterile drape, biopsy punch, sutures for closure.
+    * Follow-up: Schedule procedure for next week. Patient to return 7-10 days post-procedure for suture removal and pathology results discussion.
+    * Education: Advised on wound care post-biopsy. Discussed sun protection and regular self-skin exams.
+    * Pathology: Specimen to be sent for histopathologic examination.
+                `.trim(),
+                expected: {
+                    chiefComplaint: "Concern about a mole on my back, it looks different.",
+                    icd10: "D22.5",
+                    cpt: "11401,99213", // Assuming lesion excision (11401 for trunk lesion 0.6-1.0cm) and E/M (99213). Modifier -25 should be applied to 99213.
+                    modifier: "25", // E/M separate from procedure
+                    planKeywords: ["EXCISIONAL BIOPSY", "LOCAL ANESTHESIA", "SUTURE REMOVAL", "PATHOLOGY", "WOUND CARE", "SUN PROTECTION", "FOLLOW-UP"]
+                },
+                explanation: `
+**Chief Complaint:** Clearly stated under 'S'.
+**Primary ICD-10:** D22.5 for Melanocytic nevi of trunk, left upper quadrant is derived from the assessment.
+**Primary CPT Code(s):** An established patient office visit (99213) is for the initial evaluation. Excisional biopsy of the lesion (e.g., 11401 for 0.8 cm lesion on trunk) is the planned procedure.
+**Modifier(s):** Modifier -25 is required on the E/M code (99213) because a significant, separately identifiable E/M service was performed on the same day as a minor surgical procedure (lesion excision).
+**Key Elements of the Plan:** The plan (P) explicitly outlines the excisional biopsy, wound care, pathology submission, and future follow-up.
+                `.trim()
+            }
+        ];
+
+        // Code Lookup Data
+        const codeDatabase = {
+            // ICD-10 Codes
+            "J02.0": "Acute streptococcal pharyngitis",
+            "I10": "Essential (primary) hypertension",
+            "R05": "Cough",
+            "B07.0": "Plantar wart",
+            "J11.1": "Influenza, virus not identified, with other respiratory manifestations",
+            "R53.83": "Other fatigue",
+            "I21.01": "ST elevation (STEMI) myocardial infarction of anterior wall, initial episode of care",
+            "R50.9": "Fever, unspecified",
+            "R73.03": "Prediabetes",
+            "E78.5": "Hyperlipidemia, unspecified",
+            "B07.9": "Viral wart, unspecified",
+            "D22.5": "Melanocytic nevi of trunk, left upper quadrant",
+
+            // CPT Codes
+            "99213": "Established patient office or other outpatient visit, 20-29 minutes",
+            "99203": "New patient office or other outpatient visit, 30-44 minutes",
+            "87880": "Infectious agent antigen detection by immunoassay with direct optical observation; Streptococcus, group A",
+            "17110": "Destruction (e.g., laser surgery, electrosurgery, cryosurgery, chemosurgery, surgical curettement), of benign lesions other than skin tags or cutaneous vascular proliferative lesions; up to 14 lesions",
+            "99395": "Periodic comprehensive preventive medicine reevaluation and management of an individual aged 40-64 years",
+            "99396": "Periodic comprehensive preventive medicine reevaluation and management of an individual aged 40-64 years", // Often same code range for different age groups
+            "76801": "Ultrasound, pregnant uterus, real time with image documentation, fetal and maternal evaluation, first trimester (< 14 weeks 0 days), transabdominal approach", // Example, usually more specific
+            "20680": "Removal of implant; deep (e.g., buried) bone fixation material; knee",
+            "29870": "Arthroscopy, knee, diagnostic, with or without synovial biopsy (separate procedure)",
+            "29881": "Arthroscopy, knee, surgical; with meniscectomy (medial OR lateral), including meniscal repair when performed",
+            "71045": "Radiologic examination, chest; single view, frontal",
+            "72148": "Magnetic resonance (MR) imaging, spinal canal and contents, lumbar; without contrast material",
+            "90832": "Psychotherapy, 30 minutes with patient and/or family member",
+            "80061": "Lipid panel",
+            "99490": "Chronic care management services, at least 20 minutes of clinical staff time directed by a physician or other qualified health care professional, per calendar month, for patients with multiple (two or more) chronic conditions expected to last at least 12 months, or until the death of the patient, and that place the patient at significant risk of death, acute exacerbation/decompensation, or functional decline; with the following required elements: multiple (two or more) chronic conditions expected to last at least 12 months, or until the death of the patient, and that place the patient at significant risk of death, acute exacerbation/decompensation, or functional decline; comprehensive care plan established, implemented, revised, or monitored; and moderate or high complexity medical decision making",
+            "11401": "Excision, benign lesion, except skin tag, excludes cutaneous or subcutaneous non-lipomatous tumors, trunk, arms, or legs; excised diameter 0.6 to 1.0 cm"
+        };
+
+        // NEW: A/R Aging Scenarios
+        let currentArScenarioClaims = [];
+        const arAgingScenarios = [
+            {
+                id: 1,
+                claims: [
+                    {
+                        claimId: "C1001", patient: "Alice Brown", payer: "Blue Cross Blue Shield", amount: 150.00, daysOld: 35,
+                        correctAction: "Check claim status online (payer portal), ensure it was received and is processing.",
+                        explanation: "Claims 30-45 days old are typically still within normal processing times but should be monitored. Check the payer portal for status."
+                    },
+                    {
+                        claimId: "C1002", patient: "Bob Johnson", payer: "UnitedHealthcare", amount: 500.00, daysOld: 65,
+                        correctAction: "Call payer (provider services line), inquire about claim status and denial reasons if any; be prepared with claim number, patient info, DOS, CPTs.",
+                        explanation: "Claims 60-75 days old often require direct follow-up. A call to payer services is usually the most efficient next step."
+                    },
+                    {
+                        claimId: "C1003", patient: "Carol White", payer: "Medicare", amount: 25.00, daysOld: 95,
+                        correctAction: "Review EOB/ERA for denial reason. If denied, appeal with supporting documentation or correct/resubmit if a simple error (e.g., modifier, NPI).",
+                        explanation: "Claims 90+ days old are a high priority. They've likely been denied or are stuck. Focus on reviewing the EOB/ERA for specific denial codes and reasons, then initiate an appeal or correction."
+                    }
+                ]
+            },
+            {
+                id: 2,
+                claims: [
+                    {
+                        claimId: "C2001", patient: "David Green", payer: "Aetna", amount: 300.00, daysOld: 28,
+                        correctAction: "Monitor claim status (check next week). This is still within typical initial processing time.",
+                        explanation: "Claims less than 30 days old are usually still processing. It's too early for aggressive follow-up unless a known issue exists."
+                    },
+                    {
+                        claimId: "C2002", patient: "Eve Taylor", payer: "Cigna", amount: 1200.00, daysOld: 78,
+                        correctAction: "Call payer, specifically ask if prior authorization was applied correctly or if medical records are needed. If denied, review EOB for reason.",
+                        explanation: "For high-value claims over 75 days old, direct contact is crucial. Be ready to discuss PA and clinical documentation requirements."
+                    },
+                    {
+                        claimId: "C2003", patient: "Frank Miller", payer: "Medicaid (State X)", amount: 80.00, daysOld: 110,
+                        correctAction: "Check timely filing limit for Medicaid in State X. If limit passed, determine if a justifiable exception exists or prepare for write-off. If within limits, review denial EOB.",
+                        explanation: "Medicaid timely filing limits can be strict and vary by state. It's critical to know these limits for very old claims. If past, document write-off unless an appeal can be justified."
+                    }
+                ]
             }
         ];
 
@@ -1547,6 +1806,12 @@
             denialChallengeContent.classList.add('hidden');
             // Hide SOAP challenge content by default
             soapChallengeContent.classList.add('hidden');
+            // Hide code lookup content by default
+            codeLookupContent.classList.remove('hidden'); // Show it by default now
+            // Hide A/R Aging content by default
+            arAgingContent.classList.add('hidden');
+            // Form Repository is always visible as it's static informational content
+            // formRepositoryContent.classList.remove('hidden'); // No need to explicitly hide/show this.
         };
 
         // --- Medical Billing Walkthrough Logic ---
@@ -1630,14 +1895,13 @@
         }
 
         // --- Knowledge Quizzes Logic ---
-        let selectedQuizModule = null; // Stores the array of questions for the current module
-        let currentQuizQuestionIndex = 0; // Tracks the current question in the module
+        // selectedQuizModule and currentQuizQuestionIndex are already declared globally above.
 
         // Function to load a specific quiz module
         function loadQuizModule(moduleName) {
             quizContent.classList.remove('hidden');
             quizFeedback.innerHTML = '<p class="text-gray-500 quiz-feedback-text">Your feedback will appear here.</p>';
-            currentQuizModule = quizModules[moduleName];
+            selectedQuizModule = quizModules[moduleName]; // Assign to the global variable
             currentQuizQuestionIndex = 0;
             displayQuizQuestion();
             submitAnswerBtn.classList.remove('hidden');
@@ -1647,7 +1911,7 @@
 
         // Function to display the current quiz question
         function displayQuizQuestion() {
-            if (!currentQuizModule || currentQuizQuestionIndex >= currentQuizModule.length) {
+            if (!selectedQuizModule || currentQuizQuestionIndex >= selectedQuizModule.length) {
                 quizQuestionTitle.textContent = "Quiz Complete!";
                 quizOptions.innerHTML = `<p class="text-green-700 font-bold">You've completed this quiz module! Click 'Reset Quiz' or select another module.</p>`;
                 submitAnswerBtn.classList.add('hidden');
@@ -1655,7 +1919,7 @@
                 return;
             }
 
-            const questionData = currentQuizModule[currentQuizQuestionIndex];
+            const questionData = selectedQuizModule[currentQuizQuestionIndex];
             quizQuestionTitle.textContent = `Question ${currentQuizQuestionIndex + 1}: ${questionData.question}`;
             quizOptions.innerHTML = ''; // Clear previous options
             quizFeedback.innerHTML = '<p class="text-gray-500 quiz-feedback-text">Your feedback will appear here.</p>'; // Clear feedback for new question
@@ -1685,8 +1949,8 @@
             }
 
             const userAnswer = selectedOption.value;
-            const correctAnswer = currentQuizModule[currentQuizQuestionIndex].answer;
-            const explanation = currentQuizModule[currentQuizQuestionIndex].explanation;
+            const correctAnswer = selectedQuizModule[currentQuizQuestionIndex].answer;
+            const explanation = selectedQuizModule[currentQuizQuestionIndex].explanation;
 
             if (userAnswer === correctAnswer) {
                 quizFeedback.innerHTML = `<p class="text-green-700 font-bold">Correct! Excellent job.</p><p class="quiz-feedback-text">Explanation: ${explanation}</p>`;
@@ -2073,14 +2337,14 @@ Modifier(s): ${currentScrubberScenarioData.presentedClaim.modifier}
                 if (error) feedbackHtml += `<p class="text-gray-700 text-sm mt-1">${error.explanation}</p>`;
                 allCorrect = false;
             } else {
-                feedbackHtml += `<p class="text-green-700">CPT Code: Correct! ("${currentScrubberScenarioData.expectedInputs.correctedCPT}")</p>`;
+                feedbackHtml += `<p class="text-green-700">CPT Code: Correct! ("${currentScrubberScenarioData.expectedInputs.correctedCPT}")</pレーター: Correct! ("${currentScrubberScenarioData.expectedInputs.correctedCPT}")</p>`;
             }
 
             // Check Modifier
             if (!compareInput(userModifier, currentScrubberScenarioData.expectedInputs.correctedModifier.toUpperCase())) {
                 const error = currentScrubberScenarioData.errors.find(e => e.type === 'modifier');
                  feedbackHtml += `<p class="text-red-700">Modifier(s): Incorrect. Expected "${currentScrubberScenarioData.expectedInputs.correctedModifier}".</p>`;
-                 if (error) feedbackHtml += `<p class="text-gray-700 text-sm mt-1">${error.explanation}</p`;
+                 if (error) feedbackHtml += `<p class="text-gray-700 text-sm mt-1">${error.explanation}</p>`;
                  allCorrect = false;
             } else {
                 feedbackHtml += `<p class="text-green-700">Modifier(s): Correct! ("${currentScrubberScenarioData.expectedInputs.correctedModifier}")</p>`;
@@ -2226,7 +2490,7 @@ Modifier(s): ${currentScrubberScenarioData.presentedClaim.modifier}
             denialFeedback.className = 'bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]'; // Reset styling
         }
 
-        // --- NEW SOAP Note Coder & Extractor Logic ---
+        // --- SOAP Note Coder & Extractor Logic ---
         let currentSoapScenarioData = null;
 
         loadSoapScenarioBtn.addEventListener('click', () => {
@@ -2336,7 +2600,7 @@ Modifier(s): ${currentScrubberScenarioData.presentedClaim.modifier}
                     feedbackHtml += `<p class="text-red-700 text-sm">Missing key elements: ${missingPlanKeywords.join(', ')}.</p>`;
                 }
                 if (extraPlanKeywords.length > 0) {
-                    feedbackHtml += `<p class="text-red-700 text-sm">You included some unexpected elements: ${extraPlanKeywords.join(', ')}.</p>`;
+                    feedbackHtml += `<p class="text-red-700 text-sm">You included some unexpected elements: ${extraKeywords.join(', ')}.</p>`;
                 }
                 allCorrect = false;
             }
@@ -2375,6 +2639,149 @@ Modifier(s): ${currentScrubberScenarioData.presentedClaim.modifier}
             soapFeedback.innerHTML = '<p class="text-gray-500 soap-feedback-text">Feedback on your extraction will appear here.</p>';
             soapFeedback.className = 'bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]'; // Reset styling
         }
+
+        // --- Code Lookup Tool Logic ---
+        lookupCodeBtn.addEventListener('click', () => {
+            const code = codeLookupInput.value.trim().toUpperCase();
+            if (code === '') {
+                codeLookupResult.innerHTML = '<p class="text-red-700">Please enter a code to look up.</p>';
+                codeLookupResult.className = 'bg-red-50 p-3 rounded-lg border border-red-200 mt-4 min-h-[80px]';
+                return;
+            }
+
+            const description = codeDatabase[code];
+            if (description) {
+                codeLookupResult.innerHTML = `<p class="text-green-700 font-bold">Code found:</p><p class="code-lookup-text">${code}: ${description}</p>`;
+                codeLookupResult.className = 'bg-green-50 p-3 rounded-lg border border-green-200 mt-4 min-h-[80px]';
+            } else {
+                codeLookupResult.innerHTML = `<p class="text-red-700 font-bold">Code not found.</p><p class="code-lookup-text">"${code}" is not in our current database. Please try another common ICD-10 or CPT code (e.g., J02.0, 99213).</p>`;
+                codeLookupResult.className = 'bg-red-50 p-3 rounded-lg border border-red-200 mt-4 min-h-[80px]';
+            }
+        });
+
+        // --- NEW: A/R Aging Simulation Logic ---
+        loadArScenarioBtn.addEventListener('click', () => {
+            const randomIndex = Math.floor(Math.random() * arAgingScenarios.length);
+            currentArScenarioClaims = arAgingScenarios[randomIndex].claims;
+            
+            arAgingContent.classList.remove('hidden');
+            arClaimList.innerHTML = ''; // Clear previous claims
+
+            currentArScenarioClaims.forEach((claim, index) => {
+                const claimDiv = document.createElement('div');
+                claimDiv.classList.add('ar-claim-item');
+                claimDiv.dataset.index = index; // Store index for easy lookup
+
+                claimDiv.innerHTML = `
+                    <h3 class="font-semibold text-gray-800">Claim ID: ${claim.claimId}</h3>
+                    <div class="ar-claim-details">
+                        <p><strong>Patient:</strong> ${claim.patient}</p>
+                        <p><strong>Payer:</strong> ${claim.payer}</p>
+                        <p><strong>Amount:</strong> $${claim.amount.toFixed(2)}</p>
+                        <p><strong>Days Old:</strong> ${claim.daysOld}</p>
+                    </div>
+                    <label for="arAction-${index}" class="block text-gray-700 text-sm font-bold mb-2">Your Action:</label>
+                    <select id="arAction-${index}" class="ar-action-select focus:ring-red-500 focus:border-red-500 w-full">
+                        <option value="">-- Select Action --</option>
+                        <option value="check_status_online">Check claim status online (payer portal).</option>
+                        <option value="call_payer">Call payer (provider services) for status/details.</option>
+                        <option value="review_eob_era">Review EOB/ERA for denial reason/details.</option>
+                        <option value="submit_appeal">Submit an appeal with supporting documentation.</option>
+                        <option value="correct_resubmit">Correct simple errors and resubmit claim.</option>
+                        <option value="bill_patient">Bill patient (if patient responsibility is indicated).</option>
+                        <option value="write_off">Write off balance (e.g., timely filing, contractual adjustment).</option>
+                        <option value="monitor_further">Monitor further, still within initial processing time.</option>
+                    </select>
+                    <div id="arFeedback-${index}" class="ar-claim-feedback hidden"></div>
+                `;
+                arClaimList.appendChild(claimDiv);
+            });
+
+            arFeedback.innerHTML = '<p class="text-gray-500">Feedback on your A/R actions will appear here.</p>';
+            arFeedback.className = 'bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]';
+            checkArActionsBtn.classList.remove('hidden');
+            resetArScenarioBtn.classList.remove('hidden');
+        });
+
+        checkArActionsBtn.addEventListener('click', () => {
+            let allCorrect = true;
+            currentArScenarioClaims.forEach((claim, index) => {
+                const selectElement = document.getElementById(`arAction-${index}`);
+                const userAction = selectElement.value;
+                const feedbackDiv = document.getElementById(`arFeedback-${index}`);
+                
+                let isClaimCorrect = false;
+                // Determine correctness based on daysOld and user selection
+                if (claim.daysOld <= 30 && userAction === "monitor_further") {
+                    isClaimCorrect = true;
+                } else if (claim.daysOld > 30 && claim.daysOld <= 60 && (userAction === "check_status_online" || userAction === "call_payer")) {
+                    isClaimCorrect = true;
+                } else if (claim.daysOld > 60 && claim.daysOld <= 90 && (userAction === "call_payer" || userAction === "review_eob_era" || userAction === "submit_appeal" || userAction === "correct_resubmit")) {
+                     isClaimCorrect = true;
+                } else if (claim.daysOld > 90 && (userAction === "review_eob_era" || userAction === "submit_appeal" || userAction === "correct_resubmit" || userAction === "write_off")) {
+                    isClaimCorrect = true;
+                }
+                // Specific conditions override general if applicable (e.g., patient billing or write-off)
+                // This block adds flexibility to the logic, allowing for *any* correct action based on the specific claim's correctAction string
+                if (claim.correctAction.includes("Bill patient") && userAction === "bill_patient") {
+                    isClaimCorrect = true;
+                }
+                if (claim.correctAction.includes("Write off") && userAction === "write_off") {
+                    isClaimCorrect = true;
+                }
+                if (claim.correctAction.includes("Check claim status online") && userAction === "check_status_online") {
+                    isClaimCorrect = true;
+                }
+                if (claim.correctAction.includes("Call payer") && userAction === "call_payer") {
+                    isClaimCorrect = true;
+                }
+                if (claim.correctAction.includes("Review EOB/ERA") && userAction === "review_eob_era") {
+                    isClaimCorrect = true;
+                }
+                if (claim.correctAction.includes("Submit an appeal") && userAction === "submit_appeal") {
+                    isClaimCorrect = true;
+                }
+                if (claim.correctAction.includes("Correct simple errors") && userAction === "correct_resubmit") {
+                    isClaimCorrect = true;
+                }
+                if (claim.correctAction.includes("Monitor claim status") && userAction === "monitor_further") {
+                    isClaimCorrect = true;
+                }
+
+
+                feedbackDiv.classList.remove('hidden');
+                if (isClaimCorrect) {
+                    feedbackDiv.classList.add('correct');
+                    feedbackDiv.classList.remove('incorrect');
+                    feedbackDiv.innerHTML = `<p>Correct Action: ${claim.correctAction}</p><p class="mt-1 text-xs">(${claim.explanation})</p>`;
+                } else {
+                    feedbackDiv.classList.add('incorrect');
+                    feedbackDiv.classList.remove('correct');
+                    feedbackDiv.innerHTML = `<p>Incorrect. Expected action: ${claim.correctAction}</p><p class="mt-1 text-xs">(${claim.explanation})</p>`;
+                    allCorrect = false;
+                }
+                selectElement.disabled = true; // Disable selection after checking
+            });
+
+            if (allCorrect) {
+                arFeedback.innerHTML = '<p class="text-green-700 font-bold">Excellent! You correctly identified the best action for all aging claims.</p>';
+                arFeedback.className = 'bg-green-50 p-3 rounded-lg border border-green-200 mt-4 min-h-[80px]';
+            } else {
+                arFeedback.innerHTML = '<p class="text-red-700 font-bold">Review the feedback for each claim. Some actions were not ideal.</p>';
+                arFeedback.className = 'bg-red-50 p-3 rounded-lg border border-red-200 mt-4 min-h-[80px]';
+            }
+        });
+
+        resetArScenarioBtn.addEventListener('click', () => {
+            arAgingContent.classList.add('hidden');
+            loadArScenarioBtn.classList.remove('hidden');
+            arClaimList.innerHTML = '';
+            arFeedback.innerHTML = '<p class="text-gray-500">Feedback on your A/R actions will appear here.</p>';
+            arFeedback.className = 'bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]';
+            resetArScenarioBtn.classList.add('hidden');
+            checkArActionsBtn.classList.add('hidden');
+            showMessage('A/R Aging Scenario Reset.', 'success');
+        });
 
     </script>
 </body>
