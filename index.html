@@ -732,6 +732,639 @@
             console.warn("Using a random ID as Firebase config is missing:", userId);
         }
 
+        // --- GLOBAL DATA STORAGE (MOVE THESE TO THE TOP FOR IMMEDIATE AVAILABILITY) ---
+        // These global variables store data for various simulator sections.
+        // They need to be defined before any functions or event listeners
+        // that might try to access them upon script execution.
+
+        // Global Data Storage (for existing simulation)
+        let patientData = {};
+        let diagnoses = [];
+        let procedures = [];
+        let charges = [];
+
+        // Global Data Storage (Medical Billing Walkthrough)
+        let currentBillingStep = 0;
+        const billingSteps = [
+            {
+                title: "Step 1: Patient Registration & Insurance Verification",
+                instructions: `**Action:** Begin by gathering the patient's full demographics and insurance details. **On the simulator:** Fill in the 'Patient Registration' section (Name, DOB, Insurance ID) and click 'Register Patient'. In a real scenario, you'd also call the payer to verify eligibility and benefits.`,
+            },
+            {
+                title: "Step 2: Patient Encounter Documentation",
+                instructions: `**Action:** This is where the provider records the visit details. **On the simulator:** Fill in the 'Encounter Documentation' section (Encounter Date, Chief Complaint, and add at least one Diagnosis and one Procedure). This mirrors the clinical notes that inform coding.`,
+            },
+            {
+                title: "Step 3: Medical Coding",
+                instructions: `**Action:** Translate the documentation into standardized ICD-10 and CPT codes. **On the simulator:** Ensure your Diagnosis and Procedure inputs in Section 2 are correctly formatted codes. This is a critical skill for accurate billing.`,
+            },
+            {
+                title: "Step 4: Charge Entry & Superbill Creation",
+                instructions: `**Action:** Enter the charges for the services provided. **On the simulator:** Go to 'Charge Entry & Services', add descriptions, CPT codes (ensure they match your procedures from step 2), and prices for the services. This creates the financial record.`,
+            },
+            {
+                title: "Step 5: Claim Generation & Submission",
+                instructions: `**Action:** Compile all data into a standardized claim (CMS-1500 for professional, UB-04 for institutional) and send it to the payer. **On the simulator:** Click 'Generate Simulated Claim' in Section 4. This is the official request for payment.`,
+            },
+            {
+                title: "Step 6: Claim Adjudication",
+                instructions: `**Understanding:** The insurance company reviews the claim. They'll either pay, deny, or reject it, sending an EOB (for patient) or ERA (for provider). **Think:** What common reasons lead to denials at this stage? (e.g., medical necessity, timely filing)`,
+            },
+            {
+                title: "Step 7: Payment Posting",
+                instructions: `**Action:** Once paid, the payment is recorded in the billing system. **Understanding:** This updates the patient's balance and the provider's accounts. Accurate posting prevents overbilling or outstanding balances.`,
+            },
+            {
+                title: "Step 8: Patient Billing & Collections",
+                instructions: `**Action:** If a balance remains after insurance pays, the patient is billed. **Understanding:** This involves sending statements and following up on overdue payments. Clear communication with patients is key.`,
+            },
+            {
+                title: "Step 9: Reporting & Analysis",
+                instructions: `**Understanding:** Continuously analyze billing data to identify trends, improve efficiency, and reduce denials. This step helps optimize the entire revenue cycle. **You've completed the walkthrough!**`,
+            },
+        ];
+
+        // Global Data Storage (Prior Authorization Walkthrough)
+        let currentPaStep = 0;
+        const paSteps = [
+            {
+                title: "PA Step 1: Identify Need for Prior Authorization",
+                instructions: `**Scenario:** A patient needs an MRI of the knee.
+                **Action:** The first step is to check the patient's insurance plan and the specific CPT code (e.g., CPT 73721 for MRI knee without contrast) against the payer's policy to determine if a Prior Authorization (PA) is required. Many high-cost imaging services or specialty medications require PA.`,
+            },
+            {
+                title: "PA Step 2: Gather Necessary Information",
+                instructions: `**Action:** If PA is required, you must collect all relevant clinical and administrative information.
+                **Required Info:** Patient demographics, insurance details, referring and rendering provider NPIs, **exact CPT code(s) with modifiers**, **supporting ICD-10 diagnosis code(s) demonstrating medical necessity**, date of service, and any clinical notes (e.g., physician's order, previous treatments tried and failed).`,
+            },
+            {
+                title: "PA Step 3: Submit the Request",
+                instructions: `**Action:** Submit the PA request to the insurance company. This is usually done online via a payer portal, fax, or phone.
+                **Key Point:** Ensure all fields are accurately completed and all required supporting documentation is attached. Incomplete requests are a common cause of delays or denials.`,
+            },
+            {
+                title: "PA Step 4: Follow-up and Await Decision",
+                instructions: `**Action:** After submission, monitor the status of the request. Payers have specific turnaround times (e.g., 7-14 business days for routine, 24-72 hours for urgent).
+                **Outcome:** The PA will either be **Approved**, **Denied**, or sent back for **More Information**.`,
+            },
+            {
+                title: "PA Step 5: Handle Approved Authorization",
+                instructions: `**Action:** If approved, carefully note the **authorization number**, the **approved CPT codes**, the **number of units/visits approved**, and the **valid date range**.
+                **Next:** Ensure this authorization number is included on the claim when submitted to prevent denials. Inform the patient and scheduling department.`,
+            },
+            {
+                title: "PA Step 6: Handle Denied Authorization",
+                instructions: `**Action:** If denied, review the denial reason code carefully (often found on an EOB/ERA from the PA department). Common reasons include 'not medically necessary' or 'incorrect information'.
+                **Next:** If denied for medical necessity, discuss with the provider if an appeal (with additional clinical documentation or a peer-to-peer review) is warranted. If denied for administrative reasons, correct and resubmit. **You've completed the PA walkthrough!**`,
+            },
+        ];
+
+        // Global Data Storage (Knowledge Quizzes)
+        let selectedQuizModule = null; // Stores the array of questions for the current module
+        let currentQuizQuestionIndex = 0; // Tracks the current question in the module
+
+        const quizModules = {
+            "Coding Guidelines": [
+                {
+                    question: "What does a CPT code modifier indicate?",
+                    options: ["A. A new diagnosis", "B. The code has been altered in some way", "C. The patient has insurance", "D. The service was performed in a hospital"],
+                    answer: "B",
+                    explanation: "A CPT modifier is a two-digit code appended to a CPT code to provide additional information about the procedure or service, such as that it was altered or performed by more than one physician."
+                },
+                {
+                    question: "Which coding system is used for diagnosis codes?",
+                    options: ["A. CPT", "B. HCPCS Level II", "C. ICD-10-CM", "D. E&M"],
+                    answer: "C",
+                    explanation: "ICD-10-CM (International Classification of Diseases, 10th Revision, Clinical Modification) is the standard system for diagnosis codes in the U.S."
+                },
+                // Add more Coding Guidelines questions here
+            ],
+            "Healthcare Laws": [
+                {
+                    question: "What is the primary purpose of HIPAA for medical coders?",
+                    options: ["A. To ensure patients get timely appointments", "B. To protect the privacy and security of patient health information (PHI)", "C. To set reimbursement rates for services", "D. To standardize coding manuals"],
+                    answer: "B",
+                    explanation: "HIPAA's Privacy Rule and Security Rule mandate that Protected Health Information (PHI) is kept confidential and secure."
+                },
+                {
+                    question: "Submitting a claim with codes that you know are wrong to get a higher payment is a violation of which law?",
+                    options: ["A. Stark Law", "B. Anti-Kickback Statute", "C. False Claims Act (FCA)", "D. OIG Exclusions"],
+                    answer: "C",
+                    explanation: "The False Claims Act (FCA) imposes liability on persons and companies who knowingly submit false claims to the government."
+                },
+                // Add more Healthcare Laws questions here
+            ],
+            "Coding Ethics": [
+                {
+                    question: "Your boss tells you to change a code to one that provides higher reimbursement, even though the documentation doesn't support it. What is the most ethical action?",
+                    options: ["A. Do what your boss says to avoid conflict", "B. Report the incident to a compliance officer", "C. Change the code but make a note in your personal records", "D. Tell the patient to file a complaint"],
+                    answer: "B",
+                    explanation: "The most ethical and legally compliant action is to report fraudulent activities, such as upcoding, to a designated compliance officer or legal department. This protects you and the organization."
+                },
+                // Add more Coding Ethics questions here
+            ],
+            "Denials & Appeals": [
+                {
+                    question: "A claim is denied because the diagnosis code does not justify the procedure code. What is this denial reason called?",
+                    options: ["A. Medical necessity denial", "B. Bundling issue", "C. Payer policy change", "D. Inconsistent patient information"],
+                    answer: "A",
+                    explanation: "A denial for 'lack of medical necessity' means the payer believes the procedure performed was not necessary to treat the patient's documented diagnosis. The diagnosis code must support the procedure code."
+                },
+                {
+                    question: "What is the first step in appealing a denied claim?",
+                    options: ["A. Resubmit the claim with a new code", "B. Send a letter of protest to the payer's legal department", "C. Review the patient's chart and the denial reason", "D. Bill the patient directly for the full amount"],
+                    answer: "C",
+                    explanation: "The crucial first step in any appeal is to thoroughly review the patient’s documentation and compare it against the denial reason provided by the payer. This helps you identify if the issue is a simple coding error or a more complex medical necessity dispute."
+                },
+                // Add more Denials & Appeals questions here
+            ],
+            // Insurance Nuances Quiz Module
+            "Insurance Nuances": [
+                {
+                    question: "Which type of insurance plan typically requires a referral from a Primary Care Provider (PCP) to see a specialist?",
+                    options: ["A. PPO", "B. HMO", "C. Medicare Part B", "D. Fee-for-Service"],
+                    answer: "B",
+                    explanation: "HMO (Health Maintenance Organization) plans generally require a referral from a PCP to see a specialist, as they focus on managed care within a network."
+                },
+                {
+                    question: "When a patient has both active Medicare and Medicaid, which payer is usually considered primary?",
+                    options: ["A. Medicaid", "B. Medicare", "C. The patient's choice", "D. Whichever plan has been active longer"],
+                    answer: "B",
+                    explanation: "Medicare is almost always the primary payer when a patient has both Medicare and Medicaid. Medicaid then acts as the payer of last resort, covering what Medicare doesn't."
+                },
+                {
+                    question: "Medicare Part B typically covers what percentage of approved physician services after the deductible is met?",
+                    options: ["A. 100%", "B. 50%", "C. 80%", "D. 20%"],
+                    answer: "C",
+                    explanation: "Medicare Part B covers 80% of approved physician services after the annual deductible is met, with the patient responsible for the remaining 20% (coinsurance)."
+                }
+            ]
+        };
+
+        // Global Data Storage (Patient Balance Calculator)
+        let currentBalanceScenarioData = null;
+        const patientBalanceScenarios = [
+            {
+                patient: "Alex Green",
+                plan: {
+                    copay: 0,
+                    deductible: 1000,
+                    deductibleMetToDate: 700,
+                    coinsurance: 0.15, // 15%
+                },
+                visit: {
+                    service: "Office visit with minor procedure",
+                    allowedAmount: 300,
+                },
+                correct: {
+                    copay: 0,
+                    deductibleApplied: 300,
+                    coinsurance: 0, // No coinsurance applied as allowed amount only covers deductible
+                    totalBalance: 300,
+                },
+                calculationSteps: `
+1. Remaining Deductible: $1,000 (total) - $700 (met) = $300.
+2. Apply Allowed Amount to Deductible: The full $300 allowed amount for this visit goes towards meeting the remaining $300 deductible.
+3. Deductible is now fully met. No amount remains for coinsurance from this visit.
+4. Total Patient Balance: $300 (deductible portion met by this visit).
+                `.trim(),
+            },
+            {
+                patient: "Brenda White",
+                plan: {
+                    copay: 35,
+                    deductible: 500,
+                    deductibleMetToDate: 0,
+                    coinsurance: 0.20, // 20%
+                },
+                visit: {
+                    service: "Specialist Consultation",
+                    allowedAmount: 250,
+                },
+                correct: {
+                    copay: 35,
+                    deductibleApplied: 250,
+                    coinsurance: 0, // Deductible not fully met, so no coinsurance yet
+                    totalBalance: 285, // Copay + Deductible Applied
+                },
+                calculationSteps: `
+1. Collect Copay: $35.
+2. Apply Allowed Amount ($250) to Deductible ($500). $250 is applied to deductible.
+3. Remaining Deductible: $500 - $250 = $250.
+4. Since deductible is not fully met, no coinsurance applies from this visit.
+5. Total Patient Balance: $35 (copay) + $250 (deductible portion) = $285.
+                `.trim(),
+            },
+            {
+                patient: "Chris Johnson",
+                plan: {
+                    copay: 0,
+                    deductible: 1500,
+                    deductibleMetToDate: 1500, // Deductible already met
+                    coinsurance: 0.10, // 10%
+                },
+                visit: {
+                    service: "Follow-up Lab Tests",
+                    allowedAmount: 100,
+                },
+                correct: {
+                    copay: 0,
+                    deductibleApplied: 0,
+                    coinsurance: 10, // 10% of $100
+                    totalBalance: 10,
+                },
+                calculationSteps: `
+1. Copay: $0.
+2. Deductible: Already met. $0 applied.
+3. Coinsurance: 10% of $100 (Allowed Amount) = $10.
+4. Total Patient Balance: $10 (coinsurance).
+                `.trim(),
+            },
+            {
+                patient: "Diana Smith",
+                plan: {
+                    copay: 20,
+                    deductible: 750,
+                    deductibleMetToDate: 750, // Deductible already met
+                    coinsurance: 0.25, // 25%
+                },
+                visit: {
+                    service: "Primary Care Office Visit",
+                    allowedAmount: 90,
+                },
+                correct: {
+                    copay: 20,
+                    deductibleApplied: 0,
+                    coinsurance: 22.50, // 25% of $90
+                    totalBalance: 42.50, // Copay + Coinsurance
+                },
+                calculationSteps: `
+1. Collect Copay: $20.
+2. Deductible: Already met. $0 applied.
+3. Coinsurance: 25% of $90 (Allowed Amount) = $22.50.
+4. Total Patient Balance: $20 (copay) + $22.50 (coinsurance) = $42.50.
+                `.trim(),
+            },
+        ];
+
+        // Global Data Storage (Modifier Application Challenge)
+        let currentModifierChallenge = null;
+        const modifierScenarios = [
+            {
+                id: "Scenario 1: E/M with Minor Procedure",
+                scenario: "A patient comes in for a routine follow-up for their diabetes (E/M service). During the same visit, the physician also performs a minor skin tag removal (separate procedure) that is distinct from the diabetes management.",
+                cptCodeToInput: "99213", // E/M code
+                correctModifier: "25",
+                explanation: "Modifier -25 is used when a significant, separately identifiable evaluation and management (E/M) service is performed on the same day as another procedure or service by the same physician. The diabetes follow-up is separate from the skin tag removal."
+            },
+            {
+                id: "Scenario 2: Professional Component of Imaging",
+                scenario: "A hospital provides an X-ray service (technical component), but the radiologist (physician) from a separate group reads and interprets the X-ray (professional component). Your billing office is for the radiologist's group.",
+                cptCodeToInput: "71045", // Chest X-ray, single view
+                correctModifier: "26",
+                explanation: "Modifier -26 indicates that only the professional component of a service was performed. The radiologist's group is billing for the interpretation, not the technical aspects (equipment, tech time) of the X-ray."
+            },
+            {
+                id: "Scenario 3: Repeat Procedure by Same Physician",
+                scenario: "A patient received an injection in their left knee earlier today. Later in the same day, due to continued severe pain, the same physician performs another, distinct injection in the *same* left knee.",
+                cptCodeToInput: "20610", // Arthrocentesis, aspiration and/or injection, major joint
+                correctModifier: "76",
+                explanation: "Modifier -76 indicates a repeat procedure by the same physician on the same date of service. This clarifies that the second injection was not a duplicate but a medically necessary, distinct service."
+            },
+            {
+                id: "Scenario 4: E/M during Global Post-Op Period",
+                scenario: "A patient had a hernia repair (surgical procedure with a 90-day global period) 30 days ago. Today, the patient comes in for a completely unrelated visit for acute bronchitis, seen by the same surgeon who performed the hernia repair.",
+                cptCodeToInput: "99213", // Established patient E/M
+                correctModifier: "24",
+                explanation: "Modifier -24 is used for an unrelated evaluation and management (E/M) service by the same physician during a post-operative global period. The bronchitis is entirely separate from the hernia repair."
+            },
+            {
+                id: "Scenario 5: Telehealth Visit",
+                scenario: "A patient has a scheduled follow-up for chronic hypertension with their primary care physician. Due to their busy schedule, the patient conducts the visit via a real-time, two-way audio and video telemedicine platform.",
+                cptCodeToInput: "99213", // Established patient E/M
+                correctModifier: "95",
+                explanation: "Modifier -95 indicates that the service was provided via synchronous telemedicine, where both audio and video are used for a real-time interactive encounter. This is critical for billing telehealth services."
+            }
+        ];
+
+        // Global Data Storage (Matching Game)
+        let cards = [];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let gameActive = false;
+
+        const termPairs = [
+            { term: "EOB", definition: "Explanation of Benefits" },
+            { term: "HIPAA", definition: "Health Insurance Portability and Accountability Act" },
+            { term: "CPT", definition: "Current Procedural Terminology" },
+            { term: "ICD-10-CM", definition: "International Classification of Diseases, 10th Revision, Clinical Modification" },
+            { term: "HMO", definition: "Health Maintenance Organization" },
+            { term: "PPO", definition: "Preferred Provider Organization" },
+            { term: "NPI", definition: "National Provider Identifier" },
+            { term: "PHI", definition: "Protected Health Information" },
+            { term: "ERA", definition: "Electronic Remittance Advice" },
+            { term: "POS", definition: "Place of Service" },
+            { term: "UB-04", definition: "Institutional Claim Form" },
+            { term: "CMS-1500", definition: "Professional Claim Form" },
+            { term: "PA", definition: "Prior Authorization" },
+            { term: "AR", definition: "Accounts Receivable" },
+            { term: "RCM", definition: "Revenue Cycle Management" }
+        ];
+
+        // Global Data Storage (Claim Scrubber)
+        let currentScrubberScenarioData = null;
+        const claimScrubberScenarios = [
+            {
+                title: "Scenario 1: Missing Modifier for Separate E/M",
+                description: "A patient saw their PCP for a routine check-up and also had a mole removed during the same visit. The claim was submitted without a modifier.",
+                presentedClaim: {
+                    notes: "Patient had annual physical and also requested removal of a bothering mole on arm. Exam for physical normal. Mole removal performed.",
+                    diagnosis: "Z00.00 (Annual Physical), D22.31 (Benign neoplasm of skin, right arm)",
+                    cpt: "99395, 11400", // Preventive visit, Excision benign lesion
+                    modifier: "NONE" // Incorrect - should have a modifier on 99395 or 99213 if a problem was also addressed.
+                },
+                errors: [
+                    { type: "modifier", explanation: "When an E/M service (like an annual physical which is coded with a preventive CPT 99395) and a separate, distinct procedure (like mole removal CPT 11400) are performed on the same day by the same provider, the E/M code requires a modifier -25 if a significant, separately identifiable E/M service was performed (or, if it was a problem-focused E/M in addition to the preventive, then 9921x with -25). In this case, since an annual physical (preventive) was done, and a separate procedure, a modifier is often used on the procedure if the visit was primarily for the preventive service and the procedure was incidental or vice-versa. For simplicity in this simulator, assume the E/M would typically be 99213 and need a -25 if a problem was also addressed that day, separate from the preventive. Given the prompt's simplicity, the main issue is a missing modifier for separate services." }
+                ],
+                expectedInputs: {
+                    correctedICD: "Z00.00, D22.31", // Both diagnoses are correct.
+                    correctedCPT: "99395, 11400", // CPTs are correct for the services.
+                    correctedModifier: "25" // Modifier for the E/M or procedure depending on primary service/payer. Assuming 99395, for *this* example, let's say 99213 would also be billed with 25. Let's simplify and imply a modifier is needed. Let's make it 99213-25 and 11400. The prompt states "99395, 11400".
+                },
+                 explanation: "The initial claim was missing a modifier to indicate that the mole removal was a separate, distinct procedure from the annual physical. Modifier -25 should be appended to the E/M code (99395 in this case, or if a separate problem was managed, a 9921x code) to signify a significant, separately identifiable service was provided on the same day as another procedure. The simulator focuses on the *concept* of the missing modifier."
+            },
+            {
+                title: "Scenario 2: Diagnosis-Procedure Mismatch",
+                description: "A claim for a chest X-ray was submitted with a diagnosis code for a common cold, but the notes indicate potential pneumonia. The payer denied for lack of medical necessity.",
+                presentedClaim: {
+                    notes: "Patient with cough, fever, and congestion. Suspicion of common cold. Chest X-ray performed.",
+                    diagnosis: "J00 (Common Cold)",
+                    cpt: "71045 (Chest X-ray, single view)",
+                    modifier: "NONE"
+                },
+                errors: [
+                    { type: "diagnosis-medical-necessity", explanation: "A common cold (J00) typically does not justify a chest X-ray. The documentation suggests pneumonia, which would medically necessitate the X-ray. The diagnosis should be changed to reflect the true medical necessity for the X-ray." }
+                ],
+                expectedInputs: {
+                    correctedICD: "J18.9", // Pneumonia, unspecified
+                    correctedCPT: "71045",
+                    correctedModifier: "NONE"
+                },
+                explanation: "The original diagnosis (J00 Common Cold) did not provide medical necessity for the Chest X-ray (71045). A diagnosis like J18.9 (Pneumonia, unspecified organism) would justify the imaging study, making it a medically necessary service. This is a common denial reason."
+            },
+            {
+                title: "Scenario 3: Incorrect CPT for Service Rendered",
+                description: "A claim was submitted for a complex office visit (99215), but the documentation only supports a moderate complexity visit.",
+                presentedClaim: {
+                    notes: "Established patient. Follow-up for stable hypertension. BP good. Meds refilled. Quick review, no new complaints.",
+                    diagnosis: "I10 (Essential hypertension)",
+                    cpt: "99215 (Established patient office or other outpatient visit, 40-54 minutes)",
+                    modifier: "NONE"
+                },
+                errors: [
+                    { type: "cpt", explanation: "CPT code 99215 is for a high-complexity established patient visit, typically requiring extensive history, exam, and medical decision making. The documentation provided (routine follow-up for stable hypertension, quick review) only supports a lower level E/M code like 99213 (moderate complexity) or 99212 (low complexity). This is an example of upcoding." }
+                ],
+                expectedInputs: {
+                    correctedICD: "I10",
+                    correctedCPT: "99213", // Or even 99212, but 99213 is a common correction.
+                    correctedModifier: "NONE"
+                },
+                explanation: "The CPT code 99215 was an 'upcode' as the documentation did not support the highest level of office visit. The visit description fits CPT 99213, which is for an established patient office visit requiring a moderate level of medical decision making. Always ensure the CPT code accurately reflects the complexity and time/elements documented."
+            }
+        ];
+
+        // Global Data Storage (Denial Code Interpreter)
+        let currentDenialScenarioData = null;
+        const denialScenarios = [
+            {
+                denialCode: "CO-45 / M80",
+                context: "A Medicare claim for a routine annual physical (CPT 99395) was submitted, but it was denied with 'Contractual Obligation - Charge exceeds fee schedule/maximum allowable or contracted maximum' and 'Not covered when performed in this setting/type of service'.",
+                interpretations: [
+                    { text: "The service was not medically necessary.", correct: false },
+                    { text: "The provider is not in-network with Medicare.", correct: false },
+                    { text: "The claim was denied because it was a preventive service, and Medicare only covers problem-focused visits.", correct: false },
+                    { text: "Medicare does not pay for routine annual physicals using this CPT code (99395) under Part B; it covers Annual Wellness Visits (AWV) with different codes.", correct: true }
+                ],
+                correctActionPlanKeywords: ["Medicare", "Annual Wellness Visit", "AWV", "G0438", "G0439", "Rebill"],
+                explanation: "Medicare Part B does not cover routine annual physicals (CPT 99395). Instead, it covers an Annual Wellness Visit (AWV), which focuses on preventive care and health planning. The correct CPT codes for an AWV are G0438 (initial) or G0439 (subsequent). If the documentation supports an AWV, the claim should be rebilled with the appropriate G-code. If it was a standard physical, it might be non-covered. The M80 remark code ('Not covered when performed in this setting/type of service') further points to this policy difference.",
+            },
+            {
+                denialCode: "PR-1 / N1",
+                context: "A claim for an office visit (CPT 99213) was denied with 'Patient Responsibility - Deductible Amount' and a remark code 'Patient eligibility for the service date is not confirmed'.",
+                interpretations: [
+                    { text: "The patient did not pay their copay.", correct: false },
+                    { text: "The patient's deductible has not been met, but also their insurance was not active for that date of service.", correct: true },
+                    { text: "The CPT code was incorrect for the services rendered.", correct: false },
+                    { text: "The claim was filed outside the timely filing limit.", correct: false }
+                ],
+                correctActionPlanKeywords: ["Verify Eligibility", "Payer Portal", "Call Payer", "Patient Responsibility", "Bill Patient"],
+                explanation: "PR-1 means the patient owes the deductible. However, the N1 remark code (Patient eligibility for service date not confirmed) is critical here. It indicates a primary issue: the patient may not have had active insurance on the date of service, or their benefits changed. The first step is to **verify the patient's eligibility and benefits** with the payer for the date of service. If confirmed ineligible, the patient is responsible for the full balance. If eligible but deductible not met, bill the patient.",
+            },
+            {
+                denialCode: "CO-97",
+                context: "A claim for a laceration repair (CPT 12001) performed in the ED was denied with 'Contractual Obligation - Payment adjusted because the benefit for this service is included in the payment/allowance for another service'.",
+                interpretations: [
+                    { text: "The laceration repair was not medically necessary.", correct: false },
+                    { text: "The service was bundled into another payment and cannot be billed separately.", correct: true },
+                    { text: "The patient's deductible was not met for this service.", correct: false },
+                    { text: "The claim was missing a required modifier.", correct: false }
+                ],
+                correctActionPlanKeywords: ["Bundling", "Review NCCI Edits", "Payer Policy", "Appeal if appropriate"],
+                explanation: "CO-97 indicates a **bundling issue**. This means the laceration repair (12001) is considered part of a larger service or procedure that was also billed (e.g., an Evaluation and Management (E/M) service for the ED visit). Medicare's National Correct Coding Initiative (NCCI) edits often bundle certain minor procedures into E/M services. Review the full claim to see if an E/M code was also billed. If it's truly a separate, distinct service, a modifier (like -59) might be needed, but for many minor procedures, bundling is expected. **Do not rebill without a modifier unless documentation clearly supports it and is compliant with payer rules.**",
+            }
+        ];
+
+        // Global Data Storage (SOAP Note Coder & Extractor)
+        let currentSoapScenarioData = null;
+        const soapNoteScenarios = [
+            {
+                title: "Acute Pharyngitis (Strep Throat) Encounter",
+                description: "Extract the Chief Complaint, ICD-10, CPT, Modifier, and Key Plan elements.",
+                soapNote: `
+S:
+Chief Complaint: "Sore throat and difficulty swallowing for 3 days."
+HPI: Ms. Davis reports onset of severe sore throat 3 days ago, which has progressively worsened, making it painful to swallow liquids and solids. Associated with mild fever (up to 100.5°F at home), body aches, and fatigue. Denies cough, runny nose, congestion, or rash. No known sick contacts. Has been taking Tylenol for fever with minimal relief.
+ROS: No recent strep exposure. Denies nausea, vomiting, abdominal pain, or dysuria.
+
+O:
+Vitals: BP: 118/78 mmHg, HR: 88 bpm, RR: 18 bpm, Temp: 100.8°F, Wt: 130 lbs
+Physical Exam:
+General: Appears tired, mild distress due to throat pain.
+HEENT: Throat: Erythematous pharynx. Tonsils 2+ enlarged, with white exudates bilaterally. No peritonsillar swelling. Neck: Anterior cervical lymphadenopathy, tender to palpation.
+Lungs: Clear to auscultation bilaterally.
+Rapid Strep Test: Positive
+
+A:
+1. Acute streptococcal pharyngitis (J02.0): Confirmed by positive rapid strep test and classic Centor criteria symptoms.
+
+P:
+1. Acute streptococcal pharyngitis:
+   - Medication: Prescribed Amoxicillin 500mg, 2 tabs po BID x 10 days. Advised to complete full course.
+   - Symptomatic Relief: Advised warm salt water gargles, lozenges, Tylenol/ibuprofen as needed.
+   - Education: Discussed contagiousness, hand hygiene, stay home from work/school 24h after starting abx and once afebrile.
+   - Complications: Educated on potential complications of untreated strep throat.
+Follow-up: Return to clinic if symptoms worsen or no improvement in 48-72 hours.
+                `.trim(),
+                expected: {
+                    chiefComplaint: "Sore throat and difficulty swallowing",
+                    icd10: "J02.0",
+                    cpt: "99213, 87880", // 99213 for established visit, 87880 for rapid strep test
+                    modifier: "NONE", // Assuming no specific modifiers for this basic scenario
+                    planKeywords: ["Amoxicillin", "10 days", "gargles", "lozenge", "Tylenol", "hygiene", "stay home", "return if worse"],
+                },
+                explanation: `
+- Chief Complaint is directly from the 'S' section.
+- ICD-10 code J02.0 is provided in the 'A' (Assessment) section, confirmed by positive rapid strep and symptoms.
+- CPT 99213 is for an established patient office visit (implied by the follow-up). CPT 87880 is for the rapid strep test performed.
+- No specific modifier is needed for this simple, direct encounter.
+- Key plan elements are extracted from the 'P' section, focusing on medication, symptomatic relief, education, and follow-up instructions.
+                `.trim(),
+            },
+            {
+                title: "Hypertension Follow-up and Medication Refill",
+                description: "Extract the Chief Complaint, ICD-10, CPT, Modifier, and Key Plan elements.",
+                soapNote: `
+S:
+Chief Complaint: "Follow-up for blood pressure."
+HPI: Mr. Doe reports his home blood pressure readings have been consistently in the range of 130-140/80-90 mmHg daily since his last visit. Denies headaches, dizziness, chest pain, or vision changes. Reports adherence to prescribed Lisinopril 20mg daily. States he has been walking 30 minutes, 4 times a week, and trying to reduce sodium intake. Denies any side effects from medication.
+ROS: No new complaints. Denies fever, cough, shortness of breath, nausea, vomiting, diarrhea, constipation, or urinary symptoms.
+
+O:
+Vitals: BP: 138/86 mmHg, HR: 72 bpm, RR: 16 bpm, Temp: 98.6°F, Wt: 185 lbs (down 2 lbs from last visit)
+Physical Exam:
+General: Alert, oriented, appears comfortable.
+CV: Regular rhythm, no murmurs, rubs, or gallops.
+Pulmonary: Lungs clear to auscultation bilaterally.
+Labs (from 2 weeks prior): BMP: Na 140, K 4.1, Cr 0.9, Glucose 102; HbA1c: 5.7%; Lipid Panel: Total Chol 180, HDL 55, LDL 90, Trig 120
+
+A:
+1. Essential Hypertension (I10): Stable blood pressure readings at target.
+2. Prediabetes (R73.03): HbA1c remains stable.
+3. Hyperlipidemia (E78.5): LDL well-controlled.
+
+P:
+1. Essential Hypertension: Continue Lisinopril 20mg daily. Encourage continued home BP monitoring; bring log to next visit. Continue DASH diet and regular exercise.
+2. Prediabetes: Continue emphasizing diet and exercise. Recheck HbA1c in 6 months.
+3. Hyperlipidemia: Continue current diet and exercise. Recheck Lipid Panel in 1 year.
+Follow-up: Return to clinic in 3 months for recheck of BP and overall health.
+                `.trim(),
+                expected: {
+                    chiefComplaint: "Follow-up for blood pressure",
+                    icd10: "I10, R73.03, E78.5",
+                    cpt: "99213", // Established patient office visit, assuming moderate complexity
+                    modifier: "NONE",
+                    planKeywords: ["Lisinopril", "BP monitoring", "DASH diet", "exercise", "HbA1c", "Lipid Panel", "3 months"],
+                },
+                explanation: `
+- Chief Complaint is directly from the 'S' section.
+- ICD-10 codes I10, R73.03, E78.5 are all listed in the 'A' (Assessment) section.
+- CPT 99213 is an appropriate code for an established patient office visit managing stable chronic conditions.
+- No modifiers are needed for this straightforward follow-up.
+- Key plan elements involve medication continuation, lifestyle advice, upcoming lab work, and the next follow-up schedule.
+                `.trim(),
+            },
+            {
+                title: "Acute Knee Pain and X-ray",
+                description: "Extract the Chief Complaint, ICD-10, CPT, Modifier, and Key Plan elements.",
+                soapNote: `
+S:
+Chief Complaint: "Right knee pain after fall."
+HPI: Patient reports falling down stairs 2 days ago, landing on right knee. Immediate severe pain and swelling. Unable to bear full weight. No numbness or tingling. Has been icing and taking ibuprofen with minimal relief.
+ROS: No fever, chills. No other injuries from fall.
+
+O:
+Vitals: BP: 120/80 mmHg, HR: 70 bpm, RR: 16 bpm, Temp: 98.2°F
+Physical Exam:
+Right Knee: Moderate swelling over patella. Tenderness to palpation along medial joint line. Pain with range of motion, especially flexion and extension. Effusion present. Stable to valgus/varus stress. Distal pulses intact. No neurological deficits.
+X-ray Right Knee: Ordered.
+
+A:
+1. Right Knee Sprain (S83.91XA - Sprain of unspecified ligament of right knee, initial encounter)
+2. Traumatic Effusion, right knee (M25.461) - if applicable, otherwise omit.
+
+P:
+1. Right Knee Sprain:
+   - Immobilization: Knee immobilizer prescribed.
+   - Pain Management: Continue Ibuprofen 600mg every 6 hours as needed.
+   - RICE therapy: Rest, Ice, Compression, Elevation.
+   - Imaging: X-ray of right knee performed today, results pending. Will notify patient once read.
+   - Activity: Non-weight bearing on right leg, crutches provided.
+   - Follow-up: Orthopedic referral placed. Return to clinic in 1 week for re-evaluation or sooner if worsening.
+                `.trim(),
+                expected: {
+                    chiefComplaint: "Right knee pain after fall",
+                    icd10: "S83.91XA",
+                    cpt: "99213, 73560", // 99213 established visit, 73560 for knee X-ray
+                    modifier: "RT", // Right side
+                    planKeywords: ["immobilizer", "Ibuprofen", "RICE", "X-ray", "non-weight bearing", "crutches", "orthopedic referral", "1 week"],
+                },
+                explanation: `
+- Chief Complaint is clear from the 'S' section.
+- ICD-10 code S83.91XA is provided in the 'A' (Assessment) section. If a traumatic effusion was also explicitly diagnosed, M25.461 could be added.
+- CPT 99213 is for the established patient office visit. CPT 73560 is for the X-ray of the knee.
+- Modifier RT is crucial to indicate the service was performed on the Right side.
+- Key plan elements involve immobilization, pain management, RICE therapy, imaging details, activity restrictions, and follow-up/referral.
+                `.trim(),
+            }
+        ];
+
+        // Global Data Storage (Code Lookup Tool)
+        const codeDatabase = {
+            "J02.0": "Acute pharyngitis, unspecified",
+            "J02.9": "Acute pharyngitis, unspecified",
+            "I10": "Essential (primary) hypertension",
+            "R05": "Cough",
+            "R53.83": "Other fatigue",
+            "B07.0": "Plantar wart",
+            "B07.9": "Viral wart, unspecified",
+            "J11.1": "Influenza with gastrointestinal manifestations, virus identified",
+            "Z00.00": "Encounter for general adult medical examination without abnormal findings",
+            "R73.03": "Prediabetes",
+            "E78.5": "Hyperlipidemia, unspecified",
+            "S83.91XA": "Sprain of unspecified ligament of right knee, initial encounter",
+            "M25.461": "Effusion, right knee",
+            "J18.9": "Pneumonia, unspecified organism",
+
+            "99203": "Office or other outpatient visit for the evaluation and management of a new patient, which requires a medically appropriate history and/or examination and high complexity medical decision making. When counseling and/or coordination of care with other physicians, other qualified health care professionals, or agencies are provided consistent with the nature of the problem(s) and the patient's and/or family's needs, time is a key factor to qualify for reporting this code. (30-44 minutes)",
+            "99213": "Office or other outpatient visit for the evaluation and management of an established patient, which requires a medically appropriate history and/or examination and moderate complexity medical decision making. When counseling and/or coordination of care with other physicians, other qualified health care professionals, or agencies are provided consistent with the nature of the problem(s) and the patient's and/or family's needs, time is a key factor to qualify for reporting this code. (20-29 minutes)",
+            "99395": "Periodic comprehensive preventive medicine reevaluation and management of an individual including an age and gender appropriate history, examination, counseling/anticipatory guidance/risk factor reduction interventions, and the ordering of laboratory/diagnostic procedures, established patient; 40-64 years.",
+            "17110": "Destruction (e.g., laser surgery, electrosurgery, cryosurgery, chemosurgery, surgical curettement), of benign lesions other than skin tags or cutaneous vascular proliferative lesions; up to 14 lesions",
+            "87804": "Influenza virus antigen detection, immunoassay, with direct optical observation; with optical instrument analysis",
+            "71045": "Radiologic examination, chest; single view",
+            "20610": "Arthrocentesis, aspiration and/or injection; major joint or bursa (e.g., shoulder, hip, knee, subacromial bursa)",
+            "73560": "Radiologic examination, knee; 1 or 2 views",
+            "G0438": "Annual wellness visit; includes a personalized prevention plan of service (pps), initial visit",
+            "G0439": "Annual wellness visit, subsequent"
+            // Add more common codes here as needed
+        };
+
+        // Global Data Storage (A/R Aging Simulation)
+        let currentArScenarioClaims = [];
+        const arAgingScenarios = [
+            {
+                scenarioId: "Scenario A: Mixed Aging",
+                claims: [
+                    { claimId: "C9001", patient: "Alice", payer: "BCBS", amount: 150.00, daysOld: 15, correctAction: "Monitor claim status", explanation: "Claims under 30 days old are typically still within the payer's initial processing time. Continue to monitor the status online before calling." },
+                    { claimId: "C9002", patient: "Bob", payer: "Aetna", amount: 320.00, daysOld: 45, correctAction: "Check claim status online", explanation: "For claims 31-60 days old, check the payer's online portal first. If details are not available or it's stuck, call payer services." },
+                    { claimId: "C9003", patient: "Charlie", payer: "UnitedHealthcare", amount: 75.00, daysOld: 70, correctAction: "Call payer (provider services) for status/details", explanation: "Claims 61-90 days old often require a direct call to payer services to identify specific issues or denials not yet communicated via EOB/ERA." },
+                    { claimId: "C9004", patient: "Dana", payer: "Medicare", amount: 200.00, daysOld: 100, correctAction: "Review EOB/ERA for denial reason/details", explanation: "For claims over 90 days, there's a high probability of denial. Locate the EOB/ERA to understand the denial code and reason before planning an appeal or correction." },
+                    { claimId: "C9005", patient: "Eve", payer: "Cigna", amount: 50.00, daysOld: 65, correctAction: "Review EOB/ERA for denial reason/details", explanation: "If an EOB/ERA is available for a claim over 60 days, always review it first to pinpoint the exact reason for non-payment or underpayment. This guides your next action." },
+                    { claimId: "C9006", patient: "Frank", payer: "Humana", amount: 450.00, daysOld: 95, correctAction: "Submit an appeal", explanation: "For older denied claims where the service was medically necessary and supported by documentation, an appeal is often required. Ensure you have all necessary clinical notes." },
+                ]
+            },
+            {
+                scenarioId: "Scenario B: Denial Focus",
+                claims: [
+                    { claimId: "D1001", patient: "Grace", payer: "BCBS", amount: 120.00, daysOld: 80, correctAction: "Review EOB/ERA for denial reason/details", explanation: "This claim is old enough that it's likely been processed. Check for EOB/ERA to find a specific denial reason." },
+                    { claimId: "D1002", patient: "Henry", payer: "Aetna", amount: 25.00, daysOld: 40, correctAction: "Check claim status online", explanation: "For a claim 31-60 days old, start with an online status check. It's too early for an appeal unless a denial is confirmed." },
+                    { claimId: "D1003", patient: "Ivy", payer: "UnitedHealthcare", amount: 600.00, daysOld: 150, correctAction: "Write off balance", explanation: "A very old claim (150 days) with no resolution might be uncollectible, especially if it's past timely filing limits or payer response periods. Consider writing off after all other avenues are exhausted." },
+                    { claimId: "D1004", patient: "Jack", payer: "Medicare", amount: 80.00, daysOld: 20, correctAction: "Monitor claim status", explanation: "This claim is still very new. Monitor its progress, no immediate action required." },
+                    { claimId: "D1005", patient: "Karen", payer: "Cigna", amount: 180.00, daysOld: 75, correctAction: "Correct simple errors and resubmit claim", explanation: "If initial review (EOB/ERA or call) reveals a simple administrative error (e.g., typo, missing info), correct and resubmit promptly. This is faster than an appeal." },
+                    { claimId: "D1006", patient: "Liam", payer: "Humana", amount: 100.00, daysOld: 50, correctAction: "Bill patient", explanation: "If the EOB/ERA clearly indicates the patient is responsible (e.g., deductible, coinsurance, non-covered service), send a patient statement. This claim is mature enough for patient billing." },
+                ]
+            }
+        ];
+
         // You can also expose db, auth, and userId globally if needed for your existing script,
         // but better practice is to pass them to functions or encapsulate logic.
         // For simplicity in this direct integration, we'll use them directly within this script block.
@@ -879,968 +1512,388 @@
         const formRepositoryContent = document.getElementById('formRepositoryContent');
 
 
-        // --- Global Data Storage (for existing simulation) ---
-        let patientData = {};
-        let diagnoses = [];
-        let procedures = [];
-        let charges = [];
+        // --- FUNCTION DEFINITIONS (FOR EXISTING SIMULATION SECTIONS) ---
 
-        // --- Global Data Storage (Medical Billing Walkthrough) ---
-        let currentBillingStep = 0;
-        const billingSteps = [
-            {
-                title: "Step 1: Patient Registration & Insurance Verification",
-                instructions: `**Action:** Begin by gathering the patient's full demographics and insurance details. **On the simulator:** Fill in the 'Patient Registration' section (Name, DOB, Insurance ID) and click 'Register Patient'. In a real scenario, you'd also call the payer to verify eligibility and benefits.`,
-            },
-            {
-                title: "Step 2: Patient Encounter Documentation",
-                instructions: `**Action:** This is where the provider records the visit details. **On the simulator:** Fill in the 'Encounter Documentation' section (Encounter Date, Chief Complaint, and add at least one Diagnosis and one Procedure). This mirrors the clinical notes that inform coding.`,
-            },
-            {
-                title: "Step 3: Medical Coding",
-                instructions: `**Action:** Translate the documentation into standardized ICD-10 and CPT codes. **On the simulator:** Ensure your Diagnosis and Procedure inputs in Section 2 are correctly formatted codes. This is a critical skill for accurate billing.`,
-            },
-            {
-                title: "Step 4: Charge Entry & Superbill Creation",
-                instructions: `**Action:** Enter the charges for the services provided. **On the simulator:** Go to 'Charge Entry & Services', add descriptions, CPT codes (ensure they match your procedures from step 2), and prices for the services. This creates the financial record.`,
-            },
-            {
-                title: "Step 5: Claim Generation & Submission",
-                instructions: `**Action:** Compile all data into a standardized claim (CMS-1500 for professional, UB-04 for institutional) and send it to the payer. **On the simulator:** Click 'Generate Simulated Claim' in Section 4. This is the official request for payment.`,
-            },
-            {
-                title: "Step 6: Claim Adjudication",
-                instructions: `**Understanding:** The insurance company reviews the claim. They'll either pay, deny, or reject it, sending an EOB (for patient) or ERA (for provider). **Think:** What common reasons lead to denials at this stage? (e.g., medical necessity, timely filing)`,
-            },
-            {
-                title: "Step 7: Payment Posting",
-                instructions: `**Action:** Once paid, the payment is recorded in the billing system. **Understanding:** This updates the patient's balance and the provider's accounts. Accurate posting prevents overbilling or outstanding balances.`,
-            },
-            {
-                title: "Step 8: Patient Billing & Collections",
-                instructions: `**Action:** If a balance remains after insurance pays, the patient is billed. **Understanding:** This involves sending statements and following up on overdue payments. Clear communication with patients is key.`,
-            },
-            {
-                title: "Step 9: Reporting & Analysis",
-                instructions: `**Understanding:** Continuously analyze billing data to identify trends, improve efficiency, and reduce denials. This step helps optimize the entire revenue cycle. **You've completed the walkthrough!**`,
-            },
-        ];
+        // Function to display messages to the user
+        function showMessage(message, type = 'success') {
+            messageBox.textContent = message;
+            messageBox.className = `message-box ${type}`; // Reset classes and add new type
+            messageBox.style.display = 'block'; // Make it visible
 
-        // --- Global Data Storage (Prior Authorization Walkthrough) ---
-        let currentPaStep = 0;
-        const paSteps = [
-            {
-                title: "PA Step 1: Identify Need for Prior Authorization",
-                instructions: `**Scenario:** A patient needs an MRI of the knee.
-                **Action:** The first step is to check the patient's insurance plan and the specific CPT code (e.g., CPT 73721 for MRI knee without contrast) against the payer's policy to determine if a Prior Authorization (PA) is required. Many high-cost imaging services or specialty medications require PA.`,
-            },
-            {
-                title: "PA Step 2: Gather Necessary Information",
-                instructions: `**Action:** If PA is required, you must collect all relevant clinical and administrative information.
-                **Required Info:** Patient demographics, insurance details, referring and rendering provider NPIs, **exact CPT code(s) with modifiers**, **supporting ICD-10 diagnosis code(s) demonstrating medical necessity**, date of service, and any clinical notes (e.g., physician's order, previous treatments tried and failed).`,
-            },
-            {
-                title: "PA Step 3: Submit the Request",
-                instructions: `**Action:** Submit the PA request to the insurance company. This is usually done online via a payer portal, fax, or phone.
-                **Key Point:** Ensure all fields are accurately completed and all required supporting documentation is attached. Incomplete requests are a common cause of delays or denials.`,
-            },
-            {
-                title: "PA Step 4: Follow-up and Await Decision",
-                instructions: `**Action:** After submission, monitor the status of the request. Payers have specific turnaround times (e.g., 7-14 business days for routine, 24-72 hours for urgent).
-                **Outcome:** The PA will either be **Approved**, **Denied**, or sent back for **More Information**.`,
-            },
-            {
-                title: "PA Step 5: Handle Approved Authorization",
-                instructions: `**Action:** If approved, carefully note the **authorization number**, the **approved CPT codes**, the **number of units/visits approved**, and the **valid date range**.
-                **Next:** Ensure this authorization number is included on the claim when submitted to prevent denials. Inform the patient and scheduling department.`,
-            },
-            {
-                title: "PA Step 6: Handle Denied Authorization",
-                instructions: `**Action:** If denied, review the denial reason code carefully (often found on an EOB/ERA from the PA department). Common reasons include 'not medically necessary' or 'incorrect information'.
-                **Next:** If denied for medical necessity, discuss with the provider if an appeal (with additional clinical documentation or a peer-to-peer review) is warranted. If denied for administrative reasons, correct and resubmit. **You've completed the PA walkthrough!**`,
-            },
-        ];
-
-        // --- Global Data Storage (Knowledge Quizzes) ---
-        let selectedQuizModule = null; // Stores the array of questions for the current module
-        let currentQuizQuestionIndex = 0; // Tracks the current question in the module
-
-        const quizModules = {
-            "Coding Guidelines": [
-                {
-                    question: "What does a CPT code modifier indicate?",
-                    options: ["A. A new diagnosis", "B. The code has been altered in some way", "C. The patient has insurance", "D. The service was performed in a hospital"],
-                    answer: "B",
-                    explanation: "A CPT modifier is a two-digit code appended to a CPT code to provide additional information about the procedure or service, such as that it was altered or performed by more than one physician."
-                },
-                {
-                    question: "Which coding system is used for diagnosis codes?",
-                    options: ["A. CPT", "B. HCPCS Level II", "C. ICD-10-CM", "D. E&M"],
-                    answer: "C",
-                    explanation: "ICD-10-CM (International Classification of Diseases, 10th Revision, Clinical Modification) is the standard system for diagnosis codes in the U.S."
-                },
-                // Add more Coding Guidelines questions here
-            ],
-            "Healthcare Laws": [
-                {
-                    question: "What is the primary purpose of HIPAA for medical coders?",
-                    options: ["A. To ensure patients get timely appointments", "B. To protect the privacy and security of patient health information (PHI)", "C. To set reimbursement rates for services", "D. To standardize coding manuals"],
-                    answer: "B",
-                    explanation: "HIPAA's Privacy Rule and Security Rule mandate that Protected Health Information (PHI) is kept confidential and secure."
-                },
-                {
-                    question: "Submitting a claim with codes that you know are wrong to get a higher payment is a violation of which law?",
-                    options: ["A. Stark Law", "B. Anti-Kickback Statute", "C. False Claims Act (FCA)", "D. OIG Exclusions"],
-                    answer: "C",
-                    explanation: "The False Claims Act (FCA) imposes liability on persons and companies who knowingly submit false claims to the government."
-                },
-                // Add more Healthcare Laws questions here
-            ],
-            "Coding Ethics": [
-                {
-                    question: "Your boss tells you to change a code to one that provides higher reimbursement, even though the documentation doesn't support it. What is the most ethical action?",
-                    options: ["A. Do what your boss says to avoid conflict", "B. Report the incident to a compliance officer", "C. Change the code but make a note in your personal records", "D. Tell the patient to file a complaint"],
-                    answer: "B",
-                    explanation: "The most ethical and legally compliant action is to report fraudulent activities, such as upcoding, to a designated compliance officer or legal department. This protects you and the organization."
-                },
-                // Add more Coding Ethics questions here
-            ],
-            "Denials & Appeals": [
-                {
-                    question: "A claim is denied because the diagnosis code does not justify the procedure code. What is this denial reason called?",
-                    options: ["A. Medical necessity denial", "B. Bundling issue", "C. Payer policy change", "D. Inconsistent patient information"],
-                    answer: "A",
-                    explanation: "A denial for 'lack of medical necessity' means the payer believes the procedure performed was not necessary to treat the patient's documented diagnosis. The diagnosis code must support the procedure code."
-                },
-                {
-                    question: "What is the first step in appealing a denied claim?",
-                    options: ["A. Resubmit the claim with a new code", "B. Send a letter of protest to the payer's legal department", "C. Review the patient's chart and the denial reason", "D. Bill the patient directly for the full amount"],
-                    answer: "C",
-                    explanation: "The crucial first step in any appeal is to thoroughly review the patient’s documentation and compare it against the denial reason provided by the payer. This helps you identify if the issue is a simple coding error or a more complex medical necessity dispute."
-                },
-                // Add more Denials & Appeals questions here
-            ],
-            // Insurance Nuances Quiz Module
-            "Insurance Nuances": [
-                {
-                    question: "Which type of insurance plan typically requires a referral from a Primary Care Provider (PCP) to see a specialist?",
-                    options: ["A. PPO", "B. HMO", "C. Medicare Part B", "D. Fee-for-Service"],
-                    answer: "B",
-                    explanation: "HMO (Health Maintenance Organization) plans generally require a referral from a PCP to see a specialist, as they focus on managed care within a network."
-                },
-                {
-                    question: "When a patient has both active Medicare and Medicaid, which payer is usually considered primary?",
-                    options: ["A. Medicaid", "B. Medicare", "C. The patient's choice", "D. Whichever plan has been active longer"],
-                    answer: "B",
-                    explanation: "Medicare is almost always the primary payer when a patient has both Medicare and Medicaid. Medicaid then acts as the payer of last resort, covering what Medicare doesn't."
-                },
-                {
-                    question: "Medicare Part B typically covers what percentage of approved physician services after the deductible is met?",
-                    options: ["A. 100%", "B. 50%", "C. 80%", "D. 20%"],
-                    answer: "C",
-                    explanation: "Medicare Part B covers 80% of approved physician services after the annual deductible is met, with the patient responsible for the remaining 20% (coinsurance)."
-                }
-            ]
-        };
-
-        // --- Global Data Storage (Patient Balance Calculator) ---
-        let currentBalanceScenarioData = null;
-
-        loadBalanceScenarioBtn.addEventListener('click', () => {
-            const randomIndex = Math.floor(Math.random() * patientBalanceScenarios.length);
-            currentBalanceScenarioData = patientBalanceScenarios[randomIndex];
-            
-            balanceCalculatorContent.classList.remove('hidden');
-            balanceScenarioTitle.textContent = `Scenario for ${currentBalanceScenarioData.patient}:`;
-            balanceScenarioDetails.innerHTML = `
-                <p><strong>Plan Details:</strong></p>
-                <ul>
-                    <li>Copay: $${currentBalanceScenarioData.plan.copay.toFixed(2)}</li>
-                    <li>Deductible: $${currentBalanceScenarioData.plan.deductible.toFixed(2)}</li>
-                    <li>Deductible Met to Date: $${currentBalanceScenarioData.plan.deductibleMetToDate.toFixed(2)}</li>
-                    <li>Coinsurance: ${(currentBalanceScenarioData.plan.coinsurance * 100).toFixed(0)}%</li>
-                </ul>
-                <p><strong>Visit Details:</strong></p>
-                <ul>
-                    <li>Service: ${currentBalanceScenarioData.visit.service}</li>
-                    <li>Total Allowed Amount by Insurance: $${currentBalanceScenarioData.visit.allowedAmount.toFixed(2)}</li>
-                </ul>
-                <p class="font-bold mt-2">Calculate the Patient's Responsibility:</p>
-            `;
-            resetBalanceCalculator(); // Reset inputs and feedback
-            checkBalanceBtn.classList.remove('hidden');
-            resetBalanceBtn.classList.remove('hidden');
-        });
-
-        checkBalanceBtn.addEventListener('click', () => {
-            if (!currentBalanceScenarioData) {
-                balanceFeedback.innerHTML = '<p class="text-red-700 balance-feedback-text">Please load a scenario first!</p>';
-                return;
-            }
-
-            const userCopay = parseFloat(userCopayInput.value);
-            // Ensure the correct input element is referenced
-            const userDeductibleApplied = parseFloat(document.getElementById('userDeductibleInput').value); 
-            const userCoinsurance = parseFloat(userCoinsuranceInput.value);
-            const userTotalBalance = parseFloat(userTotalBalanceInput.value);
-
-            let feedbackHtml = '';
-            let allCorrect = true;
-
-            // Check Copay
-            if (userCopay === currentBalanceScenarioData.correct.copay) {
-                feedbackHtml += `<p class="text-green-700">Copay: Correct! ($${currentBalanceScenarioData.correct.copay.toFixed(2)})</p>`;
-            } else {
-                feedbackHtml += `<p class="text-red-700">Copay: Incorrect. Expected $${currentBalanceScenarioData.correct.copay.toFixed(2)}.</p>`;
-                allCorrect = false;
-            }
-
-            // Check Deductible Applied
-            if (userDeductibleApplied === currentBalanceScenarioData.correct.deductibleApplied) {
-                feedbackHtml += `<p class="text-green-700">Deductible Applied: Correct! ($${currentBalanceScenarioData.correct.deductibleApplied.toFixed(2)})</p>`;
-            } else {
-                feedbackHtml += `<p class="text-red-700">Deductible Applied: Incorrect. Expected $${currentBalanceScenarioData.correct.deductibleApplied.toFixed(2)}.</p>`;
-                allCorrect = false;
-            }
-
-            // Check Coinsurance
-            if (userCoinsurance === currentBalanceScenarioData.correct.coinsurance) {
-                feedbackHtml += `<p class="text-green-700">Coinsurance: Correct! ($${currentBalanceScenarioData.correct.coinsurance.toFixed(2)})</p>`;
-            } else {
-                feedbackHtml += `<p class="text-red-700">Coinsurance: Incorrect. Expected $${currentBalanceScenarioData.correct.coinsurance.toFixed(2)}.</p>`;
-                allCorrect = false;
-            }
-
-            // Check Total Patient Balance
-            if (userTotalBalance === currentBalanceScenarioData.correct.totalBalance) {
-                feedbackHtml += `<p class="text-green-700 font-bold mt-2">Total Patient Balance: Correct! ($${currentBalanceScenarioData.correct.totalBalance.toFixed(2)})</p>`;
-            } else {
-                feedbackHtml += `<p class="text-red-700 font-bold mt-2">Total Patient Balance: Incorrect. Expected $${currentBalanceScenarioData.correct.totalBalance.toFixed(2)}.</p>`;
-                allCorrect = false;
-            }
-
-            // Overall feedback and detailed steps if incorrect
-            if (!allCorrect) {
-                feedbackHtml += `<p class="text-gray-700 mt-4 font-bold">Here's a breakdown of the correct calculation:</p>`;
-                feedbackHtml += `<pre class="bg-gray-100 p-2 rounded text-xs mt-1 whitespace-pre-wrap">${currentBalanceScenarioData.calculationSteps.trim()}</pre>`;
-                balanceFeedback.className = 'bg-red-50 p-3 rounded-lg border border-red-200 mt-4 min-h-[80px]';
-            } else {
-                 balanceFeedback.className = 'bg-green-50 p-3 rounded-lg border border-green-200 mt-4 min-h-[80px]';
-            }
-            
-            balanceFeedback.innerHTML = feedbackHtml;
-        });
-
-        resetBalanceBtn.addEventListener('click', resetBalanceCalculator);
-
-        function resetBalanceCalculator() {
-            userCopayInput.value = '';
-            document.getElementById('userDeductibleInput').value = ''; // Corrected ID
-            userCoinsuranceInput.value = '';
-            userTotalBalanceInput.value = '';
-            balanceFeedback.innerHTML = '<p class="text-gray-500 balance-feedback-text">Feedback on your calculation will appear here.</p>';
-            balanceFeedback.className = 'bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]'; // Reset styling
+            // Automatically hide after 5 seconds
+            setTimeout(() => {
+                messageBox.style.display = 'none';
+            }, 5000);
         }
 
-        // --- Modifier Application Challenge Logic ---
-        // 'currentModifierChallenge' is already declared globally at the top of the script.
-        // The original error was due to redeclaring it with 'let' here.
-        let currentModifierChallenge = null; // Initialize it without 'let' or 'const'
+        // Add/Remove Diagnosis and Procedure Fields
+        function addInputGroup(containerId, inputClass, placeholder, type = 'text') {
+            const container = document.getElementById(containerId);
+            const div = document.createElement('div');
+            div.className = 'flex items-center gap-2'; // Tailwind classes for flex and gap
 
-        loadModifierScenarioBtn.addEventListener('click', () => {
-            const randomIndex = Math.floor(Math.random() * modifierScenarios.length);
-            currentModifierChallenge = modifierScenarios[randomIndex];
-            
-            modifierChallengeContent.classList.remove('hidden');
-            modifierScenarioTitle.textContent = `Scenario: ${currentModifierChallenge.id}`;
-            modifierScenarioDetails.innerHTML = `<p class="text-sm text-yellow-800 italic">${currentModifierChallenge.scenario}</p>
-                <p class="mt-2"><strong>Required CPT Code to Input:</strong> ${currentModifierChallenge.cptCodeToInput}</p>
-                <p class="font-bold mt-2">Enter the CPT Code (if different from the required) and the appropriate Modifier(s).</p>
-            `;
-            userModifierCPTInput.value = '';
-            userModifierInput.value = '';
-            modifierFeedback.innerHTML = '<p class="text-gray-500 modifier-feedback-text">Feedback on your modifier application will appear here.</p>';
-            modifierFeedback.className = 'bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]'; // Reset styling
-            checkModifierBtn.classList.remove('hidden');
-            resetModifierBtn.classList.remove('hidden');
-        });
+            const input = document.createElement('input');
+            input.type = type;
+            input.className = `${inputClass} flex-grow-1 focus:ring-green-500 focus:border-green-500`;
+            input.name = inputClass.replace(/-/g, ''); // Convert class to name attribute
+            input.placeholder = placeholder;
 
-        checkModifierBtn.addEventListener('click', () => {
-            if (!currentModifierChallenge) {
-                modifierFeedback.innerHTML = '<p class="text-red-700 modifier-feedback-text">Please load a scenario first!</p>';
-                return;
-            }
-
-            const userCPT = userModifierCPTInput.value.trim().toUpperCase();
-            const userMod = userModifierInput.value.trim().toUpperCase();
-
-            let feedbackHtml = '';
-            let isCorrect = true;
-
-            // Check CPT code
-            if (userCPT !== currentModifierChallenge.cptCodeToInput.trim().toUpperCase()) {
-                feedbackHtml += `<p class="text-red-700">CPT Code: Incorrect. Expected "${currentModifierChallenge.cptCodeToInput}".</p>`;
-                isCorrect = false;
-            } else {
-                feedbackHtml += `<p class="text-green-700">CPT Code: Correct! ("${currentModifierChallenge.cptCodeToInput}")</p>`;
-            }
-
-            // Check Modifier
-            if (userMod !== currentModifierChallenge.correctModifier.trim().toUpperCase()) {
-                feedbackHtml += `<p class="text-red-700">Modifier: Incorrect. Expected "${currentModifierChallenge.correctModifier}".</p>`;
-                isCorrect = false;
-            } else {
-                feedbackHtml += `<p class="text-green-700">Modifier: Correct! ("${currentModifierChallenge.correctModifier}")</p>`;
-            }
-
-            if (isCorrect) {
-                modifierFeedback.innerHTML = `<p class="text-green-700 font-bold">Excellent! Your CPT code and modifier application are correct.</p>`;
-            } else {
-                modifierFeedback.innerHTML += `<p class="text-gray-700 mt-4 font-bold">Explanation:</p><p class="modifier-feedback-text">${currentModifierChallenge.explanation}</p>`;
-            }
-            modifierFeedback.className = isCorrect ? 'bg-green-50 p-3 rounded-lg border border-green-200 mt-4 min-h-[80px]' : 'bg-red-50 p-3 rounded-lg border border-red-200 mt-4 min-h-[80px]';
-        });
-
-        resetModifierBtn.addEventListener('click', () => {
-            userModifierCPTInput.value = '';
-            userModifierInput.value = '';
-            modifierFeedback.innerHTML = '<p class="text-gray-500 modifier-feedback-text">Feedback on your modifier application will appear here.</p>';
-            modifierFeedback.className = 'bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]'; // Reset styling
-            checkModifierBtn.classList.remove('hidden');
-            resetModifierBtn.classList.remove('hidden');
-        });
-
-        // --- Matching Game Logic ---
-
-        startGameBtn.addEventListener('click', startGame);
-        resetGameBtn.addEventListener('click', resetGame);
-
-        function shuffle(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-        }
-
-        function createCards() {
-            cardGrid.innerHTML = ''; // Clear previous cards
-            gameMessage.textContent = '';
-            flippedCards = [];
-            matchedPairs = 0;
-            gameActive = true;
-
-            cards = [];
-            termPairs.forEach((pair, index) => {
-                cards.push({ id: `term-${index}`, type: 'term', value: pair.term, pairId: index });
-                cards.push({ id: `def-${index}`, type: 'definition', value: pair.definition, pairId: index });
-            });
-
-            shuffle(cards);
-
-            cards.forEach(cardData => {
-                const cardElement = document.createElement('div');
-                cardElement.classList.add('match-card');
-                cardElement.dataset.id = cardData.id;
-                cardElement.dataset.pairId = cardData.pairId;
-                cardElement.dataset.type = cardData.type;
-
-                const cardFront = document.createElement('div');
-                cardFront.classList.add('card-front');
-                cardFront.textContent = '?'; // Placeholder for the back of the card
-
-                const cardBack = document.createElement('div');
-                cardBack.classList.add('card-back');
-                cardBack.textContent = cardData.value;
-
-                cardElement.appendChild(cardFront);
-                cardElement.appendChild(cardBack);
-                cardGrid.appendChild(cardElement);
-
-                cardElement.addEventListener('click', () => flipCard(cardElement, cardData));
-            });
-        }
-
-        function flipCard(cardElement, cardData) {
-            if (!gameActive || flippedCards.length === 2 || cardElement.classList.contains('is-flipped') || cardElement.classList.contains('matched')) {
-                return; // Do nothing if game not active, two cards already flipped, or card already flipped/matched
-            }
-
-            cardElement.classList.add('is-flipped');
-            flippedCards.push({ element: cardElement, data: cardData });
-
-            if (flippedCards.length === 2) {
-                checkForMatch();
-            }
-        }
-
-        function checkForMatch() {
-            const [card1, card2] = flippedCards;
-            const isMatch = card1.data.pairId === card2.data.pairId;
-
-            if (isMatch) {
-                card1.element.classList.add('matched');
-                card2.element.classList.add('matched');
-                gameMessage.textContent = 'Match found!';
-                matchedPairs++;
-                if (matchedPairs === termPairs.length) {
-                    gameMessage.textContent = 'Congratulations! You matched all pairs!';
-                    gameActive = false;
-                }
-                flippedCards = []; // Clear flipped cards for next turn
-            } else {
-                gameMessage.textContent = 'No match. Try again!';
-                // Add incorrect class temporarily for visual feedback
-                card1.element.classList.add('incorrect');
-                card2.element.classList.add('incorrect');
-
-                setTimeout(() => {
-                    card1.element.classList.remove('is-flipped', 'incorrect');
-                    card2.element.classList.remove('is-flipped', 'incorrect');
-                    flippedCards = []; // Clear flipped cards
-                    gameMessage.textContent = ''; // Clear message
-                }, 1000); // Flip back after 1 second
-            }
-        }
-
-        function startGame() {
-            matchingGameContent.classList.remove('hidden');
-            startGameBtn.classList.add('hidden');
-            resetGameBtn.classList.remove('hidden');
-            createCards();
-            gameMessage.textContent = 'Find the matching pairs!';
-        }
-
-        function resetGame() {
-            matchingGameContent.classList.add('hidden');
-            startGameBtn.classList.remove('hidden');
-            resetGameBtn.classList.add('hidden');
-            cardGrid.innerHTML = '';
-            gameMessage.textContent = '';
-            flippedCards = [];
-            matchedPairs = 0;
-            gameActive = false;
-            showMessage('Matching Game Reset.', 'success');
-        }
-
-        // --- Claim Scrubber Logic ---
-        let currentScrubberScenarioData = null;
-
-        loadScrubberScenarioBtn.addEventListener('click', () => {
-            const randomIndex = Math.floor(Math.random() * claimScrubberScenarios.length);
-            currentScrubberScenarioData = claimScrubberScenarios[randomIndex];
-            
-            scrubberChallengeContent.classList.remove('hidden');
-            scrubberScenarioTitle.textContent = `Claim Scrubber: ${currentScrubberScenarioData.title}`;
-            scrubberScenarioDetails.innerHTML = `<p class="text-sm text-orange-800 italic">${currentScrubberScenarioData.description}</p>
-                <p class="mt-2 font-bold">Your Task: Correct the errors in the presented claim details below.</p>
-            `;
-            presentedClaimOutput.textContent = `
-Patient Notes: ${currentScrubberScenarioData.presentedClaim.notes}
-Diagnosis: ${currentScrubberScenarioData.presentedClaim.diagnosis}
-CPT Code(s): ${currentScrubberScenarioData.presentedClaim.cpt}
-Modifier(s): ${currentScrubberScenarioData.presentedClaim.modifier}
-            `.trim();
-            
-            resetScrubberInputsAndFeedback(); // Reset inputs and feedback
-            checkScrubberBtn.classList.remove('hidden');
-            resetScrubberBtn.classList.remove('hidden');
-        });
-
-        checkScrubberBtn.addEventListener('click', () => {
-            if (!currentScrubberScenarioData) {
-                scrubberFeedback.innerHTML = '<p class="text-red-700 scrubber-feedback-text">Please load a scenario first!</p>';
-                return;
-            }
-
-            const userICD = userScrubberICDInput.value.trim().toUpperCase();
-            const userCPT = userScrubberCPTInput.value.trim().toUpperCase();
-            const userModifier = userScrubberModifierInput.value.trim().toUpperCase();
-
-            let feedbackHtml = '';
-            let allCorrect = true;
-
-            // Helper to compare inputs, treating "NONE" or empty as the same for modifiers
-            const compareInput = (userInput, expectedValue) => {
-                if (expectedValue.toLowerCase() === 'none' || expectedValue.toLowerCase() === '') {
-                    return userInput === '' || userInput.toLowerCase() === 'none';
-                }
-                // For ICDs, allow comma-separated and check if all expected are present.
-                if (expectedValue.includes(',')) {
-                    const expectedParts = expectedValue.split(',').map(p => p.trim());
-                    const userParts = userInput.split(',').map(p => p.trim());
-                    // Check if all expected parts are in user's input, regardless of order
-                    const allExpectedFound = expectedParts.every(part => userParts.includes(part));
-                    // Check if user didn't add extra unexpected parts
-                    const noExtraParts = userParts.every(part => expectedParts.includes(part));
-                    return allExpectedFound && noExtraParts;
-                }
-                return userInput === expectedValue;
+            const removeButton = document.createElement('button');
+            removeButton.type = 'button';
+            removeButton.className = 'btn-secondary remove-item-btn';
+            removeButton.textContent = 'Remove';
+            removeButton.onclick = function() {
+                div.remove();
             };
 
-            // Check ICD
-            if (!compareInput(userICD, currentScrubberScenarioData.expectedInputs.correctedICD.toUpperCase())) {
-                const error = currentScrubberScenarioData.errors.find(e => e.type === 'diagnosis' || e.type === 'diagnosis-medical-necessity');
-                feedbackHtml += `<p class="text-red-700">ICD-10 Code: Incorrect. Expected "${currentScrubberScenarioData.expectedInputs.correctedICD}".</p>`;
-                if (error) feedbackHtml += `<p class="text-gray-700 text-sm mt-1">${error.explanation}</p>`;
-                allCorrect = false;
-            } else {
-                feedbackHtml += `<p class="text-green-700">ICD-10 Code: Correct! ("${currentScrubberScenarioData.expectedInputs.correctedICD}")</p>`;
-            }
+            div.appendChild(input);
+            div.appendChild(removeButton);
+            container.appendChild(div);
+        }
 
-            // Check CPT
-            if (!compareInput(userCPT, currentScrubberScenarioData.expectedInputs.correctedCPT.toUpperCase())) {
-                const error = currentScrubberScenarioData.errors.find(e => e.type === 'cpt');
-                feedbackHtml += `<p class="text-red-700">CPT Code: Incorrect. Expected "${currentScrubberScenarioData.expectedInputs.correctedCPT}".</p>`;
-                if (error) feedbackHtml += `<p class="text-gray-700 text-sm mt-1">${error.explanation}</p>`;
-                allCorrect = false;
-            } else {
-                feedbackHtml += `<p class="text-green-700">CPT Code: Correct! ("${currentScrubberScenarioData.expectedInputs.correctedCPT}")</p>`;
-            }
+        function addServiceInputGroup() {
+            const container = document.getElementById('chargeList');
+            const div = document.createElement('div');
+            div.className = 'grid grid-cols-1 md:grid-cols-3 gap-2 service-item';
 
-            // Check Modifier
-            if (!compareInput(userModifier, currentScrubberScenarioData.expectedInputs.correctedModifier.toUpperCase())) {
-                const error = currentScrubberScenarioData.errors.find(e => e.type === 'modifier');
-                 feedbackHtml += `<p class="text-red-700">Modifier(s): Incorrect. Expected "${currentScrubberScenarioData.expectedInputs.correctedModifier}".</p>`;
-                 if (error) feedbackHtml += `<p class="text-gray-700 text-sm mt-1">${error.explanation}</p`;
-                 allCorrect = false;
-            } else {
-                feedbackHtml += `<p class="text-green-700">Modifier(s): Correct! ("${currentScrubberScenarioData.expectedInputs.correctedModifier}")</p>`;
-            }
+            const descriptionInput = document.createElement('input');
+            descriptionInput.type = 'text';
+            descriptionInput.className = 'service-description col-span-1 md:col-span-1 focus:ring-purple-500 focus:border-purple-500';
+            descriptionInput.name = 'serviceDescription';
+            descriptionInput.placeholder = 'Service Description';
 
-            if (allCorrect) {
-                scrubberFeedback.innerHTML = `<p class="text-green-700 font-bold">Excellent! You found and corrected all errors in this claim.</p>`;
-                scrubberFeedback.className = 'bg-green-50 p-3 rounded-lg border border-green-200 mt-4 min-h-[80px]';
+            const cptCodeInput = document.createElement('input');
+            cptCodeInput.type = 'text';
+            cptCodeInput.className = 'service-cpt-code col-span-1 md:col-span-1 focus:ring-purple-500 focus:border-purple-500';
+            cptCodeInput.name = 'serviceCptCode';
+            cptCodeInput.placeholder = 'CPT Code';
+
+            const priceDiv = document.createElement('div');
+            priceDiv.className = 'flex gap-2 col-span-1 md:col-span-1';
+
+            const priceInput = document.createElement('input');
+            priceInput.type = 'number';
+            priceInput.className = 'service-price flex-grow-1 focus:ring-purple-500 focus:border-purple-500';
+            priceInput.name = 'servicePrice';
+            priceInput.placeholder = 'Price ($)';
+            priceInput.min = "0";
+            priceInput.step = "0.01";
+
+            const removeButton = document.createElement('button');
+            removeButton.type = 'button';
+            removeButton.className = 'btn-secondary remove-item-btn';
+            removeButton.textContent = 'Remove';
+            removeButton.onclick = function() {
+                div.remove();
+            };
+
+            priceDiv.appendChild(priceInput);
+            priceDiv.appendChild(removeButton);
+
+            div.appendChild(descriptionInput);
+            div.appendChild(cptCodeInput);
+            div.appendChild(priceDiv);
+            container.appendChild(div);
+        }
+
+        // --- Medical Billing Walkthrough Logic ---
+        startBillingWalkthroughBtn.addEventListener('click', () => {
+            currentBillingStep = 0;
+            billingWalkthroughContent.classList.remove('hidden');
+            startBillingWalkthroughBtn.classList.add('hidden');
+            nextBillingWalkthroughBtn.classList.remove('hidden');
+            resetBillingWalkthroughBtn.classList.remove('hidden');
+            displayBillingStep();
+        });
+
+        nextBillingWalkthroughBtn.addEventListener('click', () => {
+            currentBillingStep++;
+            if (currentBillingStep < billingSteps.length) {
+                displayBillingStep();
             } else {
-                // If there were specific error explanations, they are already added to feedbackHtml
-                scrubberFeedback.innerHTML = `<p class="text-red-700 font-bold">Not quite right. Review the feedback:</p>` + feedbackHtml;
-                scrubberFeedback.className = 'bg-red-50 p-3 rounded-lg border border-red-200 mt-4 min-h-[80px]';
+                walkthroughStepTitle.textContent = "Walkthrough Complete!";
+                walkthroughStepInstructions.innerHTML = "<p>You've walked through the entire medical billing revenue cycle. Great job!</p>";
+                nextBillingWalkthroughBtn.classList.add('hidden');
+                showMessage('Medical Billing Walkthrough Complete!', 'success');
             }
         });
 
-        resetScrubberBtn.addEventListener('click', resetScrubberInputsAndFeedback);
+        resetBillingWalkthroughBtn.addEventListener('click', () => {
+            currentBillingStep = 0;
+            billingWalkthroughContent.classList.add('hidden');
+            startBillingWalkthroughBtn.classList.remove('hidden');
+            nextBillingWalkthroughBtn.classList.add('hidden');
+            resetBillingWalkthroughBtn.classList.add('hidden');
+            showMessage('Medical Billing Walkthrough Reset.', 'success');
+        });
 
-        function resetScrubberInputsAndFeedback() {
-            userScrubberICDInput.value = '';
-            userScrubberCPTInput.value = '';
-            userScrubberModifierInput.value = '';
-            scrubberFeedback.innerHTML = '<p class="text-gray-500 scrubber-feedback-text">Feedback on your corrections will appear here.</p>';
-            scrubberFeedback.className = 'bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]'; // Reset styling
+        function displayBillingStep() {
+            const step = billingSteps[currentBillingStep];
+            walkthroughStepTitle.textContent = step.title;
+            walkthroughStepInstructions.innerHTML = step.instructions;
         }
 
-        // --- Denial Code Interpreter Logic ---
-        let currentDenialScenarioData = null;
+        // --- Prior Authorization Walkthrough Logic ---
+        startPaWalkthroughBtn.addEventListener('click', () => {
+            currentPaStep = 0;
+            paWalkthroughContent.classList.remove('hidden');
+            startPaWalkthroughBtn.classList.add('hidden');
+            nextPaWalkthroughBtn.classList.remove('hidden');
+            resetPaWalkthroughBtn.classList.remove('hidden');
+            displayPaStep();
+        });
 
-        loadDenialScenarioBtn.addEventListener('click', () => {
-            const randomIndex = Math.floor(Math.random() * denialScenarios.length);
-            currentDenialScenarioData = denialScenarios[randomIndex];
-            
-            denialChallengeContent.classList.remove('hidden');
-            denialScenarioTitle.textContent = `Denial Challenge: ${currentDenialScenarioData.denialCode}`;
-            denialScenarioDetails.innerHTML = `<p class="text-sm text-purple-800 italic">Context: ${currentDenialScenarioData.context}</p>
-            `;
-            
-            denialInterpretationOptions.innerHTML = ''; // Clear previous options
-            currentDenialScenarioData.interpretations.forEach((interpretation, index) => {
+        nextPaWalkthroughBtn.addEventListener('click', () => {
+            currentPaStep++;
+            if (currentPaStep < paSteps.length) {
+                displayPaStep();
+            } else {
+                paWalkthroughStepTitle.textContent = "PA Walkthrough Complete!";
+                paWalkthroughStepInstructions.innerHTML = "<p>You've walked through the Prior Authorization process. Great job!</p>";
+                nextPaWalkthroughBtn.classList.add('hidden');
+                showMessage('Prior Authorization Walkthrough Complete!', 'success');
+            }
+        });
+
+        resetPaWalkthroughBtn.addEventListener('click', () => {
+            currentPaStep = 0;
+            paWalkthroughContent.classList.add('hidden');
+            startPaWalkthroughBtn.classList.remove('hidden');
+            nextPaWalkthroughBtn.classList.add('hidden');
+            resetPaWalkthroughBtn.classList.add('hidden');
+            showMessage('PA Walkthrough Reset.', 'success');
+        });
+
+        function displayPaStep() {
+            const step = paSteps[currentPaStep];
+            paWalkthroughStepTitle.textContent = step.title;
+            paWalkthroughStepInstructions.innerHTML = step.instructions;
+        }
+
+        // --- Knowledge Quizzes Logic ---
+        function loadQuiz(moduleName) {
+            selectedQuizModule = quizModules[moduleName];
+            currentQuizQuestionIndex = 0;
+            quizContent.classList.remove('hidden');
+            submitAnswerBtn.classList.remove('hidden');
+            nextQuestionBtn.classList.add('hidden');
+            resetQuizBtn.classList.remove('hidden');
+            displayQuizQuestion();
+            quizFeedback.innerHTML = '<p class="text-gray-500 quiz-feedback-text">Your feedback will appear here.</p>';
+        }
+
+        function displayQuizQuestion() {
+            if (!selectedQuizModule || currentQuizQuestionIndex >= selectedQuizModule.length) {
+                quizQuestionTitle.textContent = "Quiz Complete!";
+                quizOptions.innerHTML = '<p class="text-lg text-center text-gray-700">You\'ve finished this quiz module!</p>';
+                submitAnswerBtn.classList.add('hidden');
+                nextQuestionBtn.classList.add('hidden');
+                showMessage('Quiz Module Complete!', 'success');
+                return;
+            }
+
+            const questionData = selectedQuizModule[currentQuizQuestionIndex];
+            quizQuestionTitle.textContent = `Question ${currentQuizQuestionIndex + 1}: ${questionData.question}`;
+            quizOptions.innerHTML = ''; // Clear previous options
+
+            questionData.options.forEach((option, index) => {
                 const label = document.createElement('label');
-                label.className = 'denial-option';
+                label.className = 'quiz-option';
                 const input = document.createElement('input');
                 input.type = 'radio';
-                input.name = 'denialInterpretation';
-                input.id = `denialOption${index}`; // Add unique ID for the radio button
-                input.value = index; // Use index to map back to the interpretation object
-                label.setAttribute('for', `denialOption${index}`); // Link label to input via 'for'
+                input.name = 'quizOption';
+                input.value = option.charAt(0); // Value is A, B, C, D
                 label.appendChild(input);
-                label.appendChild(document.createTextNode(interpretation.text));
-                denialInterpretationOptions.appendChild(label);
+                label.appendChild(document.createTextNode(option));
+                quizOptions.appendChild(label);
             });
-
-            resetDenialInputsAndFeedback();
-            checkDenialBtn.classList.remove('hidden');
-            resetDenialBtn.classList.remove('hidden');
-        });
-
-        checkDenialBtn.addEventListener('click', () => {
-            if (!currentDenialScenarioData) {
-                denialFeedback.innerHTML = '<p class="text-red-700 denial-feedback-text">Please load a scenario first!</p>';
-                return;
-            }
-
-            const selectedInterpretationOption = document.querySelector('input[name="denialInterpretation"]:checked');
-            const userActionPlan = userActionPlanInput.value.trim().toUpperCase();
-
-            let feedbackHtml = '';
-            let allCorrect = true;
-
-            // Check Interpretation
-            if (!selectedInterpretationOption) {
-                feedbackHtml += `<p class="text-red-700">Interpretation: Please select an interpretation.</p>`;
-                allCorrect = false;
-            } else {
-                const selectedInterpretationIndex = parseInt(selectedInterpretationOption.value);
-                const isInterpretationCorrect = currentDenialScenarioData.interpretations[selectedInterpretationIndex].correct;
-                
-                if (isInterpretationCorrect) {
-                    feedbackHtml += `<p class="text-green-700">Interpretation: Correct! ("${currentDenialScenarioData.interpretations[selectedInterpretationIndex].text}")</p>`;
-                } else {
-                    const correctText = currentDenialScenarioData.interpretations.find(i => i.correct).text;
-                    feedbackHtml += `<p class="text-red-700">Interpretation: Incorrect. The correct interpretation is: "${correctText}".</p>`;
-                    allCorrect = false;
-                }
-            }
-
-            // Check Action Plan (using keywords)
-            const correctActionKeywords = currentDenialScenarioData.correctActionPlanKeywords.map(k => k.toUpperCase());
-            const userActionWords = userActionPlan.split(/\s|,\s*/).filter(word => word !== '').map(word => word.toUpperCase());
-            
-            let actionPlanCorrect = true;
-            let missingKeywords = [];
-            let extraKeywords = [];
-
-            correctActionKeywords.forEach(keyword => {
-                if (!userActionWords.includes(keyword)) {
-                    missingKeywords.push(keyword);
-                    actionPlanCorrect = false;
-                }
-            });
-
-            // Check for extraneous words that are not expected for a perfectly correct answer
-            userActionWords.forEach(word => {
-                if (!correctActionKeywords.includes(word)) {
-                    extraKeywords.push(word);
-                }
-            });
-
-            if (actionPlanCorrect && extraKeywords.length === 0) { // All correct keywords present, no extra unexpected ones
-                feedbackHtml += `<p class="text-green-700 mt-2">Action Plan: Well done! Your action plan is comprehensive.</p>`;
-            } else {
-                feedbackHtml += `<p class="text-red-700 mt-2">Action Plan: Review your action plan.</p>`;
-                if (missingKeywords.length > 0) {
-                    feedbackHtml += `<p class="text-red-700 text-sm">Missing key elements: ${missingKeywords.join(', ')}.</p>`;
-                }
-                if (extraKeywords.length > 0) {
-                    feedbackHtml += `<p class="text-red-700 text-sm">You included some unexpected elements: ${extraKeywords.join(', ')}.</p>`;
-                }
-                allCorrect = false;
-            }
-
-            // Overall feedback
-            if (allCorrect) {
-                denialFeedback.innerHTML = `<p class="text-green-700 font-bold">Excellent! You correctly interpreted the denial and formulated the ideal action plan.</p>`;
-                denialFeedback.className = 'bg-green-50 p-3 rounded-lg border border-green-200 mt-4 min-h-[80px]';
-            } else {
-                denialFeedback.innerHTML = `<p class="text-red-700 font-bold">Not quite perfect. Review the feedback and explanation:</p>` + feedbackHtml;
-                denialFeedback.className = 'bg-red-50 p-3 rounded-lg border border-red-200 mt-4 min-h-[80px]';
-            }
-            denialFeedback.innerHTML += `<p class="text-gray-700 mt-4 font-bold">Detailed Explanation for Resolution:</p><p class="denial-feedback-text">${currentDenialScenarioData.explanation}</p>`;
-
-            // Disable inputs after checking
-            denialInterpretationOptions.querySelectorAll('input[type="radio"]').forEach(radio => radio.disabled = true);
-            userActionPlanInput.disabled = true;
-        });
-
-        resetDenialBtn.addEventListener('click', resetDenialInputsAndFeedback);
-
-        function resetDenialInputsAndFeedback() {
-            denialInterpretationOptions.innerHTML = '<p class="text-gray-500 denial-scenario-text">Select an interpretation.</p>'; // Reset radio buttons
-            userActionPlanInput.value = '';
-            userActionPlanInput.disabled = false;
-            denialInterpretationOptions.querySelectorAll('input[type="radio"]').forEach(radio => radio.disabled = false);
-            denialFeedback.innerHTML = '<p class="text-gray-500 denial-feedback-text">Feedback on your denial resolution plan will appear here.</p>';
-            denialFeedback.className = 'bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]'; // Reset styling
+            submitAnswerBtn.classList.remove('hidden');
+            nextQuestionBtn.classList.add('hidden');
+            quizFeedback.innerHTML = '<p class="text-gray-500 quiz-feedback-text">Your feedback will appear here.</p>';
+            // Re-enable radio buttons
+            quizOptions.querySelectorAll('input[type="radio"]').forEach(radio => radio.disabled = false);
         }
 
-        // --- SOAP Note Coder & Extractor Logic ---
-        // currentSoapScenarioData is already declared globally, no 'let' here.
-        let currentSoapScenarioData = null;
-
-        loadSoapScenarioBtn.addEventListener('click', () => {
-            const randomIndex = Math.floor(Math.random() * soapNoteScenarios.length);
-            currentSoapScenarioData = soapNoteScenarios[randomIndex];
-            
-            soapChallengeContent.classList.remove('hidden');
-            soapScenarioTitle.textContent = `SOAP Note Challenge: ${currentSoapScenarioData.title}`;
-            soapScenarioDescription.textContent = currentSoapScenarioData.description;
-            soapNoteDisplay.textContent = currentSoapScenarioData.soapNote;
-            
-            resetSoapInputsAndFeedback();
-            checkSoapBtn.classList.remove('hidden');
-            resetSoapBtn.classList.remove('hidden');
-        });
-
-        checkSoapBtn.addEventListener('click', () => {
-            if (!currentSoapScenarioData) {
-                soapFeedback.innerHTML = '<p class="text-red-700 soap-feedback-text">Please load a scenario first!</p>';
+        submitAnswerBtn.addEventListener('click', () => {
+            const selectedOption = document.querySelector('input[name="quizOption"]:checked');
+            if (!selectedOption) {
+                quizFeedback.innerHTML = '<p class="text-red-700 quiz-feedback-text">Please select an answer.</p>';
+                quizFeedback.className = 'bg-red-50 p-3 rounded-lg border border-red-200 mt-4 min-h-[80px]';
                 return;
             }
 
-            const userChiefComplaint = userSoapChiefComplaintInput.value.trim();
-            const userICD = userSoapICDInput.value.trim().toUpperCase().split(',').map(s => s.trim()).filter(s => s !== '');
-            const userCPT = userSoapCPTInput.value.trim().toUpperCase().split(',').map(s => s.trim()).filter(s => s !== '');
-            const userModifier = userSoapModifierInput.value.trim().toUpperCase();
-            const userPlan = userSoapPlanInput.value.trim().toUpperCase();
+            const questionData = selectedQuizModule[currentQuizQuestionIndex];
+            if (selectedOption.value === questionData.answer) {
+                quizFeedback.innerHTML = `<p class="text-green-700 font-bold">Correct! 🎉</p><p class="quiz-feedback-text">${questionData.explanation}</p>`;
+                quizFeedback.className = 'bg-green-50 p-3 rounded-lg border border-green-200 mt-4 min-h-[80px]';
+            } else {
+                quizFeedback.innerHTML = `<p class="text-red-700 font-bold">Incorrect. 😔</p><p class="quiz-feedback-text">The correct answer was **${questionData.answer}**. ${questionData.explanation}</p>`;
+                quizFeedback.className = 'bg-red-50 p-3 rounded-lg border border-red-200 mt-4 min-h-[80px]';
+            }
+            submitAnswerBtn.classList.add('hidden');
+            nextQuestionBtn.classList.remove('hidden');
+            // Disable radio buttons after submission
+            quizOptions.querySelectorAll('input[type="radio"]').forEach(radio => radio.disabled = true);
+        });
 
-            let feedbackHtml = '';
-            let allCorrect = true;
+        nextQuestionBtn.addEventListener('click', () => {
+            currentQuizQuestionIndex++;
+            displayQuizQuestion();
+        });
 
-            // Helper to compare arrays of codes, ignoring order
-            const compareCodeArrays = (userArray, expectedArray) => {
-                if (userArray.length !== expectedArray.length) return false;
-                const sortedUser = [...userArray].sort();
-                const sortedExpected = [...expectedArray].sort();
-                for (let i = 0; i < sortedUser.length; i++) {
-                    if (sortedUser[i] !== sortedExpected[i]) return false;
-                }
-                return true;
+        resetQuizBtn.addEventListener('click', () => {
+            selectedQuizModule = null;
+            currentQuizQuestionIndex = 0;
+            quizContent.classList.add('hidden');
+            quizFeedback.innerHTML = '<p class="text-gray-500 quiz-feedback-text">Your feedback will appear here.</p>';
+            quizFeedback.className = 'bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]'; // Reset styling
+            submitAnswerBtn.classList.add('hidden');
+            nextQuestionBtn.classList.add('hidden');
+            resetQuizBtn.classList.add('hidden');
+            showMessage('Quiz Reset.', 'success');
+        });
+
+        quizGuidelinesBtn.addEventListener('click', () => loadQuiz("Coding Guidelines"));
+        quizLawsBtn.addEventListener('click', () => loadQuiz("Healthcare Laws"));
+        quizEthicsBtn.addEventListener('click', () => loadQuiz("Coding Ethics"));
+        quizDenialsBtn.addEventListener('click', () => loadQuiz("Denials & Appeals"));
+        quizInsuranceNuanceBtn.addEventListener('click', () => loadQuiz("Insurance Nuances"));
+
+        // --- EVENT LISTENERS (MAIN SIMULATOR SECTIONS) ---
+
+        registerPatientBtn.addEventListener('click', async () => {
+            patientData = {
+                name: patientNameInput.value,
+                dob: patientDOBInput.value,
+                insuranceID: insuranceIDInput.value
             };
 
-            // Check Chief Complaint
-            if (userChiefComplaint.toLowerCase() === currentSoapScenarioData.expected.chiefComplaint.toLowerCase()) {
-                feedbackHtml += `<p class="text-green-700">Chief Complaint: Correct! ("${currentSoapScenarioData.expected.chiefComplaint}")</p>`;
-            } else {
-                feedbackHtml += `<p class="text-red-700">Chief Complaint: Incorrect. Expected: "${currentSoapScenarioData.expected.chiefComplaint}".</p>`;
-                allCorrect = false;
-            }
-
-            // Check Primary ICD-10
-            const expectedICD = currentSoapScenarioData.expected.icd10.split(',').map(s => s.trim().toUpperCase());
-            if (compareCodeArrays(userICD, expectedICD)) {
-                feedbackHtml += `<p class="text-green-700">Primary ICD-10 Code(s): Correct! ("${currentSoapScenarioData.expected.icd10}")</p>`;
-            } else {
-                feedbackHtml += `<p class="text-red-700">Primary ICD-10 Code(s): Incorrect. Expected: "${currentSoapScenarioData.expected.icd10}".</p>`;
-                allCorrect = false;
-            }
-
-            // Check Primary CPT
-            const expectedCPT = currentSoapScenarioData.expected.cpt.split(',').map(s => s.trim().toUpperCase());
-            if (compareCodeArrays(userCPT, expectedCPT)) {
-                feedbackHtml += `<p class="text-green-700">Primary CPT Code(s): Correct! ("${currentSoapScenarioData.expected.cpt}")</p>`;
-            } else {
-                feedbackHtml += `<p class="text-red-700">Primary CPT Code(s): Incorrect. Expected: "${currentSoapScenarioData.expected.cpt}".</p>`;
-                allCorrect = false;
-            }
-
-            // Check Modifier
-            const expectedModifier = currentSoapScenarioData.expected.modifier.toUpperCase();
-            const userModNormalized = (userSoapModifierInput.value.trim().toUpperCase() === 'NONE' || userSoapModifierInput.value.trim() === '') ? 'NONE' : userSoapModifierInput.value.trim().toUpperCase();
-
-            if (userModNormalized === expectedModifier) {
-                feedbackHtml += `<p class="text-green-700">Modifier(s): Correct! ("${expectedModifier}")</p>`;
-            } else {
-                feedbackHtml += `<p class="text-red-700">Modifier(s): Incorrect. Expected: "${expectedModifier}".</p>`;
-                allCorrect = false;
-            }
-
-            // Check Key Plan Elements (using keywords)
-            const expectedPlanKeywords = currentSoapScenarioData.expected.planKeywords.map(k => k.toUpperCase());
-            const userPlanWords = userPlan.split(/\s|,\s*|\.\s*|;\s*/).filter(word => word !== '').map(word => word.toUpperCase());
-            
-            let planCorrect = true;
-            let missingPlanKeywords = [];
-            let extraPlanKeywords = [];
-
-            expectedPlanKeywords.forEach(keyword => {
-                if (!userPlanWords.some(word => word.includes(keyword))) { // Check if any user word contains the keyword
-                    missingPlanKeywords.push(keyword);
-                    planCorrect = false;
+            if (patientData.name && patientData.dob && patientData.insuranceID) {
+                showMessage('Patient Registered Successfully!', 'success');
+                // Save patient data to Firestore
+                if (db && userId) {
+                    try {
+                        // Using a unique ID for the patient document based on their name and DOB
+                        const patientDocRef = doc(db, `artifacts/${appId}/users/${userId}/patients`, `${patientData.name.replace(/\s/g, '-')}-${patientData.dob}`);
+                        await setDoc(patientDocRef, patientData, { merge: true });
+                        console.log("Patient data saved to Firestore:", patientData);
+                    } catch (e) {
+                        console.error("Error saving patient data to Firestore:", e);
+                        showMessage('Error saving patient data.', 'error');
+                    }
                 }
-            });
-
-            userPlanWords.forEach(word => {
-                 // Check if the user's word is not directly one of the expected keywords AND doesn't contain an expected keyword
-                if (!expectedPlanKeywords.includes(word) && !expectedPlanKeywords.some(kw => word.includes(kw))) {
-                    extraPlanKeywords.push(word);
-                }
-            });
-
-            if (planCorrect && extraPlanKeywords.length === 0) {
-                feedbackHtml += `<p class="text-green-700 mt-2">Key Plan Elements: Well done! Your summary covers the main points.</p>`;
             } else {
-                feedbackHtml += `<p class="text-red-700 mt-2">Key Plan Elements: Review your plan summary.</p>`;
-                if (missingPlanKeywords.length > 0) {
-                    feedbackHtml += `<p class="text-red-700 text-sm">Missing key elements: ${missingPlanKeywords.join(', ')}.</p>`;
-                }
-                if (extraPlanKeywords.length > 0) {
-                    feedbackHtml += `<p class="text-red-700 text-sm">You included some unexpected elements: ${extraKeywords.join(', ')}.</p>`;
-                }
-                allCorrect = false;
+                showMessage('Please fill in all patient registration fields.', 'error');
             }
-
-            // Overall feedback
-            if (allCorrect) {
-                soapFeedback.innerHTML = `<p class="text-green-700 font-bold">Excellent! You correctly extracted all key information from the SOAP note.</p>`;
-                soapFeedback.className = 'bg-green-50 p-3 rounded-lg border border-green-200 mt-4 min-h-[80px]';
-            } else {
-                soapFeedback.innerHTML = `<p class="text-red-700 font-bold">Not quite perfect. Review the feedback and explanation:</p>` + feedbackHtml;
-                soapFeedback.className = 'bg-red-50 p-3 rounded-lg border border-red-200 mt-4 min-h-[80px]';
-            }
-            soapFeedback.innerHTML += `<p class="text-gray-700 mt-4 font-bold">Detailed Explanation:</p><p class="soap-feedback-text">${currentSoapScenarioData.explanation}</p>`;
-
-            // Disable inputs after checking
-            userSoapChiefComplaintInput.disabled = true;
-            userSoapICDInput.disabled = true;
-            userSoapCPTInput.disabled = true;
-            userSoapModifierInput.disabled = true;
-            userSoapPlanInput.disabled = true;
         });
 
-        resetSoapBtn.addEventListener('click', resetSoapInputsAndFeedback);
+        addDiagnosisBtn.addEventListener('click', () => addInputGroup('diagnosisList', 'diagnosis-code', 'e.g., J02.9 (Acute pharyngitis)'));
+        addProcedureBtn.addEventListener('click', () => addInputGroup('procedureList', 'procedure-code', 'e.g., 99213 (Office visit)'));
+        addChargeBtn.addEventListener('click', addServiceInputGroup);
 
-        function resetSoapInputsAndFeedback() {
-            userSoapChiefComplaintInput.value = '';
-            userSoapICDInput.value = '';
-            userSoapCPTInput.value = '';
-            userSoapModifierInput.value = '';
-            userSoapPlanInput.value = '';
-            userSoapChiefComplaintInput.disabled = false;
-            userSoapICDInput.disabled = false;
-            userSoapCPTInput.disabled = false;
-            userSoapModifierInput.disabled = false;
-            userSoapPlanInput.disabled = false;
-            soapFeedback.innerHTML = '<p class="text-gray-500 soap-feedback-text">Feedback on your extraction will appear here.</p>';
-            soapFeedback.className = 'bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]'; // Reset styling
-        }
+        generateClaimBtn.addEventListener('click', async () => {
+            const currentDiagnoses = Array.from(document.querySelectorAll('.diagnosis-code')).map(input => input.value.trim()).filter(Boolean);
+            const currentProcedures = Array.from(document.querySelectorAll('.procedure-code')).map(input => input.value.trim()).filter(Boolean);
+            const currentCharges = Array.from(document.querySelectorAll('.service-item')).map(item => {
+                const description = item.querySelector('.service-description').value.trim();
+                const cptCode = item.querySelector('.service-cpt-code').value.trim();
+                const price = parseFloat(item.querySelector('.service-price').value);
+                return { description, cptCode, price: isNaN(price) ? 0 : price };
+            }).filter(item => item.description || item.cptCode || item.price > 0);
 
-        // --- Code Lookup Tool Logic ---
-        lookupCodeBtn.addEventListener('click', () => {
-            const code = codeLookupInput.value.trim().toUpperCase();
-            if (code === '') {
-                codeLookupResult.innerHTML = '<p class="text-red-700">Please enter a code to look up.</p>';
-                codeLookupResult.className = 'bg-red-50 p-3 rounded-lg border border-red-200 mt-4 min-h-[80px]';
+            if (!patientData.name) {
+                showMessage('Please register a patient first.', 'error');
+                return;
+            }
+            if (!encounterDateInput.value || !chiefComplaintInput.value) {
+                showMessage('Please fill in encounter date and chief complaint.', 'error');
+                return;
+            }
+            if (currentDiagnoses.length === 0 || currentProcedures.length === 0 || currentCharges.length === 0) {
+                showMessage('Please add at least one diagnosis, procedure, and service charge.', 'error');
                 return;
             }
 
-            const description = codeDatabase[code];
-            if (description) {
-                codeLookupResult.innerHTML = `<p class="text-green-700 font-bold">Code found:</p><p class="code-lookup-text">${code}: ${description}</p>`;
-                codeLookupResult.className = 'bg-green-50 p-3 rounded-lg border border-green-200 mt-4 min-h-[80px]';
-            } else {
-                codeLookupResult.innerHTML = `<p class="text-red-700 font-bold">Code not found.</p><p class="code-lookup-text">"${code}" is not in our current database. Please try another common ICD-10 or CPT code (e.g., J02.0, 99213).</p>`;
-                codeLookupResult.className = 'bg-red-50 p-3 rounded-lg border border-red-200 mt-4 min-h-[80px]';
+            const claim = {
+                patient: patientData,
+                encounter: {
+                    date: encounterDateInput.value,
+                    chiefComplaint: chiefComplaintInput.value,
+                },
+                diagnoses: currentDiagnoses,
+                procedures: currentProcedures,
+                charges: currentCharges,
+                totalCharge: currentCharges.reduce((sum, item) => sum + item.price, 0)
+            };
+
+            let claimText = `--- CMS-1500 Claim (Simulated) ---\n\n`;
+            claimText += `Patient Name: ${claim.patient.name}\n`;
+            claimText += `Patient DOB: ${claim.patient.dob}\n`;
+            claimText += `Insurance ID: ${claim.patient.insuranceID}\n`;
+            claimText += `\nEncounter Date: ${claim.encounter.date}\n`;
+            claimText += `Chief Complaint: ${claim.encounter.chiefComplaint}\n`;
+            claimText += `\nDiagnoses (ICD-10): ${claim.diagnoses.join(', ')}\n`;
+            claimText += `Procedures (CPT/HCPCS): ${claim.procedures.join(', ')}\n`;
+            claimText += `\nServices & Charges:\n`;
+            claim.charges.forEach(charge => {
+                claimText += `- ${charge.description} (CPT: ${charge.cptCode}): $${charge.price.toFixed(2)}\n`;
+            });
+            claimText += `\nTotal Billed: $${claim.totalCharge.toFixed(2)}\n`;
+            claimText += `------------------------------------\n`;
+
+            claimOutput.textContent = claimText;
+            showMessage('Simulated Claim Generated!', 'success');
+
+            // Save claim data to Firestore
+            if (db && userId) {
+                try {
+                    const claimsCollection = collection(db, `artifacts/${appId}/users/${userId}/claims`);
+                    await addDoc(claimsCollection, claim);
+                    console.log("Claim data saved to Firestore:", claim);
+                } catch (e) {
+                    console.error("Error saving claim data to Firestore:", e);
+                    showMessage('Error saving claim data.', 'error');
+                }
             }
         });
 
-        // --- NEW: A/R Aging Simulation Logic ---
-        loadArScenarioBtn.addEventListener('click', () => {
-            const randomIndex = Math.floor(Math.random() * arAgingScenarios.length);
-            currentArScenarioClaims = arAgingScenarios[randomIndex].claims;
-            
-            arAgingContent.classList.remove('hidden');
-            arClaimList.innerHTML = ''; // Clear previous claims
-
-            currentArScenarioClaims.forEach((claim, index) => {
-                const claimDiv = document.createElement('div');
-                claimDiv.classList.add('ar-claim-item');
-                claimDiv.dataset.index = index; // Store index for easy lookup
-
-                claimDiv.innerHTML = `
-                    <h3 class="font-semibold text-gray-800">Claim ID: ${claim.claimId}</h3>
-                    <div class="ar-claim-details">
-                        <p><strong>Patient:</strong> ${claim.patient}</p>
-                        <p><strong>Payer:</strong> ${claim.payer}</p>
-                        <p><strong>Amount:</strong> $${claim.amount.toFixed(2)}</p>
-                        <p><strong>Days Old:</strong> ${claim.daysOld}</p>
+        clearAllBtn.addEventListener('click', () => {
+            patientNameInput.value = '';
+            patientDOBInput.value = '';
+            insuranceIDInput.value = '';
+            encounterDateInput.value = '';
+            chiefComplaintInput.value = '';
+            diagnosisList.innerHTML = `
+                <label class="block text-gray-700 text-sm font-bold mb-2">Diagnoses (ICD Codes):</label>
+                <div class="flex items-center gap-2">
+                    <input type="text" class="diagnosis-code flex-grow-1 focus:ring-green-500 focus:border-green-500" name="diagnosisCode" placeholder="e.g., J02.9 (Acute pharyngitis)">
+                    <button type="button" class="btn-secondary remove-item-btn">Remove</button>
+                </div>
+            `;
+            procedureList.innerHTML = `
+                <label class="block text-gray-700 text-sm font-bold mb-2">Procedures (CPT/HCPCS Codes):</label>
+                <div class="flex items-center gap-2">
+                    <input type="text" class="procedure-code flex-grow-1 focus:ring-green-500 focus:border-green-500" name="procedureCode" placeholder="e.g., 99213 (Office visit)">
+                    <button type="button" class="btn-secondary remove-item-btn">Remove</button>
+                </div>
+            `;
+            chargeList.innerHTML = `
+                <label class="block text-gray-700 text-sm font-bold mb-2">Services Rendered:</label>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-2 service-item">
+                    <input type="text" class="service-description col-span-1 md:col-span-1 focus:ring-purple-500 focus:border-purple-500" name="serviceDescription" placeholder="Service Description">
+                    <input type="text" class="service-cpt-code col-span-1 md:col-span-1 focus:ring-purple-500 focus:border-purple-500" name="serviceCptCode" placeholder="CPT Code">
+                    <div class="flex gap-2 col-span-1 md:col-span-1">
+                        <input type="number" class="service-price flex-grow-1 focus:ring-purple-500 focus:border-purple-500" name="servicePrice" placeholder="Price ($)" min="0" step="0.01">
+                        <button type="button" class="btn-secondary remove-item-btn">Remove</button>
                     </div>
-                    <label for="arAction-${index}" class="block text-gray-700 text-sm font-bold mb-2">Your Action:</label>
-                    <select id="arAction-${index}" name="arAction-${index}" class="ar-action-select focus:ring-red-500 focus:border-red-500 w-full">
-                        <option value="">-- Select Action --</option>
-                        <option value="check_status_online">Check claim status online (payer portal).</option>
-                        <option value="call_payer">Call payer (provider services) for status/details.</option>
-                        <option value="review_eob_era">Review EOB/ERA for denial reason/details.</option>
-                        <option value="submit_appeal">Submit an appeal with supporting documentation.</option>
-                        <option value="correct_resubmit">Correct simple errors and resubmit claim.</option>
-                        <option value="bill_patient">Bill patient (if patient responsibility is indicated).</option>
-                        <option value="write_off">Write off balance (e.g., timely filing, contractual adjustment).</option>
-                        <option value="monitor_further">Monitor further, still within initial processing time.</option>
-                    </select>
-                    <div id="arFeedback-${index}" class="ar-claim-feedback hidden"></div>
-                `;
-                arClaimList.appendChild(claimDiv);
-            });
-
-            arFeedback.innerHTML = '<p class="text-gray-500">Feedback on your A/R actions will appear here.</p>';
-            arFeedback.className = 'bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]';
-            checkArActionsBtn.classList.remove('hidden');
-            resetArScenarioBtn.classList.remove('hidden');
-        });
-
-        checkArActionsBtn.addEventListener('click', () => {
-            let allCorrect = true;
-            currentArScenarioClaims.forEach((claim, index) => {
-                const selectElement = document.getElementById(`arAction-${index}`);
-                const userAction = selectElement.value;
-                const feedbackDiv = document.getElementById(`arFeedback-${index}`);
-                
-                let isClaimCorrect = false;
-                // Determine correctness based on daysOld and user selection
-                if (claim.daysOld <= 30 && userAction === "monitor_further") {
-                    isClaimCorrect = true;
-                } else if (claim.daysOld > 30 && claim.daysOld <= 60 && (userAction === "check_status_online" || userAction === "call_payer")) {
-                    isClaimCorrect = true;
-                } else if (claim.daysOld > 60 && claim.daysOld <= 90 && (userAction === "call_payer" || userAction === "review_eob_era" || userAction === "submit_appeal" || userAction === "correct_resubmit")) {
-                     isClaimCorrect = true;
-                } else if (claim.daysOld > 90 && (userAction === "review_eob_era" || userAction === "submit_appeal" || userAction === "correct_resubmit" || userAction === "write_off")) {
-                    isClaimCorrect = true;
-                }
-                // Specific conditions override general if applicable (e.g., patient billing or write-off)
-                // This block adds flexibility to the logic, allowing for *any* correct action based on the specific claim's correctAction string
-                if (claim.correctAction.includes("Bill patient") && userAction === "bill_patient") {
-                    isClaimCorrect = true;
-                }
-                if (claim.correctAction.includes("Write off") && userAction === "write_off") {
-                    isClaimCorrect = true;
-                }
-                if (claim.correctAction.includes("Check claim status online") && userAction === "check_status_online") {
-                    isClaimCorrect = true;
-                }
-                if (claim.correctAction.includes("Call payer") && userAction === "call_payer") {
-                    isClaimCorrect = true;
-                }
-                if (claim.correctAction.includes("Review EOB/ERA") && userAction === "review_eob_era") {
-                    isClaimCorrect = true;
-                }
-                if (claim.correctAction.includes("Submit an appeal") && userAction === "submit_appeal") {
-                    isClaimCorrect = true;
-                }
-                if (claim.correctAction.includes("Correct simple errors") && userAction === "correct_resubmit") {
-                    isClaimCorrect = true;
-                }
-                if (claim.correctAction.includes("Monitor claim status") && userAction === "monitor_further") {
-                    isClaimCorrect = true;
-                }
-
-
-                feedbackDiv.classList.remove('hidden');
-                if (isClaimCorrect) {
-                    feedbackDiv.classList.add('correct');
-                    feedbackDiv.classList.remove('incorrect');
-                    feedbackDiv.innerHTML = `<p>Correct Action: ${claim.correctAction}</p><p class="mt-1 text-xs">(${claim.explanation})</p>`;
-                } else {
-                    feedbackDiv.classList.add('incorrect');
-                    feedbackDiv.classList.remove('correct');
-                    feedbackDiv.innerHTML = `<p>Incorrect. Expected action: ${claim.correctAction}</p><p class="mt-1 text-xs">(${claim.explanation})</p>`;
-                    allCorrect = false;
-                }
-                selectElement.disabled = true; // Disable selection after checking
-            });
-
-            if (allCorrect) {
-                arFeedback.innerHTML = '<p class="text-green-700 font-bold">Excellent! You correctly identified the best action for all aging claims.</p>';
-                arFeedback.className = 'bg-green-50 p-3 rounded-lg border border-green-200 mt-4 min-h-[80px]';
-            } else {
-                arFeedback.innerHTML = '<p class="text-red-700 font-bold">Review the feedback for each claim. Some actions were not ideal.</p>';
-                arFeedback.className = 'bg-red-50 p-3 rounded-lg border border-red-200 mt-4 min-h-[80px]';
-            }
-        });
-
-        resetArScenarioBtn.addEventListener('click', () => {
-            arAgingContent.classList.add('hidden');
-            loadArScenarioBtn.classList.remove('hidden');
-            arClaimList.innerHTML = '';
-            arFeedback.innerHTML = '<p class="text-gray-500">Feedback on your A/R actions will appear here.</p>';
-            arFeedback.className = 'bg-gray-50 p-3 rounded-lg border border-gray-200 mt-4 min-h-[80px]';
-            resetArScenarioBtn.classList.add('hidden');
-            checkArActionsBtn.classList.add('hidden');
-            showMessage('A/R Aging Scenario Reset.', 'success');
+                </div>
+            `;
+            claimOutput.textContent = '';
+            patientData = {};
+            diagnoses = [];
+            procedures = [];
+            charges = [];
+            showMessage('All data cleared!', 'success');
         });
 
     </script>
