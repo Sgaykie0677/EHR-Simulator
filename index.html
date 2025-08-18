@@ -1,3 +1,76 @@
+<script type="module">
+    // Import the functions you need from the Firebase SDKs
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, collection, query, where, addDoc, getDocs, onSnapshot, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // Your web app's Firebase configuration (provided by Canvas environment)
+    // Make sure to parse it as it comes in as a string
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; // Fallback for local testing if not in Canvas
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    let userId = null; // To store the user's UID or an anonymous ID
+
+    // Listen for auth state changes and sign in
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            // User is signed in.
+            userId = user.uid;
+            console.log("User signed in:", userId);
+        } else {
+            // User is signed out or not authenticated yet.
+            // Attempt to sign in with custom token if available, otherwise anonymously.
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                try {
+                    const userCredential = await signInWithCustomToken(auth, __initial_auth_token);
+                    userId = userCredential.user.uid;
+                    console.log("Signed in with custom token:", userId);
+                } catch (error) {
+                    console.error("Error signing in with custom token:", error);
+                    // Fallback to anonymous if custom token fails
+                    try {
+                        const userCredential = await signInAnonymously(auth);
+                        userId = userCredential.user.uid;
+                        console.log("Signed in anonymously (fallback):", userId);
+                    } catch (anonError) {
+                        console.error("Error signing in anonymously:", anonError);
+                        // If all auth fails, generate a random ID
+                        userId = crypto.randomUUID();
+                        console.warn("Could not authenticate, using random ID:", userId);
+                    }
+                }
+            } else {
+                // If no initial token, sign in anonymously
+                try {
+                    const userCredential = await signInAnonymously(auth);
+                    userId = userCredential.user.uid;
+                    console.log("Signed in anonymously:", userId);
+                } catch (error) {
+                    console.error("Error signing in anonymously:", error);
+                    // If anonymous auth fails, generate a random ID
+                    userId = crypto.randomUUID();
+                    console.warn("Could not authenticate, using random ID:", userId);
+                }
+            }
+        }
+        // Now that auth is ready, you can start interacting with Firestore
+        // For now, we'll just log that it's ready.
+        console.log("Firebase Auth and Firestore services initialized. User ID:", userId);
+    });
+
+    // You can also expose db, auth, and userId globally if needed for your existing script,
+    // but better practice is to pass them to functions or encapsulate logic.
+    // For simplicity in this direct integration, we'll use them directly within this script block.
+    // window.db = db; // Not recommended for large apps, but can simplify initial integration
+    // window.auth = auth;
+    // window.userId = userId;
+</script>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2799,3 +2872,4 @@ Modifier(s): ${currentScrubberScenarioData.presentedClaim.modifier}
     </script>
 </body>
 </html>
+
