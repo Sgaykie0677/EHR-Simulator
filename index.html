@@ -666,62 +666,71 @@
 
         // Your web app's Firebase configuration (provided by Canvas environment)
         // Make sure to parse it as it comes in as a string
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null; // Changed to null if undefined
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; // Fallback for local testing if not in Canvas
 
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
+        // Initialize Firebase ONLY if config is available
+        let app;
+        let db;
+        let auth;
+        let userId = null;
 
-        let userId = null; // To store the user's UID or an anonymous ID
+        if (firebaseConfig) {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
 
-        // Listen for auth state changes and sign in
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                // User is signed in.
-                userId = user.uid;
-                console.log("User signed in:", userId);
-            } else {
-                // User is signed out or not authenticated yet.
-                // Attempt to sign in with custom token if available, otherwise anonymously.
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    try {
-                        const userCredential = await signInWithCustomToken(auth, __initial_auth_token);
-                        userId = userCredential.user.uid;
-                        console.log("Signed in with custom token:", userId);
-                    } catch (error) {
-                        console.error("Error signing in with custom token:", error);
-                        // Fallback to anonymous if custom token fails
+            // Listen for auth state changes and sign in
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    // User is signed in.
+                    userId = user.uid;
+                    console.log("User signed in:", userId);
+                } else {
+                    // User is signed out or not authenticated yet.
+                    // Attempt to sign in with custom token if available, otherwise anonymously.
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        try {
+                            const userCredential = await signInWithCustomToken(auth, __initial_auth_token);
+                            userId = userCredential.user.uid;
+                            console.log("Signed in with custom token:", userId);
+                        } catch (error) {
+                            console.error("Error signing in with custom token:", error);
+                            // Fallback to anonymous if custom token fails
+                            try {
+                                const userCredential = await signInAnonymously(auth);
+                                userId = userCredential.user.uid;
+                                console.log("Signed in anonymously (fallback):", userId);
+                            } catch (anonError) {
+                                console.error("Error signing in anonymously:", anonError);
+                                // If all auth fails, generate a random ID
+                                userId = crypto.randomUUID();
+                                console.warn("Could not authenticate, using random ID:", userId);
+                            }
+                        }
+                    } else {
+                        // If no initial token, sign in anonymously
                         try {
                             const userCredential = await signInAnonymously(auth);
                             userId = userCredential.user.uid;
-                            console.log("Signed in anonymously (fallback):", userId);
-                        } catch (anonError) {
-                            console.error("Error signing in anonymously:", anonError);
-                            // If all auth fails, generate a random ID
+                            console.log("Signed in anonymously:", userId);
+                        } catch (error) {
+                            console.error("Error signing in anonymously:", error);
+                            // If anonymous auth fails, generate a random ID
                             userId = crypto.randomUUID();
                             console.warn("Could not authenticate, using random ID:", userId);
                         }
                     }
-                } else {
-                    // If no initial token, sign in anonymously
-                    try {
-                        const userCredential = await signInAnonymously(auth);
-                        userId = userCredential.user.uid;
-                        console.log("Signed in anonymously:", userId);
-                    } catch (error) {
-                        console.error("Error signing in anonymously:", error);
-                        // If anonymous auth fails, generate a random ID
-                        userId = crypto.randomUUID();
-                        console.warn("Could not authenticate, using random ID:", userId);
-                    }
                 }
-            }
-            // Now that auth is ready, you can start interacting with Firestore
-            // For now, we'll just log that it's ready.
-            console.log("Firebase Auth and Firestore services initialized. User ID:", userId);
-        });
+                // Now that auth is ready, you can start interacting with Firestore
+                console.log("Firebase Auth and Firestore services initialized. User ID:", userId);
+            });
+        } else {
+            console.warn("Firebase configuration not found. Firebase services will not be initialized.");
+            // If Firebase config is not available, provide a fallback userId
+            userId = crypto.randomUUID();
+            console.warn("Using a random ID as Firebase config is missing:", userId);
+        }
 
         // You can also expose db, auth, and userId globally if needed for your existing script,
         // but better practice is to pass them to functions or encapsulate logic.
@@ -1392,7 +1401,7 @@ Modifier(s): ${currentScrubberScenarioData.presentedClaim.modifier}
             if (!compareInput(userModifier, currentScrubberScenarioData.expectedInputs.correctedModifier.toUpperCase())) {
                 const error = currentScrubberScenarioData.errors.find(e => e.type === 'modifier');
                  feedbackHtml += `<p class="text-red-700">Modifier(s): Incorrect. Expected "${currentScrubberScenarioData.expectedInputs.correctedModifier}".</p>`;
-                 if (error) feedbackHtml += `<p class="text-gray-700 text-sm mt-1">${error.explanation}</p>`;
+                 if (error) feedbackHtml += `<p class="text-gray-700 text-sm mt-1">${error.explanation}</p`;
                  allCorrect = false;
             } else {
                 feedbackHtml += `<p class="text-green-700">Modifier(s): Correct! ("${currentScrubberScenarioData.expectedInputs.correctedModifier}")</p>`;
