@@ -2735,7 +2735,81 @@ Modifier(s): ${currentScrubberScenarioData.presentedClaim.modifier}
             checkArActionsBtn.classList.add('hidden');
             showMessage('A/R Aging Scenario Reset.', 'success');
         });
+// Import the functions you need from the Firebase SDKs
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+// If you don't need analytics, you can remove this line
+// import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-analytics.js";
 
+// Your web app's Firebase configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyBWp8SyLaqyPb8ezZ4TX-3oVt8ixai_ruw",
+    authDomain: "ehr-and-office-admin-simulator.firebaseapp.com",
+    projectId: "ehr-and-office-admin-simulator",
+    storageBucket: "ehr-and-office-admin-simulator.firebasestorage.app",
+    messagingSenderId: "823707136204",
+    appId: "1:823707136204:web:caba29a6c7635811db5269",
+    measurementId: "G-7C8WFWD2Q0"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+// If you don't need analytics, you can remove this line
+// const analytics = getAnalytics(app);
+
+console.log("Firebase initialized and connected to Firestore!");
+
+// --- Firebase Data Saving Function ---
+async function savePatientData(patientData) {
+    try {
+        const docRef = await addDoc(collection(db, "patients"), {
+            name: patientData.patientName,
+            dob: patientData.patientDOB,
+            insuranceId: patientData.insuranceID,
+            createdAt: serverTimestamp()
+        });
+        console.log("Document written with ID: ", docRef.id);
+        return { success: true, message: "Patient registered successfully!", id: docRef.id };
+    } catch (e) {
+        console.error("Error adding document: ", e);
+        return { success: false, message: "Error registering patient: " + e.message };
+    }
+}
+
+// --- Event Listener for Patient Registration ---
+document.getElementById('registerPatientBtn').addEventListener('click', async () => {
+    const patientName = document.getElementById('patientName').value;
+    const patientDOB = document.getElementById('patientDOB').value;
+    const insuranceID = document.getElementById('insuranceID').value;
+    const messageBox = document.getElementById('messageBox');
+
+    if (!patientName || !patientDOB || !insuranceID) {
+        messageBox.textContent = 'Please fill out all patient information fields.';
+        messageBox.className = 'message-box error block';
+        return;
+    }
+
+    const patientData = {
+        patientName,
+        patientDOB,
+        insuranceID
+    };
+
+    const result = await savePatientData(patientData);
+
+    if (result.success) {
+        messageBox.textContent = result.message;
+        messageBox.className = 'message-box success block';
+        document.getElementById('patientName').value = '';
+        document.getElementById('patientDOB').value = '';
+        document.getElementById('insuranceID').value = '';
+    } else {
+        messageBox.textContent = result.message;
+        messageBox.className = 'message-box error block';
+    }
+});
     </script>
 </body>
 </html>
+
