@@ -2737,7 +2737,1242 @@ Modifier(s): ${currentScrubberScenarioData.presentedClaim.modifier}
         });
 
     </script>
+    <script>
+    // --------------------------------------------------------------------------------------
+    // --- Data Definitions (Quizzes, Scenarios, etc.) ---
+    // --------------------------------------------------------------------------------------
+
+    const quizzes = {
+        'Coding Guidelines': [
+            {
+                question: 'When should a CPT modifier be used?',
+                options: [
+                    'To increase the payment amount for a service.',
+                    'To report a service that was altered from its standard description.',
+                    'To denote an unusual diagnosis.',
+                    'To indicate the number of times a procedure was performed.'
+                ],
+                answer: 'To report a service that was altered from its standard description.',
+                feedback: 'Correct! Modifiers provide additional information about a service without changing the original CPT code.'
+            },
+            {
+                question: 'What is the purpose of the ICD-10-CM coding system?',
+                options: [
+                    'To describe medical services and procedures performed by physicians.',
+                    'To classify and code all diagnoses, symptoms, and procedures recorded in hospitals.',
+                    'To track drug usage in outpatient settings.',
+                    'To identify the type of durable medical equipment used by a patient.'
+                ],
+                answer: 'To classify and code all diagnoses, symptoms, and procedures recorded in hospitals.',
+                feedback: 'Correct! ICD-10-CM is the official system for medical diagnoses in the U.S. healthcare system.'
+            },
+            {
+                question: 'Which of the following is true about selecting an E/M code?',
+                options: [
+                    'The highest code is always used for complex cases.',
+                    'It is based on the patient’s age and gender.',
+                    'It depends on the complexity of the visit, including history, exam, and medical decision making.',
+                    'The same E/M code can be used for all visits by the same patient.'
+                ],
+                answer: 'It depends on the complexity of the visit, including history, exam, and medical decision making.',
+                feedback: 'Correct! E/M (Evaluation and Management) codes are chosen based on the level of service provided, often determined by the complexity of the visit documentation.'
+            }
+        ],
+        'Healthcare Laws': [
+            {
+                question: 'What is the primary purpose of HIPAA?',
+                options: [
+                    'To set standards for hospital accreditation.',
+                    'To provide health insurance to low-income families.',
+                    'To protect the privacy and security of patient health information.',
+                    'To regulate drug pricing and pharmacy operations.'
+                ],
+                answer: 'To protect the privacy and security of patient health information.',
+                feedback: 'Correct! HIPAA (Health Information Portability and Accountability Act) sets national standards to protect sensitive patient data.'
+            },
+            {
+                question: 'What does the Stark Law prohibit?',
+                options: [
+                    'Billing for services not rendered.',
+                    'Physicians from referring patients to entities in which they or a family member have a financial interest.',
+                    'Upcoding services to increase reimbursement.',
+                    'Billing patients for services that were not medically necessary.'
+                ],
+                answer: 'Physicians from referring patients to entities in which they or a family member have a financial interest.',
+                feedback: 'Correct! The Stark Law, also known as the Physician Self-Referral Law, is meant to prevent conflicts of interest.'
+            },
+            {
+                question: 'Which of these acts governs Medicare and Medicaid reimbursement?',
+                options: [
+                    'The Patient Protection and Affordable Care Act (PPACA).',
+                    'The Social Security Act.',
+                    'The False Claims Act.',
+                    'The Health Information Technology for Economic and Clinical Health (HITECH) Act.'
+                ],
+                answer: 'The Social Security Act.',
+                feedback: 'Correct! The Social Security Act establishes the statutory authority for the Medicare and Medicaid programs.'
+            }
+        ],
+        'Coding Ethics': [
+            {
+                question: 'What is the most important ethical principle for a medical coder?',
+                options: [
+                    'To bill for the highest possible level of service.',
+                    'To ensure maximum reimbursement for the provider.',
+                    'To accurately represent the patient encounter in a compliant manner.',
+                    'To protect the financial interests of the practice.'
+                ],
+                answer: 'To accurately represent the patient encounter in a compliant manner.',
+                feedback: 'Correct! The primary ethical duty of a coder is to be accurate and compliant with all coding rules, regardless of financial impact.'
+            },
+            {
+                question: 'What is "upcoding"?',
+                options: [
+                    'Coding a diagnosis to a higher level of specificity.',
+                    'Submitting a claim with incorrect patient information.',
+                    'Billing for a more expensive service than was actually provided.',
+                    'Using an outdated code that is no longer valid.'
+                ],
+                answer: 'Billing for a more expensive service than was actually provided.',
+                feedback: 'Correct! Upcoding is a form of fraud that involves submitting codes for a higher level of service or a more severe diagnosis than what was documented.'
+            },
+            {
+                question: 'You find a mistake on a claim from a previous month that resulted in a small overpayment. What should you do?',
+                options: [
+                    'Ignore it, as the amount is too small to matter.',
+                    'Correct the mistake and resubmit the claim for the correct amount.',
+                    'Report the overpayment to the payer and return the funds.',
+                    'Keep the money and apply it as a credit for the next visit.'
+                ],
+                answer: 'Report the overpayment to the payer and return the funds.',
+                feedback: 'Correct! Under the False Claims Act, failing to report and return an overpayment can be considered fraud.'
+            }
+        ],
+        'Denials & Appeals': [
+            {
+                question: 'A claim is denied with reason code CO-16. What does this typically indicate?',
+                options: [
+                    'Services were not medically necessary.',
+                    'A claim has been duplicated.',
+                    'The patient is not eligible for this service.',
+                    'The claim was submitted to the wrong payer.'
+                ],
+                answer: 'The patient is not eligible for this service.',
+                feedback: 'Correct! CO-16 means "Claim/service lacks information which is needed for adjudication." Ineligibility is a common reason for this code.'
+            },
+            {
+                question: 'What is the first step in the appeals process for a denied claim?',
+                options: [
+                    'File a lawsuit against the payer.',
+                    'Resubmit the claim with a new set of codes.',
+                    'Review the payer’s policy and appeal process for the specific denial reason.',
+                    'Immediately write off the balance to the patient.'
+                ],
+                answer: 'Review the payer’s policy and appeal process for the specific denial reason.',
+                feedback: 'Correct! Research is key. You must understand why the claim was denied before you can formulate a successful appeal.'
+            }
+        ],
+        'Insurance Nuances': [
+            {
+                question: 'What is the "Deductible" in a health insurance plan?',
+                options: [
+                    'The fixed amount a patient pays for a doctor’s visit.',
+                    'The maximum amount a patient will pay in a year.',
+                    'The amount the patient must pay out-of-pocket before their insurance starts paying for services.',
+                    'The percentage of the cost of a medical service paid by the patient after the deductible is met.'
+                ],
+                answer: 'The amount the patient must pay out-of-pocket before their insurance starts paying for services.',
+                feedback: 'Correct! The deductible is the initial out-of-pocket amount a patient must pay before their insurance begins to cover costs.'
+            },
+            {
+                question: 'What is the difference between a PPO and an HMO?',
+                options: [
+                    'PPO plans are always more expensive than HMO plans.',
+                    'HMO plans require you to have a primary care provider (PCP) and get referrals to see specialists; PPOs do not.',
+                    'PPO plans cover preventative care, while HMO plans do not.',
+                    'HMO plans have no deductibles or copays.'
+                ],
+                answer: 'HMO plans require you to have a primary care provider (PCP) and get referrals to see specialists; PPOs do not.',
+                feedback: 'Correct! This is a primary difference. PPO plans offer more flexibility to see out-of-network providers without a referral.'
+            }
+        ]
+    };
+
+    const balanceScenarios = [
+        {
+            title: 'Scenario 1: Standard Office Visit',
+            details: 'The patient has a **$50 copay** for a primary care office visit. Their **$1,000 deductible** and **20% coinsurance** have not been met. The total charge for the visit is **$150**. How much does the patient owe today?',
+            answers: { copay: 50, deductible: 0, coinsurance: 0, total: 50 }
+        },
+        {
+            title: 'Scenario 2: Deductible Not Met',
+            details: 'The patient has a **$50 copay** and a **$1,000 deductible**. The total charge is **$200**. The patient has paid **$0** towards their deductible so far. How much does the patient owe today? (Remember, the copay may be waived or applied differently in a deductible-first plan.)',
+            answers: { copay: 0, deductible: 200, coinsurance: 0, total: 200 }
+        },
+        {
+            title: 'Scenario 3: Coinsurance Kicks In',
+            details: 'The patient has a **$500 deductible** and a **10% coinsurance**. Their deductible has been fully met from a previous visit. The total charge for today\'s visit is **$100**. How much does the patient owe?',
+            answers: { copay: 0, deductible: 0, coinsurance: 10, total: 10 }
+        },
+        {
+            title: 'Scenario 4: Combination of Deductible & Coinsurance',
+            details: 'The patient has a **$2,000 deductible** and **30% coinsurance**. They have already paid **$1,800** toward their deductible. The total charge for today\'s visit is **$500**. How much does the patient owe today?',
+            answers: { copay: 0, deductible: 200, coinsurance: 90, total: 290 }
+        }
+    ];
+
+    const modifierScenarios = [
+        {
+            title: 'Scenario 1: Evaluation and Management (E/M) on the Same Day',
+            details: 'A patient presents to the clinic for an office visit (E/M code). During the visit, the provider performs a minor surgical procedure that is normally a part of the office visit. However, the documentation shows that the E/M service was significant and separately identifiable from the procedure. What codes and modifiers should be used?',
+            cpt: '99213',
+            modifier: '25',
+            feedback: 'Correct! Modifier 25 is used to indicate that a significant, separately identifiable E/M service was performed on the same day as a minor surgical procedure. The CPT code would be the appropriate E/M code for the visit.'
+        },
+        {
+            title: 'Scenario 2: Distinct Procedural Service',
+            details: 'A patient has a mole removed from their left arm (CPT 17000). During the same visit, they have another, unrelated mole removed from their right leg (CPT 17000). The two procedures are distinct and separate from each other. What codes and modifiers should be used?',
+            cpt: '17000',
+            modifier: '59',
+            feedback: 'Correct! Modifier 59 is used to identify a distinct procedural service. Since the two mole removals were on different, separate sites (arm and leg), this modifier is appropriate to show they are not duplicate services.'
+        },
+        {
+            title: 'Scenario 3: Discontinued Procedure',
+            details: 'A provider begins a procedure (CPT 43235, EGD) but must discontinue it due to equipment malfunction before it is completed. Anesthesia was administered and the scope was inserted, but the procedure could not be finished. What codes and modifiers should be used to bill for the work that was done?',
+            cpt: '43235',
+            modifier: '53',
+            feedback: 'Correct! Modifier 53 is used for discontinued physician services. It indicates that the procedure was started but was stopped due to extenuating circumstances or for the patient\'s well-being.'
+        }
+    ];
+
+    const matchingGameData = [
+        { term: 'EOB', definition: 'Explanation of Benefits' },
+        { term: 'A/R', definition: 'Accounts Receivable' },
+        { term: 'CPT', definition: 'Current Procedural Terminology' },
+        { term: 'ICD-10', definition: 'International Classification of Diseases, 10th Revision' },
+        { term: 'CMS', definition: 'Centers for Medicare & Medicaid Services' },
+        { term: 'HCPCS', definition: 'Healthcare Common Procedure Coding System' },
+        { term: 'RVU', definition: 'Relative Value Unit' },
+        { term: 'POS', definition: 'Place of Service' },
+        { term: 'PPO', definition: 'Preferred Provider Organization' },
+        { term: 'HMO', definition: 'Health Maintenance Organization' }
+    ];
+
+    const scrubberScenarios = [
+        {
+            title: 'Scenario 1: Medical Necessity Mismatch',
+            details: 'A patient is seen for a routine flu shot. The provider documented a diagnosis of "influenza" and billed with a CPT code for a vaccine administration. The claim was submitted with the following codes:',
+            claim: 'ICD-10: J11.1 (Influenza with pneumonia) \nCPT: 90471 (Immunization Administration)',
+            incorrectReason: 'The ICD-10 code (J11.1) is for a patient who already has influenza with complications, but the service provided (vaccine administration) is for prevention. This is a medical necessity mismatch.',
+            correctCodes: { icd: 'Z23', cpt: '90471', modifier: 'None' },
+            feedback: 'The correct ICD-10 code for a routine vaccination is Z23. The original diagnosis code (J11.1) implies the patient is already sick, which does not justify a preventive vaccination. This claim would be denied for lack of medical necessity.'
+        },
+        {
+            title: 'Scenario 2: Unbundling',
+            details: 'A patient undergoes a surgical procedure that includes a routine closure (suturing). The provider bills separately for both the surgery and the closure. The submitted claim includes these two codes:',
+            claim: 'CPT: 25000 (Excision of lesion on radius)\nCPT: 12001 (Simple repair of wound)',
+            incorrectReason: 'A simple wound closure is considered a part of the surgical procedure and should not be billed separately. This is a classic example of "unbundling."',
+            correctCodes: { icd: 'M79.5 (or another appropriate diagnosis)', cpt: '25000', modifier: 'None' },
+            feedback: 'The code for simple wound closure (12001) is bundled into the surgical procedure (25000). Billing for both is considered unbundling, which is a form of fraud. Only the code for the major procedure should be submitted.'
+        },
+        {
+            title: 'Scenario 3: Missing Modifier for Bilateral Procedure',
+            details: 'A patient has a procedure performed on both their left and right knees. The provider bills for the same procedure code twice, but forgets to add a modifier to indicate a bilateral procedure.',
+            claim: 'CPT: 27440 (Arthroplasty, knee) \nCPT: 27440 (Arthroplasty, knee)',
+            incorrectReason: 'Billing for the same procedure code twice without a modifier indicates a duplicate service. The payer will likely deny the second line item.',
+            correctCodes: { icd: 'M23.90', cpt: '27440', modifier: '50' },
+            feedback: 'Correct! The CPT code should be listed once with the -50 modifier to indicate a bilateral procedure. This is the correct way to bill for services performed on paired body parts.'
+        }
+    ];
+
+    const denialScenarios = [
+        {
+            title: 'Scenario 1: Lack of Prior Authorization',
+            details: 'You submitted a claim for a specialized MRI. It was denied with a **CO-23** reason code.',
+            options: [
+                'The patient has been seen too many times.',
+                'The service was performed by an unauthorized provider.',
+                'The patient is not eligible for this service.',
+                'The service requires a prior authorization that was not obtained.'
+            ],
+            correctInterpretation: 'The service requires a prior authorization that was not obtained.',
+            actionPlanKeywords: ['verify', 'prior authorization', 'appeal', 'retrospective authorization', 'patient responsibility', 'medical record']
+        },
+        {
+            title: 'Scenario 2: Service Exceeds Authorization',
+            details: 'You submitted a claim for 5 physical therapy sessions. The claim was denied with a **CO-109** reason code, and you know you had a prior authorization for the services.',
+            options: [
+                'The service was not documented.',
+                'The patient is no longer covered by this plan.',
+                'The services exceeded the number of authorized visits.',
+                'The claim was submitted to the wrong payer.'
+            ],
+            correctInterpretation: 'The services exceeded the number of authorized visits.',
+            actionPlanKeywords: ['review', 'authorization', 'appeal', 'medical necessity', 'document', 'payer policy']
+        },
+        {
+            title: 'Scenario 3: Missing or Invalid Documentation',
+            details: 'A claim for a consultation service (CPT 99244) was denied with a **CO-22** reason code.',
+            options: [
+                'Services were not medically necessary.',
+                'The patient\'s diagnosis code is invalid.',
+                'The claim lacks necessary documentation or a report.',
+                'The CPT code is for a service not covered by the plan.'
+            ],
+            correctInterpretation: 'The claim lacks necessary documentation or a report.',
+            actionPlanKeywords: ['review', 'documentation', 'submit', 'appeal', 'medical record', 'attestation']
+        }
+    ];
+
+    const soapScenarios = [
+        {
+            title: 'Scenario 1: Sinus Infection',
+            description: 'Extract the codes for a patient presenting with a sinus infection and fever.',
+            soapNote: `
+Date: 08/25/2025
+Subjective: Patient is a 35-year-old male presenting with a 3-day history of nasal congestion, facial pain, and a low-grade fever. He reports green discharge from his nose and a cough that started yesterday. He denies shortness of breath or headache.
+Objective: Vitals: BP 120/80, T 99.8°F. Exam: Nasal mucosa is swollen and erythematous with mucopurulent discharge. Sinuses are tender to palpation. Pharynx is mildly inflamed.
+Assessment: Acute sinusitis due to streptococcus.
+Plan: 1. Prescribe Amoxicillin 500mg. 2. Advise saline nasal spray and warm compresses. 3. Follow up in 7 days or sooner if symptoms worsen. 4. Code and bill today's visit.
+            `,
+            correctExtraction: {
+                chiefComplaint: 'nasal congestion, facial pain, low-grade fever',
+                icd: 'J01.00',
+                cpt: '99213',
+                modifier: 'None'
+            }
+        },
+        {
+            title: 'Scenario 2: Sprained Ankle',
+            description: 'Extract the codes and information for a patient seen for an ankle injury.',
+            soapNote: `
+Date: 08/26/2025
+Subjective: Patient is a 22-year-old female who twisted her right ankle while playing basketball. She reports immediate pain and swelling. She is limping and unable to put full weight on it. She denies any previous ankle injuries.
+Objective: Exam: Right ankle is swollen with ecchymosis noted laterally. Tenderness to palpation over the anterior talofibular ligament. Patient has decreased range of motion due to pain. No deformity noted. X-ray of the ankle was performed in the clinic and shows no fracture.
+Assessment: Sprain of the lateral collateral ligament of the right ankle.
+Plan: 1. Apply an ankle brace. 2. Prescribe NSAIDs for pain. 3. R.I.C.E. instructions (Rest, Ice, Compression, Elevation). 4. Follow up in 2 weeks. 5. Code and bill today's E/M and x-ray services.
+            `,
+            correctExtraction: {
+                chiefComplaint: 'twisted right ankle, pain, swelling',
+                icd: 'S93.401A',
+                cpt: '99213, 73600',
+                modifier: 'RT'
+            }
+        },
+        {
+            title: 'Scenario 3: Laceration Repair',
+            description: 'Extract the codes for a patient who had a laceration repaired.',
+            soapNote: `
+Date: 08/27/2025
+Subjective: Patient is a 15-year-old male who sustained a cut to his left forearm while climbing a fence. He reports bleeding and pain.
+Objective: Exam: 3.5 cm simple laceration on the left forearm. No foreign bodies noted. Bleeding is minimal and controlled.
+Assessment: Laceration of forearm, simple.
+Plan: 1. Irrigate and prep the wound. 2. Close with sutures. 3. Apply sterile dressing. 4. Advise to keep the wound clean and dry. 5. Follow up in 10 days for suture removal.
+            `,
+            correctExtraction: {
+                chiefComplaint: 'cut on left forearm',
+                icd: 'S51.812A',
+                cpt: '12002',
+                modifier: 'None'
+            }
+        }
+    ];
+
+    const billingWalkthroughSteps = [
+        {
+            title: 'Step 1: Patient Registration & Eligibility',
+            instructions: 'The first step is to collect patient demographics and insurance information. Verify the patient\'s eligibility and benefits, including copay, deductible, and coinsurance, before the appointment.'
+        },
+        {
+            title: 'Step 2: Encounter Documentation',
+            instructions: 'The healthcare provider documents the patient\'s visit. This includes the chief complaint, medical history, physical exam, and the provider\'s assessment and plan.'
+        },
+        {
+            title: 'Step 3: Medical Coding',
+            instructions: 'The encounter documentation is reviewed and translated into standardized medical codes. This includes assigning ICD-10 codes for diagnoses and CPT/HCPCS codes for services and procedures.'
+        },
+        {
+            title: 'Step 4: Charge Entry',
+            instructions: 'The medical codes are entered into the EHR system along with the corresponding charges for each service. This creates a detailed record of what the patient owes.'
+        },
+        {
+            title: 'Step 5: Claim Generation & Submission',
+            instructions: 'A claim form (e.g., CMS-1500) is generated from the charge entry data. The claim is then sent to the insurance payer, either electronically or on paper.'
+        },
+        {
+            title: 'Step 6: Payer Adjudication',
+            instructions: 'The insurance company reviews the claim to determine if the services are medically necessary and if the patient is eligible for coverage. The claim is either paid, denied, or sent back for more information.'
+        },
+        {
+            title: 'Step 7: Payment Posting',
+            instructions: 'The payment from the insurance company is posted to the patient\'s account. Any remaining balance is either transferred to the patient or a secondary payer.'
+        },
+        {
+            title: 'Step 8: Patient Billing & A/R Follow-up',
+            instructions: 'A bill is sent to the patient for any remaining balance (copays, deductibles, coinsurance). If the claim was denied, the billing team will work on resolving the denial (A/R follow-up).'
+        }
+    ];
+
+    const paWalkthroughSteps = [
+        {
+            title: 'Step 1: Determine PA Necessity',
+            instructions: 'Before the service, confirm with the patient\'s insurance provider if the CPT code for the planned procedure or medication requires prior authorization. This prevents a denial later on.'
+        },
+        {
+            title: 'Step 2: Gather Required Documentation',
+            instructions: 'Collect all necessary clinical documentation, including the patient\'s medical history, lab results, and a letter of medical necessity from the physician. This documentation supports the request.'
+        },
+        {
+            title: 'Step 3: Submit the PA Request',
+            instructions: 'Submit the prior authorization request to the insurance payer via their online portal, phone, or fax, along with all the supporting documentation.'
+        },
+        {
+            title: 'Step 4: Await Payer Decision',
+            instructions: 'Wait for the insurance company to review the request. This can take anywhere from a few hours to several days, depending on the payer and the urgency of the service.'
+        },
+        {
+            title: 'Step 5: Receive and Track the PA',
+            instructions: 'Once the payer approves or denies the request, you will receive a decision with a unique prior authorization number. This number must be included on the claim form when the service is eventually billed.'
+        }
+    ];
+
+    const terminologyPairs = [
+        { key: 'A/R', value: 'Accounts Receivable' },
+        { key: 'CPT', value: 'Current Procedural Terminology' },
+        { key: 'EOB', value: 'Explanation of Benefits' },
+        { key: 'EMR', value: 'Electronic Medical Record' },
+        { key: 'HMO', value: 'Health Maintenance Organization' },
+        { key: 'ICD', value: 'International Classification of Diseases' },
+        { key: 'NDC', value: 'National Drug Code' },
+        { key: 'POS', value: 'Place of Service' },
+        { key: 'PPO', value: 'Preferred Provider Organization' },
+        { key: 'RVU', value: 'Relative Value Unit' },
+        { key: 'UB-04', value: 'Uniform Bill' },
+        { key: 'Dx', value: 'Diagnosis' },
+        { key: 'Px', value: 'Procedure' },
+        { key: 'COB', value: 'Coordination of Benefits' },
+        { key: 'MAC', value: 'Medicare Administrative Contractor' },
+    ];
+
+
+    // --------------------------------------------------------------------------------------
+    // --- Global Variables and Utility Functions ---
+    // --------------------------------------------------------------------------------------
+
+    let patientData = {};
+    let currentQuiz = null;
+    let quizIndex = 0;
+    let quizScore = 0;
+    let currentBalanceScenario = null;
+    let currentModifierScenario = null;
+    let currentScrubberScenario = null;
+    let currentDenialScenario = null;
+    let currentSoapScenario = null;
+    let walkthroughStep = 0;
+    let paWalkthroughStep = 0;
+
+    let flippedCards = [];
+    let matchedCards = [];
+
+    function showMessage(text, type) {
+        const messageBox = document.getElementById('messageBox');
+        messageBox.textContent = text;
+        messageBox.className = `message-box ${type}`;
+        messageBox.style.display = 'block';
+        setTimeout(() => {
+            messageBox.style.display = 'none';
+        }, 5000);
+    }
+
+    function generateUniqueId() {
+        return '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function normalizeText(text) {
+        if (text === null || text === undefined) return '';
+        return text.toString().toLowerCase().trim().replace(/[\s\-,.()]/g, '');
+    }
+
+    // --------------------------------------------------------------------------------------
+    // --- Patient Registration & Claim Generation Logic ---
+    // --------------------------------------------------------------------------------------
+
+    document.getElementById('registerPatientBtn').addEventListener('click', () => {
+        const name = document.getElementById('patientName').value.trim();
+        const dob = document.getElementById('patientDOB').value;
+        const insuranceID = document.getElementById('insuranceID').value.trim();
+
+        if (name && dob && insuranceID) {
+            patientData = {
+                name,
+                dob,
+                insuranceID,
+                id: generateUniqueId()
+            };
+            localStorage.setItem('patientRecord', JSON.stringify(patientData));
+            showMessage('Patient registered and saved successfully! You can now document the encounter.', 'success');
+        } else {
+            showMessage('Please complete all patient registration fields.', 'error');
+        }
+    });
+
+    function createItemInput(type) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'flex items-center gap-2';
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = `${type}-code flex-grow-1 focus:ring-green-500 focus:border-green-500`;
+        input.name = `${type}Code`;
+        input.placeholder = type === 'diagnosis' ? 'e.g., J02.9' : 'e.g., 99213';
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'btn-secondary remove-item-btn';
+        removeBtn.textContent = 'Remove';
+        removeBtn.addEventListener('click', () => wrapper.remove());
+        wrapper.appendChild(input);
+        wrapper.appendChild(removeBtn);
+        return wrapper;
+    }
+
+    document.getElementById('addDiagnosisBtn').addEventListener('click', () => {
+        const list = document.getElementById('diagnosisList');
+        list.appendChild(createItemInput('diagnosis'));
+    });
+
+    document.getElementById('addProcedureBtn').addEventListener('click', () => {
+        const list = document.getElementById('procedureList');
+        list.appendChild(createItemInput('procedure'));
+    });
+
+    function createServiceInput() {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'grid grid-cols-1 md:grid-cols-3 gap-2 service-item';
+        const descInput = document.createElement('input');
+        descInput.type = 'text';
+        descInput.className = 'service-description col-span-1 md:col-span-1 focus:ring-purple-500 focus:border-purple-500';
+        descInput.name = 'serviceDescription';
+        descInput.placeholder = 'Service Description';
+        const cptInput = document.createElement('input');
+        cptInput.type = 'text';
+        cptInput.className = 'service-cpt-code col-span-1 md:col-span-1 focus:ring-purple-500 focus:border-purple-500';
+        cptInput.name = 'serviceCptCode';
+        cptInput.placeholder = 'CPT Code';
+        const priceWrapper = document.createElement('div');
+        priceWrapper.className = 'flex gap-2 col-span-1 md:col-span-1';
+        const priceInput = document.createElement('input');
+        priceInput.type = 'number';
+        priceInput.className = 'service-price flex-grow-1 focus:ring-purple-500 focus:border-purple-500';
+        priceInput.name = 'servicePrice';
+        priceInput.placeholder = 'Price ($)';
+        priceInput.min = '0';
+        priceInput.step = '0.01';
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'btn-secondary remove-item-btn';
+        removeBtn.textContent = 'Remove';
+        removeBtn.addEventListener('click', () => wrapper.remove());
+        priceWrapper.appendChild(priceInput);
+        priceWrapper.appendChild(removeBtn);
+        wrapper.appendChild(descInput);
+        wrapper.appendChild(cptInput);
+        wrapper.appendChild(priceWrapper);
+        return wrapper;
+    }
+
+    document.getElementById('addChargeBtn').addEventListener('click', () => {
+        const list = document.getElementById('chargeList');
+        list.appendChild(createServiceInput());
+    });
+
+    document.getElementById('generateClaimBtn').addEventListener('click', () => {
+        const chiefComplaint = document.getElementById('chiefComplaint').value.trim();
+        const encounterDate = document.getElementById('encounterDate').value;
+        const diagnosisCodes = Array.from(document.querySelectorAll('.diagnosis-code')).map(input => input.value.trim()).filter(code => code);
+        const procedureCodes = Array.from(document.querySelectorAll('.procedure-code')).map(input => input.value.trim()).filter(code => code);
+        const services = Array.from(document.querySelectorAll('.service-item')).map(item => {
+            return {
+                description: item.querySelector('.service-description').value.trim(),
+                cpt: item.querySelector('.service-cpt-code').value.trim(),
+                price: parseFloat(item.querySelector('.service-price').value) || 0
+            };
+        }).filter(service => service.cpt && service.price > 0);
+
+        if (!patientData.id || !encounterDate || diagnosisCodes.length === 0 || procedureCodes.length === 0 || services.length === 0) {
+            showMessage('Please complete all sections to generate a claim.', 'error');
+            return;
+        }
+
+        const totalCharges = services.reduce((sum, service) => sum + service.price, 0).toFixed(2);
+        
+        const claimOutput = `
+PATIENT INFORMATION
+-------------------
+Patient Name: ${patientData.name}
+Patient DOB: ${patientData.dob}
+Insurance ID: ${patientData.insuranceID}
+Claim ID: ${generateUniqueId()}
+            
+ENCOUNTER DETAILS
+-------------------
+Encounter Date: ${encounterDate}
+Chief Complaint: ${chiefComplaint}
+Diagnoses (ICD-10): ${diagnosisCodes.join(', ')}
+Procedures (CPT/HCPCS): ${procedureCodes.join(', ')}
+            
+SERVICES RENDERED
+-------------------
+${services.map(s => `${s.cpt}: ${s.description} ($${s.price.toFixed(2)})`).join('\n            ')}
+            
+FINANCIALS
+-------------------
+Total Billed: $${totalCharges}
+        `;
+
+        document.getElementById('claimOutput').textContent = claimOutput;
+        showMessage('Simulated claim generated successfully!', 'success');
+    });
+
+    document.getElementById('clearAllBtn').addEventListener('click', () => {
+        document.getElementById('patientName').value = '';
+        document.getElementById('patientDOB').value = '';
+        document.getElementById('insuranceID').value = '';
+        document.getElementById('encounterDate').value = '';
+        document.getElementById('chiefComplaint').value = '';
+        
+        const diagnosisList = document.getElementById('diagnosisList');
+        while (diagnosisList.children.length > 1) { diagnosisList.removeChild(diagnosisList.lastChild); }
+        diagnosisList.querySelector('input').value = '';
+
+        const procedureList = document.getElementById('procedureList');
+        while (procedureList.children.length > 1) { procedureList.removeChild(procedureList.lastChild); }
+        procedureList.querySelector('input').value = '';
+
+        const chargeList = document.getElementById('chargeList');
+        while (chargeList.children.length > 1) { chargeList.removeChild(chargeList.lastChild); }
+        chargeList.querySelector('.service-description').value = '';
+        chargeList.querySelector('.service-cpt-code').value = '';
+        chargeList.querySelector('.service-price').value = '';
+
+        document.getElementById('claimOutput').textContent = 'Your simulated claim details will appear here after generation.';
+        patientData = {};
+        localStorage.removeItem('patientRecord');
+        showMessage('All data has been cleared.', 'success');
+    });
+    
+    // Auto-load patient data on page load
+    (function loadPatientData() {
+        const savedData = localStorage.getItem('patientRecord');
+        if (savedData) {
+            patientData = JSON.parse(savedData);
+            document.getElementById('patientName').value = patientData.name;
+            document.getElementById('patientDOB').value = patientData.dob;
+            document.getElementById('insuranceID').value = patientData.insuranceID;
+            showMessage('Patient data loaded successfully!', 'success');
+        }
+    })();
+
+    // --------------------------------------------------------------------------------------
+    // --- Walkthroughs Logic ---
+    // --------------------------------------------------------------------------------------
+
+    const billingWalkthroughContent = document.getElementById('billingWalkthroughContent');
+    const walkthroughStepTitle = document.getElementById('walkthroughStepTitle');
+    const walkthroughStepInstructions = document.getElementById('walkthroughStepInstructions');
+    const startBillingWalkthroughBtn = document.getElementById('startBillingWalkthroughBtn');
+    const nextBillingWalkthroughBtn = document.getElementById('nextBillingWalkthroughBtn');
+    const resetBillingWalkthroughBtn = document.getElementById('resetBillingWalkthroughBtn');
+
+    function displayWalkthroughStep(step) {
+        if (step < billingWalkthroughSteps.length) {
+            walkthroughStepTitle.textContent = billingWalkthroughSteps[step].title;
+            walkthroughStepInstructions.textContent = billingWalkthroughSteps[step].instructions;
+            billingWalkthroughContent.classList.remove('hidden');
+            nextBillingWalkthroughBtn.classList.remove('hidden');
+            resetBillingWalkthroughBtn.classList.remove('hidden');
+            startBillingWalkthroughBtn.classList.add('hidden');
+        } else {
+            walkthroughStepTitle.textContent = 'Walkthrough Complete!';
+            walkthroughStepInstructions.textContent = 'You have successfully completed the medical billing revenue cycle walkthrough. Click "Reset" to start over.';
+            nextBillingWalkthroughBtn.classList.add('hidden');
+        }
+    }
+
+    startBillingWalkthroughBtn.addEventListener('click', () => {
+        walkthroughStep = 0;
+        displayWalkthroughStep(walkthroughStep);
+    });
+
+    nextBillingWalkthroughBtn.addEventListener('click', () => {
+        walkthroughStep++;
+        displayWalkthroughStep(walkthroughStep);
+    });
+
+    resetBillingWalkthroughBtn.addEventListener('click', () => {
+        walkthroughStep = 0;
+        billingWalkthroughContent.classList.add('hidden');
+        startBillingWalkthroughBtn.classList.remove('hidden');
+        nextBillingWalkthroughBtn.classList.add('hidden');
+        resetBillingWalkthroughBtn.classList.add('hidden');
+        showMessage('Walkthrough reset.', 'success');
+    });
+
+    const paWalkthroughContent = document.getElementById('paWalkthroughContent');
+    const paWalkthroughStepTitle = document.getElementById('paWalkthroughStepTitle');
+    const paWalkthroughStepInstructions = document.getElementById('paWalkthroughStepInstructions');
+    const startPaWalkthroughBtn = document.getElementById('startPaWalkthroughBtn');
+    const nextPaWalkthroughBtn = document.getElementById('nextPaWalkthroughBtn');
+    const resetPaWalkthroughBtn = document.getElementById('resetPaWalkthroughBtn');
+
+    function displayPaWalkthroughStep(step) {
+        if (step < paWalkthroughSteps.length) {
+            paWalkthroughStepTitle.textContent = paWalkthroughSteps[step].title;
+            paWalkthroughStepInstructions.textContent = paWalkthroughSteps[step].instructions;
+            paWalkthroughContent.classList.remove('hidden');
+            nextPaWalkthroughBtn.classList.remove('hidden');
+            resetPaWalkthroughBtn.classList.remove('hidden');
+            startPaWalkthroughBtn.classList.add('hidden');
+        } else {
+            paWalkthroughStepTitle.textContent = 'PA Walkthrough Complete!';
+            paWalkthroughStepInstructions.textContent = 'You have successfully completed the prior authorization walkthrough. Click "Reset" to start over.';
+            nextPaWalkthroughBtn.classList.add('hidden');
+        }
+    }
+
+    startPaWalkthroughBtn.addEventListener('click', () => {
+        paWalkthroughStep = 0;
+        displayPaWalkthroughStep(paWalkthroughStep);
+    });
+
+    nextPaWalkthroughBtn.addEventListener('click', () => {
+        paWalkthroughStep++;
+        displayPaWalkthroughStep(paWalkthroughStep);
+    });
+
+    resetPaWalkthroughBtn.addEventListener('click', () => {
+        paWalkthroughStep = 0;
+        paWalkthroughContent.classList.add('hidden');
+        startPaWalkthroughBtn.classList.remove('hidden');
+        nextPaWalkthroughBtn.classList.add('hidden');
+        resetPaWalkthroughBtn.classList.add('hidden');
+        showMessage('PA walkthrough reset.', 'success');
+    });
+
+    // --------------------------------------------------------------------------------------
+    // --- Quiz Logic ---
+    // --------------------------------------------------------------------------------------
+
+    const quizContent = document.getElementById('quizContent');
+    const quizQuestionTitle = document.getElementById('quizQuestionTitle');
+    const quizOptionsDiv = document.getElementById('quizOptions');
+    const quizFeedbackDiv = document.getElementById('quizFeedback');
+    const submitAnswerBtn = document.getElementById('submitAnswerBtn');
+    const nextQuestionBtn = document.getElementById('nextQuestionBtn');
+    const resetQuizBtn = document.getElementById('resetQuizBtn');
+
+    function loadQuiz(quizName) {
+        currentQuiz = shuffleArray(quizzes[quizName]);
+        quizIndex = 0;
+        quizScore = 0;
+        quizContent.classList.remove('hidden');
+        resetQuizBtn.classList.remove('hidden');
+        submitAnswerBtn.classList.remove('hidden');
+        nextQuestionBtn.classList.add('hidden');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if (quizIndex < currentQuiz.length) {
+            const questionData = currentQuiz[quizIndex];
+            quizQuestionTitle.textContent = `Question ${quizIndex + 1}: ${questionData.question}`;
+            quizOptionsDiv.innerHTML = '';
+            shuffleArray(questionData.options).forEach(option => {
+                const label = document.createElement('label');
+                label.className = 'quiz-option';
+                label.innerHTML = `<input type="radio" name="quizOption" value="${option}"> ${option}`;
+                quizOptionsDiv.appendChild(label);
+            });
+            quizFeedbackDiv.innerHTML = '<p class="text-gray-500 quiz-feedback-text">Your feedback will appear here.</p>';
+        } else {
+            quizQuestionTitle.textContent = `Quiz Complete! Your score is ${quizScore} out of ${currentQuiz.length}.`;
+            quizOptionsDiv.innerHTML = '';
+            quizFeedbackDiv.innerHTML = `<p class="quiz-feedback-text font-bold">You've finished the quiz! Click "Reset" to try another.</p>`;
+            submitAnswerBtn.classList.add('hidden');
+            nextQuestionBtn.classList.add('hidden');
+        }
+    }
+
+    document.querySelectorAll('.btn-primary[id^="quiz"]').forEach(button => {
+        button.addEventListener('click', (e) => {
+            const quizName = e.target.textContent.trim();
+            loadQuiz(quizName);
+        });
+    });
+
+    submitAnswerBtn.addEventListener('click', () => {
+        const selectedOption = document.querySelector('input[name="quizOption"]:checked');
+        if (!selectedOption) {
+            showMessage('Please select an answer.', 'error');
+            return;
+        }
+        const selectedAnswer = selectedOption.value;
+        const correctAnswer = currentQuiz[quizIndex].answer;
+        const feedbackText = currentQuiz[quizIndex].feedback;
+
+        if (selectedAnswer === correctAnswer) {
+            quizScore++;
+            quizFeedbackDiv.innerHTML = `<p class="quiz-feedback-text text-green-700 font-bold">Correct! </p><p class="quiz-feedback-text mt-2">${feedbackText}</p>`;
+        } else {
+            quizFeedbackDiv.innerHTML = `<p class="quiz-feedback-text text-red-700 font-bold">Incorrect. The correct answer was: ${correctAnswer}</p><p class="quiz-feedback-text mt-2">${feedbackText}</p>`;
+        }
+        
+        submitAnswerBtn.classList.add('hidden');
+        nextQuestionBtn.classList.remove('hidden');
+    });
+
+    nextQuestionBtn.addEventListener('click', () => {
+        quizIndex++;
+        loadQuestion();
+        nextQuestionBtn.classList.add('hidden');
+        submitAnswerBtn.classList.remove('hidden');
+    });
+
+    resetQuizBtn.addEventListener('click', () => {
+        quizContent.classList.add('hidden');
+        quizIndex = 0;
+        quizScore = 0;
+        currentQuiz = null;
+        showMessage('Quiz reset.', 'success');
+    });
+
+    // --------------------------------------------------------------------------------------
+    // --- Patient Balance Calculator Logic ---
+    // --------------------------------------------------------------------------------------
+
+    const balanceCalculatorContent = document.getElementById('balanceCalculatorContent');
+    const balanceScenarioTitle = document.getElementById('balanceScenarioTitle');
+    const balanceScenarioDetails = document.getElementById('balanceScenarioDetails');
+    const userCopayInput = document.getElementById('userCopay');
+    const userDeductibleInput = document.getElementById('userDeductibleInput');
+    const userCoinsuranceInput = document.getElementById('userCoinsurance');
+    const userTotalBalanceInput = document.getElementById('userTotalBalance');
+    const balanceFeedbackDiv = document.getElementById('balanceFeedback');
+    const loadBalanceScenarioBtn = document.getElementById('loadBalanceScenarioBtn');
+    const checkBalanceBtn = document.getElementById('checkBalanceBtn');
+    const resetBalanceBtn = document.getElementById('resetBalanceBtn');
+
+    function loadBalanceScenario() {
+        currentBalanceScenario = balanceScenarios[Math.floor(Math.random() * balanceScenarios.length)];
+        balanceCalculatorContent.classList.remove('hidden');
+        balanceScenarioTitle.textContent = currentBalanceScenario.title;
+        balanceScenarioDetails.innerHTML = currentBalanceScenario.details;
+        
+        userCopayInput.value = '';
+        userDeductibleInput.value = '';
+        userCoinsuranceInput.value = '';
+        userTotalBalanceInput.value = '';
+        balanceFeedbackDiv.innerHTML = '<p class="text-gray-500 balance-feedback-text">Feedback on your calculation will appear here.</p>';
+        
+        checkBalanceBtn.classList.remove('hidden');
+        resetBalanceBtn.classList.remove('hidden');
+    }
+
+    loadBalanceScenarioBtn.addEventListener('click', loadBalanceScenario);
+
+    checkBalanceBtn.addEventListener('click', () => {
+        const userCopay = parseFloat(userCopayInput.value) || 0;
+        const userDeductible = parseFloat(userDeductibleInput.value) || 0;
+        const userCoinsurance = parseFloat(userCoinsuranceInput.value) || 0;
+        const userTotalBalance = parseFloat(userTotalBalanceInput.value) || 0;
+        
+        const correctAnswers = currentBalanceScenario.answers;
+        let feedback = '';
+        let isCorrect = true;
+
+        if (userCopay !== correctAnswers.copay) { feedback += `<p>• Copay is incorrect. Should be $${correctAnswers.copay.toFixed(2)}.</p>`; isCorrect = false; }
+        if (userDeductible !== correctAnswers.deductible) { feedback += `<p>• Deductible applied is incorrect. Should be $${correctAnswers.deductible.toFixed(2)}.</p>`; isCorrect = false; }
+        if (userCoinsurance !== correctAnswers.coinsurance) { feedback += `<p>• Coinsurance is incorrect. Should be $${correctAnswers.coinsurance.toFixed(2)}.</p>`; isCorrect = false; }
+        if (userTotalBalance !== correctAnswers.total) { feedback += `<p>• Total patient balance is incorrect. Should be $${correctAnswers.total.toFixed(2)}.</p>`; isCorrect = false; }
+
+        if (isCorrect) {
+            balanceFeedbackDiv.innerHTML = '<p class="text-green-700 font-bold">All calculations are correct! Great job!</p>';
+        } else {
+            balanceFeedbackDiv.innerHTML = `<p class="text-red-700 font-bold">Something is incorrect.</p>${feedback}`;
+        }
+    });
+
+    resetBalanceBtn.addEventListener('click', () => {
+        balanceCalculatorContent.classList.add('hidden');
+        showMessage('Scenario reset.', 'success');
+    });
+
+    // --------------------------------------------------------------------------------------
+    // --- Advanced Modifier Application Challenge Logic ---
+    // --------------------------------------------------------------------------------------
+
+    const modifierChallengeContent = document.getElementById('modifierChallengeContent');
+    const modifierScenarioTitle = document.getElementById('modifierScenarioTitle');
+    const modifierScenarioDetails = document.getElementById('modifierScenarioDetails');
+    const userModifierCPTInput = document.getElementById('userModifierCPT');
+    const userModifierInput = document.getElementById('userModifier');
+    const modifierFeedbackDiv = document.getElementById('modifierFeedback');
+    const loadModifierScenarioBtn = document.getElementById('loadModifierScenarioBtn');
+    const checkModifierBtn = document.getElementById('checkModifierBtn');
+    const resetModifierBtn = document.getElementById('resetModifierBtn');
+
+    function loadModifierScenario() {
+        currentModifierScenario = modifierScenarios[Math.floor(Math.random() * modifierScenarios.length)];
+        modifierChallengeContent.classList.remove('hidden');
+        modifierScenarioTitle.textContent = currentModifierScenario.title;
+        modifierScenarioDetails.textContent = currentModifierScenario.details;
+        
+        userModifierCPTInput.value = '';
+        userModifierInput.value = '';
+        modifierFeedbackDiv.innerHTML = '<p class="text-gray-500 modifier-feedback-text">Feedback on your modifier application will appear here.</p>';
+        
+        checkModifierBtn.classList.remove('hidden');
+        resetModifierBtn.classList.remove('hidden');
+    }
+
+    loadModifierScenarioBtn.addEventListener('click', loadModifierScenario);
+
+    checkModifierBtn.addEventListener('click', () => {
+        const userCPT = normalizeText(userModifierCPTInput.value);
+        const userModifier = normalizeText(userModifierInput.value);
+        
+        const correctCPT = normalizeText(currentModifierScenario.cpt);
+        const correctModifier = normalizeText(currentModifierScenario.modifier);
+        
+        if (userCPT === correctCPT && userModifier === correctModifier) {
+            modifierFeedbackDiv.innerHTML = `<p class="text-green-700 font-bold">Correct! </p><p class="modifier-feedback-text mt-2">${currentModifierScenario.feedback}</p>`;
+        } else {
+            let feedback = `<p class="text-red-700 font-bold">Incorrect. Please try again.</p>`;
+            if (userCPT !== correctCPT) { feedback += `<p class="text-sm mt-2">The CPT code is incorrect. It should be: <span class="font-bold">${currentModifierScenario.cpt}</span></p>`; }
+            if (userModifier !== correctModifier) { feedback += `<p class="text-sm">The modifier is incorrect. It should be: <span class="font-bold">${currentModifierScenario.modifier}</span></p>`; }
+            modifierFeedbackDiv.innerHTML = feedback;
+        }
+    });
+
+    resetModifierBtn.addEventListener('click', () => {
+        modifierChallengeContent.classList.add('hidden');
+        showMessage('Scenario reset.', 'success');
+    });
+
+    // --------------------------------------------------------------------------------------
+    // --- Medical Terminology Matching Game Logic ---
+    // --------------------------------------------------------------------------------------
+
+    const matchingGameContent = document.getElementById('matchingGameContent');
+    const cardGrid = document.getElementById('cardGrid');
+    const startGameBtn = document.getElementById('startGameBtn');
+    const resetGameBtn = document.getElementById('resetGameBtn');
+    const gameMessage = document.getElementById('gameMessage');
+
+    function createCards() {
+        const cards = [];
+        const pairs = shuffleArray(terminologyPairs.slice(0, 8)); // Use a smaller set for a manageable game
+        pairs.forEach(pair => {
+            cards.push({ id: pair.term, text: pair.term, type: 'term', matched: false });
+            cards.push({ id: pair.term, text: pair.value, type: 'definition', matched: false });
+        });
+        return shuffleArray(cards);
+    }
+
+    function renderCards(cards) {
+        cardGrid.innerHTML = '';
+        cards.forEach(card => {
+            const cardElement = document.createElement('div');
+            cardElement.className = 'match-card';
+            cardElement.dataset.id = card.id;
+            cardElement.dataset.type = card.type;
+            cardElement.textContent = card.type === 'term' ? card.text : 'Click to Flip';
+            cardElement.addEventListener('click', () => handleCardClick(cardElement, card));
+            cardGrid.appendChild(cardElement);
+        });
+    }
+    
+    function handleCardClick(cardElement, card) {
+        if (flippedCards.length < 2 && !cardElement.classList.contains('flipped') && !card.matched) {
+            cardElement.classList.add('flipped');
+            cardElement.textContent = card.text;
+            flippedCards.push(cardElement);
+
+            if (flippedCards.length === 2) {
+                setTimeout(checkMatch, 1000);
+            }
+        }
+    }
+
+    function checkMatch() {
+        const [card1, card2] = flippedCards;
+        const id1 = card1.dataset.id;
+        const id2 = card2.dataset.id;
+        
+        if (id1 === id2) {
+            card1.classList.add('matched');
+            card2.classList.add('matched');
+            matchedCards.push(id1);
+            gameMessage.textContent = 'Match found!';
+            flippedCards = [];
+            if (matchedCards.length === terminologyPairs.slice(0, 8).length) {
+                gameMessage.textContent = 'You won! All pairs matched!';
+                resetGameBtn.classList.remove('hidden');
+            }
+        } else {
+            gameMessage.textContent = 'No match. Try again.';
+            setTimeout(() => {
+                card1.classList.remove('flipped');
+                card2.classList.remove('flipped');
+                card1.textContent = 'Click to Flip';
+                card2.textContent = 'Click to Flip';
+                flippedCards = [];
+            }, 1000);
+        }
+    }
+
+    startGameBtn.addEventListener('click', () => {
+        matchingGameContent.classList.remove('hidden');
+        startGameBtn.classList.add('hidden');
+        resetGameBtn.classList.add('hidden');
+        gameMessage.textContent = 'Find all matching pairs.';
+        flippedCards = [];
+        matchedCards = [];
+        const cards = createCards();
+        renderCards(cards);
+    });
+
+    resetGameBtn.addEventListener('click', () => {
+        matchingGameContent.classList.add('hidden');
+        startGameBtn.classList.remove('hidden');
+        resetGameBtn.classList.add('hidden');
+        gameMessage.textContent = '';
+        showMessage('Game reset.', 'success');
+    });
+
+    // --------------------------------------------------------------------------------------
+    // --- Claim Scrubber / Error Finder Challenge Logic ---
+    // --------------------------------------------------------------------------------------
+
+    const scrubberChallengeContent = document.getElementById('scrubberChallengeContent');
+    const scrubberScenarioTitle = document.getElementById('scrubberScenarioTitle');
+    const scrubberScenarioDetails = document.getElementById('scrubberScenarioDetails');
+    const presentedClaimOutput = document.getElementById('presentedClaimOutput');
+    const userScrubberICDInput = document.getElementById('userScrubberICD');
+    const userScrubberCPTInput = document.getElementById('userScrubberCPT');
+    const userScrubberModifierInput = document.getElementById('userScrubberModifier');
+    const scrubberFeedbackDiv = document.getElementById('scrubberFeedback');
+    const loadScrubberScenarioBtn = document.getElementById('loadScrubberScenarioBtn');
+    const checkScrubberBtn = document.getElementById('checkScrubberBtn');
+    const resetScrubberBtn = document.getElementById('resetScrubberBtn');
+
+    function loadScrubberScenario() {
+        currentScrubberScenario = scrubberScenarios[Math.floor(Math.random() * scrubberScenarios.length)];
+        scrubberChallengeContent.classList.remove('hidden');
+        scrubberScenarioTitle.textContent = currentScrubberScenario.title;
+        scrubberScenarioDetails.textContent = currentScrubberScenario.details;
+        presentedClaimOutput.textContent = currentScrubberScenario.claim;
+        
+        userScrubberICDInput.value = '';
+        userScrubberCPTInput.value = '';
+        userScrubberModifierInput.value = '';
+        scrubberFeedbackDiv.innerHTML = '<p class="text-gray-500 scrubber-feedback-text">Feedback on your corrections will appear here.</p>';
+        
+        checkScrubberBtn.classList.remove('hidden');
+        resetScrubberBtn.classList.remove('hidden');
+    }
+
+    loadScrubberScenarioBtn.addEventListener('click', loadScrubberScenario);
+
+    checkScrubberBtn.addEventListener('click', () => {
+        const userICD = normalizeText(userScrubberICDInput.value);
+        const userCPT = normalizeText(userScrubberCPTInput.value);
+        const userModifier = normalizeText(userScrubberModifierInput.value);
+        
+        const correctICD = normalizeText(currentScrubberScenario.correctCodes.icd);
+        const correctCPT = normalizeText(currentScrubberScenario.correctCodes.cpt);
+        const correctModifier = normalizeText(currentScrubberScenario.correctCodes.modifier);
+        
+        if (userICD === correctICD && userCPT === correctCPT && userModifier === correctModifier) {
+            scrubberFeedbackDiv.innerHTML = `<p class="text-green-700 font-bold">Excellent! All corrections are right.</p><p class="scrubber-feedback-text mt-2">${currentScrubberScenario.feedback}</p>`;
+        } else {
+            let feedback = `<p class="text-red-700 font-bold">One or more of your corrections is incorrect. Please review the scenario and try again.</p>`;
+            scrubberFeedbackDiv.innerHTML = feedback;
+        }
+    });
+
+    resetScrubberBtn.addEventListener('click', () => {
+        scrubberChallengeContent.classList.add('hidden');
+        showMessage('Scenario reset.', 'success');
+    });
+
+    // --------------------------------------------------------------------------------------
+    // --- Denial Code Interpreter & Action Plan Simulator Logic ---
+    // --------------------------------------------------------------------------------------
+
+    const denialChallengeContent = document.getElementById('denialChallengeContent');
+    const denialScenarioTitle = document.getElementById('denialScenarioTitle');
+    const denialScenarioDetails = document.getElementById('denialScenarioDetails');
+    const denialInterpretationOptionsDiv = document.getElementById('denialInterpretationOptions');
+    const userActionPlanInput = document.getElementById('userActionPlan');
+    const denialFeedbackDiv = document.getElementById('denialFeedback');
+    const loadDenialScenarioBtn = document.getElementById('loadDenialScenarioBtn');
+    const checkDenialBtn = document.getElementById('checkDenialBtn');
+    const resetDenialBtn = document.getElementById('resetDenialBtn');
+
+    function loadDenialScenario() {
+        currentDenialScenario = denialScenarios[Math.floor(Math.random() * denialScenarios.length)];
+        denialChallengeContent.classList.remove('hidden');
+        denialScenarioTitle.textContent = currentDenialScenario.title;
+        denialScenarioDetails.textContent = currentDenialScenario.details;
+        
+        denialInterpretationOptionsDiv.innerHTML = '';
+        shuffleArray(currentDenialScenario.options).forEach(option => {
+            const label = document.createElement('label');
+            label.className = 'denial-option';
+            label.innerHTML = `<input type="radio" name="denialOption" value="${option}"> ${option}`;
+            denialInterpretationOptionsDiv.appendChild(label);
+        });
+        
+        userActionPlanInput.value = '';
+        denialFeedbackDiv.innerHTML = '<p class="text-gray-500 denial-feedback-text">Feedback on your denial resolution plan will appear here.</p>';
+        
+        checkDenialBtn.classList.remove('hidden');
+        resetDenialBtn.classList.remove('hidden');
+    }
+
+    loadDenialScenarioBtn.addEventListener('click', loadDenialScenario);
+
+    checkDenialBtn.addEventListener('click', () => {
+        const selectedOption = document.querySelector('input[name="denialOption"]:checked');
+        const userActionPlan = userActionPlanInput.value.toLowerCase().trim();
+        
+        let isCorrectInterpretation = false;
+        if (selectedOption) {
+            isCorrectInterpretation = selectedOption.value === currentDenialScenario.correctInterpretation;
+        }
+
+        const actionPlanCorrect = currentDenialScenario.actionPlanKeywords.every(keyword => userActionPlan.includes(keyword));
+        
+        let feedbackMessage = '';
+        if (isCorrectInterpretation && actionPlanCorrect) {
+            feedbackMessage = '<p class="text-green-700 font-bold">Correct! You correctly interpreted the denial and provided a great action plan.</p>';
+        } else {
+            feedbackMessage = '<p class="text-red-700 font-bold">Incorrect. Please try again.</p>';
+            if (!isCorrectInterpretation) {
+                feedbackMessage += `<p class="text-sm mt-2">Your interpretation of the denial code was incorrect. The correct meaning is: <span class="font-bold">${currentDenialScenario.correctInterpretation}</span></p>`;
+            }
+            if (!actionPlanCorrect) {
+                feedbackMessage += `<p class="text-sm">Your action plan is missing key steps. Make sure to mention researching, appealing, and using documentation.</p>`;
+            }
+        }
+        denialFeedbackDiv.innerHTML = feedbackMessage;
+    });
+
+    resetDenialBtn.addEventListener('click', () => {
+        denialChallengeContent.classList.add('hidden');
+        showMessage('Scenario reset.', 'success');
+    });
+
+    // --------------------------------------------------------------------------------------
+    // --- SOAP Note Coder & Extractor Challenge Logic ---
+    // --------------------------------------------------------------------------------------
+
+    const soapChallengeContent = document.getElementById('soapChallengeContent');
+    const soapScenarioTitle = document.getElementById('soapScenarioTitle');
+    const soapScenarioDescription = document.getElementById('soapScenarioDescription');
+    const soapNoteDisplay = document.getElementById('soapNoteDisplay');
+    const userSoapChiefComplaintInput = document.getElementById('userSoapChiefComplaint');
+    const userSoapICDInput = document.getElementById('userSoapICD');
+    const userSoapCPTInput = document.getElementById('userSoapCPT');
+    const userSoapModifierInput = document.getElementById('userSoapModifier');
+    const soapFeedbackDiv = document.getElementById('soapFeedback');
+    const loadSoapScenarioBtn = document.getElementById('loadSoapScenarioBtn');
+    const checkSoapBtn = document.getElementById('checkSoapBtn');
+    const resetSoapBtn = document.getElementById('resetSoapBtn');
+
+    function loadSoapScenario() {
+        currentSoapScenario = soapScenarios[Math.floor(Math.random() * soapScenarios.length)];
+        soapChallengeContent.classList.remove('hidden');
+        soapScenarioTitle.textContent = currentSoapScenario.title;
+        soapScenarioDescription.textContent = currentSoapScenario.description;
+        soapNoteDisplay.textContent = currentSoapScenario.soapNote.trim();
+        
+        userSoapChiefComplaintInput.value = '';
+        userSoapICDInput.value = '';
+        userSoapCPTInput.value = '';
+        userSoapModifierInput.value = '';
+        soapFeedbackDiv.innerHTML = '<p class="text-gray-500 soap-feedback-text">Feedback on your extraction will appear here.</p>';
+        
+        checkSoapBtn.classList.remove('hidden');
+        resetSoapBtn.classList.remove('hidden');
+    }
+
+    loadSoapScenarioBtn.addEventListener('click', loadSoapScenario);
+
+    checkSoapBtn.addEventListener('click', () => {
+        const userComplaint = normalizeText(userSoapChiefComplaintInput.value);
+        const userICD = normalizeText(userSoapICDInput.value.replace(/\s/g, ''));
+        const userCPT = normalizeText(userSoapCPTInput.value.replace(/\s/g, ''));
+        const userModifier = normalizeText(userSoapModifierInput.value.replace(/\s/g, ''));
+        
+        const correctComplaint = normalizeText(currentSoapScenario.correctExtraction.chiefComplaint);
+        const correctICD = normalizeText(currentSoapScenario.correctExtraction.icd.replace(/\s/g, ''));
+        const correctCPT = normalizeText(currentSoapScenario.correctExtraction.cpt.replace(/\s/g, ''));
+        const correctModifier = normalizeText(currentSoapScenario.correctExtraction.modifier.replace(/\s/g, ''));
+        
+        let feedbackMessage = '';
+        let isCorrect = true;
+
+        if (userComplaint.includes(correctComplaint) || correctComplaint.includes(userComplaint)) {
+            feedbackMessage += '<p class="text-green-700 font-bold">• Chief Complaint: Correct.</p>';
+        } else {
+            feedbackMessage += '<p class="text-red-700 font-bold">• Chief Complaint: Incorrect.</p>';
+            isCorrect = false;
+        }
+
+        if (userICD === correctICD) {
+            feedbackMessage += '<p class="text-green-700 font-bold">• ICD-10 Code(s): Correct.</p>';
+        } else {
+            feedbackMessage += `<p class="text-red-700 font-bold">• ICD-10 Code(s): Incorrect. Should be ${currentSoapScenario.correctExtraction.icd}.</p>`;
+            isCorrect = false;
+        }
+
+        if (userCPT === correctCPT) {
+            feedbackMessage += '<p class="text-green-700 font-bold">• CPT Code(s): Correct.</p>';
+        } else {
+            feedbackMessage += `<p class="text-red-700 font-bold">• CPT Code(s): Incorrect. Should be ${currentSoapScenario.correctExtraction.cpt}.</p>`;
+            isCorrect = false;
+        }
+        
+        if (userModifier === correctModifier) {
+            feedbackMessage += '<p class="text-green-700 font-bold">• Modifier(s): Correct.</p>';
+        } else {
+            feedbackMessage += `<p class="text-red-700 font-bold">• Modifier(s): Incorrect. Should be ${currentSoapScenario.correctExtraction.modifier}.</p>`;
+            isCorrect = false;
+        }
+
+        if (isCorrect) {
+            soapFeedbackDiv.innerHTML = `<p class="text-green-700 font-bold">Excellent! All your extractions are correct.</p>`;
+        } else {
+            soapFeedbackDiv.innerHTML = `<p class="text-red-700 font-bold">One or more of your extractions is incorrect. Please review and try again.</p><div class="mt-4">${feedbackMessage}</div>`;
+        }
+    });
+
+    resetSoapBtn.addEventListener('click', () => {
+        soapChallengeContent.classList.add('hidden');
+        showMessage('Scenario reset.', 'success');
+    });
+
+</script>
 </body>
 </html>
+
 
 
