@@ -21,7 +21,7 @@
         input, select, textarea { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
         .btn { background-color: #3498db; color: #fff; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
         .btn:hover { background-color: #2980b9; }
-        #patient-list, #billing-list, #pa-list, #soap-notes-list, #denial-list { list-style-type: none; padding: 0; }
+        #patient-list, #billing-list, #pa-list, #soap-notes-list, #denial-list, .ar-list { list-style-type: none; padding: 0; }
         .patient-card, .bill-card, .pa-card, .soap-card, .denial-card { background-color: #f9f9f9; padding: 15px; border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 10px; }
         .patient-card h3, .bill-card h3, .pa-card h3, .soap-card h3, .denial-card h3 { margin-top: 0; }
         /* Calendar Styles */
@@ -52,6 +52,10 @@
         .code-match-option:hover { background-color: #ddd; }
         .code-match-option.correct { background-color: #d4edda; border-color: #c3e6cb; }
         .code-match-option.incorrect { background-color: #f8d7da; border-color: #f5c6cb; }
+        /* A/R Aging Styles */
+        .ar-category { margin-bottom: 30px; }
+        .ar-category h3 { margin-top: 0; color: #2c3e50; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+        .ar-item { background-color: #fff; padding: 10px; border: 1px solid #e0e0e0; border-radius: 4px; margin-bottom: 8px; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -71,6 +75,7 @@
         <button class="tab-button" onclick="showTab('soap')">SOAP Note</button>
         <button class="tab-button" onclick="showTab('denial')">Denial Management</button>
         <button class="tab-button" onclick="showTab('code-match')">Code Match</button>
+        <button class="tab-button" onclick="showTab('ar-aging')">A/R Aging</button>
     </div>
 
     <div id="dashboard" class="tab-content active">
@@ -348,6 +353,32 @@
             <button class="btn" onclick="nextCodeMatch()">Next</button>
         </div>
     </div>
+
+    <div id="ar-aging" class="tab-content">
+        <div class="section">
+            <h2>Accounts Receivable Aging Report</h2>
+            <p>Claims sorted by the number of days they are outstanding. Click "Refresh Report" to update.</p>
+            <button class="btn" onclick="renderARAging()">Refresh Report</button>
+            <div id="ar-aging-report">
+                <div class="ar-category">
+                    <h3>Current (0-30 days)</h3>
+                    <ul id="ar-list-30" class="ar-list"></ul>
+                </div>
+                <div class="ar-category">
+                    <h3>31-60 days</h3>
+                    <ul id="ar-list-60" class="ar-list"></ul>
+                </div>
+                <div class="ar-category">
+                    <h3>61-90 days</h3>
+                    <ul id="ar-list-90" class="ar-list"></ul>
+                </div>
+                <div class="ar-category">
+                    <h3>91+ days</h3>
+                    <ul id="ar-list-91" class="ar-list"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -419,6 +450,7 @@
         addClaim(patientId, serviceDate, cptCode, billingDiagnosis, insurancePayer, claimStatus);
         billingForm.reset();
         renderClaims();
+        renderARAging();
     });
 
     paForm.addEventListener('submit', function(e) {
@@ -735,6 +767,64 @@
         renderCodeMatch();
     }
 
+    function renderARAging() {
+        const today = new Date();
+        const buckets = {
+            'ar-list-30': [],
+            'ar-list-60': [],
+            'ar-list-90': [],
+            'ar-list-91': []
+        };
+
+        const pendingClaims = claims.filter(claim => claim.status === 'pending');
+
+        pendingClaims.forEach(claim => {
+            const serviceDate = new Date(claim.serviceDate);
+            const diffTime = Math.abs(today - serviceDate);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            let bucketId;
+            if (diffDays <= 30) {
+                bucketId = 'ar-list-30';
+            } else if (diffDays <= 60) {
+                bucketId = 'ar-list-60';
+            } else if (diffDays <= 90) {
+                bucketId = 'ar-list-90';
+            } else {
+                bucketId = 'ar-list-91';
+            }
+            
+            buckets[bucketId].push({ ...claim, daysOutstanding: diffDays });
+        });
+
+        document.getElementById('ar-list-30').innerHTML = '';
+        document.getElementById('ar-list-60').innerHTML = '';
+        document.getElementById('ar-list-90').innerHTML = '';
+        document.getElementById('ar-list-91').innerHTML = '';
+
+        for (const bucket in buckets) {
+            const list = document.getElementById(bucket);
+            if (buckets[bucket].length > 0) {
+                buckets[bucket].forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = 'ar-item';
+                    li.innerHTML = `
+                        <strong>Patient:</strong> ${item.patientName} | 
+                        <strong>CPT:</strong> ${item.cptCode} | 
+                        <strong>Payer:</strong> ${item.insurance} | 
+                        <strong>Days Outstanding:</strong> ${item.daysOutstanding}
+                    `;
+                    list.appendChild(li);
+                });
+            } else {
+                 const li = document.createElement('li');
+                 li.className = 'ar-item';
+                 li.textContent = 'No claims in this bucket.';
+                 list.appendChild(li);
+            }
+        }
+    }
+
     function changeMonth(direction) {
         currentMonth += direction;
         if (currentMonth > 11) {
@@ -768,6 +858,9 @@
         document.querySelector(`.tab-button[onclick="showTab('${tabId}')"]`).classList.add('active');
         if (tabId === 'code-match') {
             renderCodeMatch();
+        }
+        if (tabId === 'ar-aging') {
+            renderARAging();
         }
     }
 
