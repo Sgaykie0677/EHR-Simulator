@@ -322,3 +322,467 @@
                     <textarea id="denial-reason" rows="4" placeholder="E.g., Missing modifier, not medically necessary, etc." required></textarea>
                 </div>
                 <div class="form-group">
+                    <label for="appeal-status">Appeal Status:</label>
+                    <select id="appeal-status">
+                        <option value="pending">Pending Review</option>
+                        <option value="appealed">Appealed</option>
+                        <option value="overturned">Overturned (Payment Received)</option>
+                        <option value="denied-final">Final Denial</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn">Submit Denial</button>
+            </form>
+        </div>
+        <div class="section">
+            <h2>Denied Claims Tracker</h2>
+            <ul id="denial-list"></ul>
+        </div>
+    </div>
+
+    <div id="code-match" class="tab-content">
+        <div class="section">
+            <h2>Code Matching Practice</h2>
+            <p>Match the description to the correct code.</p>
+            <h3 id="code-match-term"></h3>
+            <div id="code-match-options" class="code-match-options"></div>
+            <button class="btn" onclick="nextCodeMatch()">Next</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const patientForm = document.getElementById('patient-form');
+    const patientList = document.getElementById('patient-list');
+    const billingForm = document.getElementById('billing-form');
+    const billingList = document.getElementById('billing-list');
+    const paForm = document.getElementById('pa-form');
+    const paList = document.getElementById('pa-list');
+    const appointmentForm = document.getElementById('appointment-form');
+    const calendarGrid = document.getElementById('calendar-grid');
+    const currentMonthYear = document.getElementById('current-month-year');
+    const quizForm = document.getElementById('quiz-form');
+    const quizResult = document.getElementById('quiz-result');
+    const balanceForm = document.getElementById('balance-form');
+    const calculatorResult = document.getElementById('calculator-result');
+    const soapForm = document.getElementById('soap-form');
+    const soapNotesList = document.getElementById('soap-notes-list');
+    const denialForm = document.getElementById('denial-form');
+    const denialList = document.getElementById('denial-list');
+    const codeMatchTerm = document.getElementById('code-match-term');
+    const codeMatchOptions = document.getElementById('code-match-options');
+
+    let patients = JSON.parse(localStorage.getItem('patients')) || [];
+    let claims = JSON.parse(localStorage.getItem('claims')) || [];
+    let authorizations = JSON.parse(localStorage.getItem('authorizations')) || [];
+    let appointments = JSON.parse(localStorage.getItem('appointments')) || [];
+    let soapNotes = JSON.parse(localStorage.getItem('soapNotes')) || [];
+    let denials = JSON.parse(localStorage.getItem('denials')) || [];
+    
+    let currentMonth = new Date().getMonth();
+    let currentYear = new Date().getFullYear();
+
+    const quizAnswers = {
+        q1: 'A',
+        q2: 'B',
+        q3: 'A'
+    };
+
+    const codeMatchData = [
+        { term: 'Office visit, new patient, level 3', code: '99203', options: ['99213', '99201', '99203', '99214'] },
+        { term: 'Influenza with pneumonia', code: 'J11.0', options: ['J10.0', 'J11.0', 'J18.9', 'J01.90'] },
+        { term: 'Routine venipuncture', code: '36415', options: ['36410', '99211', '88305', '36415'] },
+        { term: 'Type 2 diabetes mellitus with diabetic neuropathy', code: 'E11.40', options: ['E10.40', 'E11.40', 'E11.9', 'G63'] },
+        { term: 'Annual wellness visit, Medicare', code: 'G0439', options: ['G0439', '99385', '99204', '99490'] }
+    ];
+    let currentCodeMatchIndex = 0;
+
+    // Event listeners
+    patientForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const patientName = document.getElementById('patient-name').value;
+        const patientDob = document.getElementById('patient-dob').value;
+        const patientDiagnosis = document.getElementById('patient-diagnosis').value;
+        addPatient(patientName, patientDob, patientDiagnosis);
+        patientForm.reset();
+        renderPatients();
+        updatePatientDropdowns();
+    });
+
+    billingForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const patientId = document.getElementById('billing-patient').value;
+        const serviceDate = document.getElementById('service-date').value;
+        const cptCode = document.getElementById('cpt-code').value;
+        const billingDiagnosis = document.getElementById('billing-diagnosis').value;
+        const insurancePayer = document.getElementById('insurance-payer').value;
+        const claimStatus = document.getElementById('claim-status').value;
+        addClaim(patientId, serviceDate, cptCode, billingDiagnosis, insurancePayer, claimStatus);
+        billingForm.reset();
+        renderClaims();
+    });
+
+    paForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const patientId = document.getElementById('pa-patient').value;
+        const service = document.getElementById('pa-service').value;
+        const reason = document.getElementById('pa-reason').value;
+        const status = document.getElementById('pa-status').value;
+        addAuthorization(patientId, service, reason, status);
+        paForm.reset();
+        renderAuthorizations();
+    });
+
+    appointmentForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const patientId = document.getElementById('appointment-patient').value;
+        const date = document.getElementById('appointment-date').value;
+        const time = document.getElementById('appointment-time').value;
+        addAppointment(patientId, date, time);
+        appointmentForm.reset();
+        renderCalendar();
+    });
+    
+    quizForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        let score = 0;
+        let totalQuestions = Object.keys(quizAnswers).length;
+
+        for (const question in quizAnswers) {
+            const selectedOption = document.querySelector(`input[name="${question}"]:checked`);
+            if (selectedOption && selectedOption.value === quizAnswers[question]) {
+                score++;
+            }
+        }
+        
+        quizResult.textContent = `You scored ${score} out of ${totalQuestions}.`;
+    });
+
+    balanceForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const charged = parseFloat(document.getElementById('charged-amount').value);
+        const allowed = parseFloat(document.getElementById('allowed-amount').value);
+        const paid = parseFloat(document.getElementById('insurance-paid').value);
+        const copay = parseFloat(document.getElementById('copay').value);
+
+        if (isNaN(charged) || isNaN(allowed) || isNaN(paid) || isNaN(copay)) {
+            calculatorResult.textContent = "Please enter valid numbers in all fields.";
+            return;
+        }
+
+        const patientResponsibility = allowed - paid + copay;
+        
+        calculatorResult.innerHTML = `
+            <p><strong>Total Charged Amount:</strong> $${charged.toFixed(2)}</p>
+            <p><strong>Allowed Amount:</strong> $${allowed.toFixed(2)}</p>
+            <p><strong>Insurance Paid:</strong> $${paid.toFixed(2)}</p>
+            <p><strong>Patient's Copay:</strong> $${copay.toFixed(2)}</p>
+            <p><strong>Patient's Final Balance:</strong> $${patientResponsibility.toFixed(2)}</p>
+        `;
+    });
+
+    soapForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const patientId = document.getElementById('soap-patient').value;
+        const subjective = document.getElementById('soap-subjective').value;
+        const objective = document.getElementById('soap-objective').value;
+        const assessment = document.getElementById('soap-assessment').value;
+        const plan = document.getElementById('soap-plan').value;
+        addSOAPNote(patientId, subjective, objective, assessment, plan);
+        soapForm.reset();
+        renderSOAPNotes();
+    });
+
+    denialForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const patientId = document.getElementById('denial-patient').value;
+        const claimCpt = document.getElementById('claim-cpt').value;
+        const denialReason = document.getElementById('denial-reason').value;
+        const appealStatus = document.getElementById('appeal-status').value;
+        addDenial(patientId, claimCpt, denialReason, appealStatus);
+        denialForm.reset();
+        renderDenials();
+    });
+
+
+    // Data Management
+    function addPatient(name, dob, diagnosis) {
+        const patient = {
+            id: Date.now().toString(),
+            name,
+            dob,
+            diagnosis
+        };
+        patients.push(patient);
+        localStorage.setItem('patients', JSON.stringify(patients));
+    }
+
+    function addClaim(patientId, serviceDate, cptCode, diagnosis, insurance, status) {
+        const patient = patients.find(p => p.id === patientId);
+        if (!patient) return;
+        const claim = {
+            id: Date.now().toString(),
+            patientName: patient.name,
+            serviceDate,
+            cptCode,
+            diagnosis,
+            insurance,
+            status
+        };
+        claims.push(claim);
+        localStorage.setItem('claims', JSON.stringify(claims));
+    }
+
+    function addAuthorization(patientId, service, reason, status) {
+        const patient = patients.find(p => p.id === patientId);
+        if (!patient) return;
+        const auth = {
+            id: Date.now().toString(),
+            patientName: patient.name,
+            service,
+            reason,
+            status
+        };
+        authorizations.push(auth);
+        localStorage.setItem('authorizations', JSON.stringify(authorizations));
+    }
+
+    function addAppointment(patientId, date, time) {
+        const patient = patients.find(p => p.id === patientId);
+        if (!patient) return;
+        const appointment = {
+            id: Date.now().toString(),
+            patientName: patient.name,
+            date,
+            time
+        };
+        appointments.push(appointment);
+        localStorage.setItem('appointments', JSON.stringify(appointments));
+    }
+
+    function addSOAPNote(patientId, subjective, objective, assessment, plan) {
+        const patient = patients.find(p => p.id === patientId);
+        if (!patient) return;
+        const note = {
+            id: Date.now().toString(),
+            patientName: patient.name,
+            date: new Date().toLocaleDateString(),
+            subjective,
+            objective,
+            assessment,
+            plan
+        };
+        soapNotes.push(note);
+        localStorage.setItem('soapNotes', JSON.stringify(soapNotes));
+    }
+
+    function addDenial(patientId, claimCpt, denialReason, appealStatus) {
+        const patient = patients.find(p => p.id === patientId);
+        if (!patient) return;
+        const denial = {
+            id: Date.now().toString(),
+            patientName: patient.name,
+            claimCpt,
+            denialReason,
+            appealStatus
+        };
+        denials.push(denial);
+        localStorage.setItem('denials', JSON.stringify(denials));
+    }
+
+
+    // Rendering functions
+    function renderPatients() {
+        patientList.innerHTML = '';
+        patients.forEach(patient => {
+            const li = document.createElement('li');
+            li.className = 'patient-card';
+            li.innerHTML = `
+                <h3>${patient.name}</h3>
+                <p><strong>DOB:</strong> ${patient.dob}</p>
+                <p><strong>Diagnosis:</strong> ${patient.diagnosis}</p>
+            `;
+            patientList.appendChild(li);
+        });
+    }
+
+    function renderClaims() {
+        billingList.innerHTML = '';
+        claims.forEach(claim => {
+            const li = document.createElement('li');
+            li.className = 'bill-card';
+            li.innerHTML = `
+                <h3>Claim for: ${claim.patientName}</h3>
+                <p><strong>Date of Service:</strong> ${claim.serviceDate}</p>
+                <p><strong>CPT Code:</strong> ${claim.cptCode}</p>
+                <p><strong>Payer:</strong> ${claim.insurance}</p>
+                <p><strong>Status:</strong> <span style="color: ${claim.status === 'denied' ? 'red' : claim.status === 'accepted' ? 'green' : 'orange'}; font-weight: bold;">${claim.status.toUpperCase()}</span></p>
+            `;
+            billingList.appendChild(li);
+        });
+    }
+
+    function renderAuthorizations() {
+        paList.innerHTML = '';
+        authorizations.forEach(auth => {
+            const li = document.createElement('li');
+            li.className = 'pa-card';
+            li.innerHTML = `
+                <h3>PA for: ${auth.patientName}</h3>
+                <p><strong>Service:</strong> ${auth.service}</p>
+                <p><strong>Status:</strong> <span style="color: ${auth.status === 'denied' ? 'red' : auth.status === 'approved' ? 'green' : 'orange'}; font-weight: bold;">${auth.status.toUpperCase()}</span></p>
+            `;
+            paList.appendChild(li);
+        });
+    }
+
+    function renderCalendar() {
+        calendarGrid.innerHTML = '';
+        const date = new Date(currentYear, currentMonth, 1);
+        const firstDayOfMonth = date.getDay();
+        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+        const prevMonthDays = new Date(currentYear, currentMonth, 0).getDate();
+        currentMonthYear.textContent = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+        for (let i = firstDayOfMonth; i > 0; i--) {
+            const cell = document.createElement('div');
+            cell.className = 'day-cell other-month';
+            cell.textContent = prevMonthDays - i + 1;
+            calendarGrid.appendChild(cell);
+        }
+
+        for (let i = 1; i <= daysInMonth; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'day-cell current-month';
+            cell.textContent = i;
+            cell.dataset.date = new Date(currentYear, currentMonth, i).toISOString().split('T')[0];
+            cell.onclick = () => document.getElementById('appointment-date').value = cell.dataset.date;
+
+            const dayAppointments = appointments.filter(a => new Date(a.date).getDate() === i && new Date(a.date).getMonth() === currentMonth && new Date(a.date).getFullYear() === currentYear);
+            dayAppointments.forEach(appt => {
+                const apptDiv = document.createElement('div');
+                apptDiv.className = 'appointment';
+                apptDiv.textContent = `${appt.time} - ${appt.patientName}`;
+                cell.appendChild(apptDiv);
+            });
+            calendarGrid.appendChild(cell);
+        }
+    }
+    
+    function renderSOAPNotes() {
+        soapNotesList.innerHTML = '';
+        soapNotes.forEach(note => {
+            const li = document.createElement('li');
+            li.className = 'soap-card';
+            li.innerHTML = `
+                <h3>Note for: ${note.patientName} (${note.date})</h3>
+                <p><strong>S:</strong> ${note.subjective}</p>
+                <p><strong>O:</strong> ${note.objective}</p>
+                <p><strong>A:</strong> ${note.assessment}</p>
+                <p><strong>P:</strong> ${note.plan}</p>
+            `;
+            soapNotesList.appendChild(li);
+        });
+    }
+
+    function renderDenials() {
+        denialList.innerHTML = '';
+        denials.forEach(denial => {
+            const li = document.createElement('li');
+            li.className = 'denial-card';
+            li.innerHTML = `
+                <h3>Denial for: ${denial.patientName}</h3>
+                <p><strong>CPT Code:</strong> ${denial.claimCpt}</p>
+                <p><strong>Reason:</strong> ${denial.denialReason}</p>
+                <p><strong>Appeal Status:</strong> <span style="color: ${denial.appealStatus === 'overturned' ? 'green' : denial.appealStatus === 'denied-final' ? 'red' : 'orange'}; font-weight: bold;">${denial.appealStatus.toUpperCase()}</span></p>
+            `;
+            denialList.appendChild(li);
+        });
+    }
+
+    function renderCodeMatch() {
+        const matchData = codeMatchData[currentCodeMatchIndex];
+        codeMatchTerm.textContent = matchData.term;
+        codeMatchOptions.innerHTML = '';
+
+        matchData.options.sort(() => Math.random() - 0.5); // Shuffle options
+
+        matchData.options.forEach(option => {
+            const optionDiv = document.createElement('div');
+            optionDiv.className = 'code-match-option';
+            optionDiv.textContent = option;
+            optionDiv.onclick = () => checkCodeMatch(option, matchData.code, optionDiv);
+            codeMatchOptions.appendChild(optionDiv);
+        });
+    }
+
+    function checkCodeMatch(selectedCode, correctCode, element) {
+        const options = document.querySelectorAll('.code-match-option');
+        options.forEach(option => option.onclick = null); // Disable clicks after first selection
+
+        if (selectedCode === correctCode) {
+            element.classList.add('correct');
+        } else {
+            element.classList.add('incorrect');
+            const correctElement = Array.from(options).find(opt => opt.textContent === correctCode);
+            if (correctElement) {
+                correctElement.classList.add('correct');
+            }
+        }
+    }
+
+    function nextCodeMatch() {
+        currentCodeMatchIndex = (currentCodeMatchIndex + 1) % codeMatchData.length;
+        renderCodeMatch();
+    }
+
+    function changeMonth(direction) {
+        currentMonth += direction;
+        if (currentMonth > 11) {
+            currentMonth = 0;
+            currentYear++;
+        } else if (currentMonth < 0) {
+            currentMonth = 11;
+            currentYear--;
+        }
+        renderCalendar();
+    }
+    
+    function updatePatientDropdowns() {
+        const patientDropdowns = document.querySelectorAll('#billing-patient, #pa-patient, #appointment-patient, #soap-patient, #denial-patient');
+        patientDropdowns.forEach(select => {
+            select.innerHTML = '<option value="">Select Patient</option>';
+            patients.forEach(patient => {
+                const option = document.createElement('option');
+                option.value = patient.id;
+                option.textContent = patient.name;
+                select.appendChild(option);
+            });
+        });
+    }
+
+    // Tab functionality
+    function showTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
+        document.querySelector(`.tab-button[onclick="showTab('${tabId}')"]`).classList.add('active');
+        if (tabId === 'code-match') {
+            renderCodeMatch();
+        }
+    }
+
+    // Initial render
+    document.addEventListener('DOMContentLoaded', () => {
+        renderPatients();
+        renderClaims();
+        renderAuthorizations();
+        renderCalendar();
+        renderSOAPNotes();
+        renderDenials();
+        updatePatientDropdowns();
+        showTab('dashboard');
+    });
+</script>
+
+</body>
+</html>
